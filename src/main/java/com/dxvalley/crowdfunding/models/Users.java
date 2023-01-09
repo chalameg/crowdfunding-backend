@@ -2,13 +2,18 @@ package com.dxvalley.crowdfunding.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -36,6 +41,8 @@ public class Users {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
+    @OneToMany(targetEntity = Company.class, cascade = CascadeType.ALL)
+    private List<Company> companies;
 
     public Users( String username, String password, String fullName, String website,
         String biography, Boolean emailVerified, String createdAt, String deletedAt, Boolean isEnabled) {
