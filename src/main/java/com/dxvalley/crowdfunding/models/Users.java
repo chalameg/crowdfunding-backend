@@ -12,8 +12,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -41,8 +43,14 @@ public class Users {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
-    @OneToMany(targetEntity = Company.class, cascade = CascadeType.ALL)
-    private List<Company> companies;
+    //user address
+    @OneToOne(cascade = CascadeType.ALL)
+    private Address address;
+
+    //user campaign
+    @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
+    // @JoinColumn(name = "userId", referencedColumnName = "userId")
+    private List<Campaign> campaings;
 
     public Users( String username, String password, String fullName, String website,
         String biography, Boolean emailVerified, String createdAt, String deletedAt, Boolean isEnabled) {
