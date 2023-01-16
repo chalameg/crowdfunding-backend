@@ -51,11 +51,6 @@ public class UserController {
     return hasSysAdmin.get();
   }
 
-  private boolean isOwnAccount(String userName) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    return userRepository.findByUsername((String) auth.getPrincipal()).getUsername().equals(userName);
-  }
-
   @GetMapping("/getUsers")
   List<Users> getUsers() {
     if (isSysAdmin()) {
@@ -76,7 +71,7 @@ public class UserController {
   public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
     var user = userRepository.findByUserId(userId);
     if (user == null) {
-      createUserResponse response = new createUserResponse("error", "Cannot find this user!");
+      ApiResponse response = new ApiResponse("error", "Cannot find this user!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -84,15 +79,22 @@ public class UserController {
   }
 
   @GetMapping("/getUserByUsername/{username}")
-  Optional<Users> getByUsername(@PathVariable String username) {
-    return Optional.ofNullable(userRepository.findByUsername(username));
+  ResponseEntity<?> getByUsername(@PathVariable String username) {
+    var user = userRepository.findByUsername(username);
+
+    if (user == null) {
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this phone number/email!");
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
   @PostMapping("/register")
-  public ResponseEntity<createUserResponse> register(@RequestBody Users tempUser) {
+  public ResponseEntity<ApiResponse> register(@RequestBody Users tempUser) {
     var user = userRepository.findByUsername(tempUser.getUsername());
     if (user != null) {
-      createUserResponse response = new createUserResponse("error", "user already exists");
+      ApiResponse response = new ApiResponse("error", "user already exists");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -101,59 +103,66 @@ public class UserController {
     tempUser.setRoles(roles);
     tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
     userRepository.save(tempUser);
-    //send email verification
-    
-    createUserResponse response = new createUserResponse("success", "user created successfully!");
+    // send email verification
+
+    ApiResponse response = new ApiResponse("success", "user created successfully!");
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @PutMapping("/edit/{userId}")
   public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {
     Users user = userRepository.findByUserId(userId);
-    if(user == null){
+    if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
-    
+
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
-    user.setRoles(tempUser.getRoles() != null ? 
-      tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName())).collect(Collectors.toList()) : 
-      user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName())).collect(Collectors.toList()));
+    user.setRoles(tempUser.getRoles() != null
+        ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+            .collect(Collectors.toList())
+        : user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+            .collect(Collectors.toList()));
 
     user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
 
-    user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword()) : passwordEncoder.encode(user.getPassword()));
-   
+    user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
+        : passwordEncoder.encode(user.getPassword()));
+
     Users response = userRepository.save(user);
 
     response.setPassword(null);
-    
+
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-  @PutMapping("/manageAccount/{userName}/{usernameChange}")
-  public Users manageAccount(@RequestBody UsernamePassword temp,
-      @PathVariable String userName,
-      @PathVariable Boolean usernameChange) throws AccessDeniedException {
-    if (isOwnAccount(userName)) {
+  @PutMapping("/changePasswordOrUsername/{userName}")
+  public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,
+      @PathVariable String userName) throws AccessDeniedException {
+  
       Users user = userRepository.findByUsername(userName);
+
       if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
         user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+      }else{
+        ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
+      
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
       }
-      if (usernameChange) {
-        user.setUsername(temp.getNewUsername());
-      }
-      Users response = userRepository.save(user);
-      response.setPassword(null);
-      return response;
-    } else
-      throw new AccessDeniedException("403 Forbidden");
+      user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
+
+      userRepository.save(user);
+
+      ApiResponse response = new ApiResponse("success", "Password / userName Changed Successfully!");
+      
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    
   }
 
   @DeleteMapping("/delete/{userId}")
   ResponseEntity<?> deleteUser(@PathVariable Long userId) {
     Users user = userRepository.findByUserId(userId);
-    if(user == null){
+    if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
     this.userRepository.deleteById(userId);
@@ -174,7 +183,7 @@ class UsernamePassword {
 @Getter
 @Setter
 @AllArgsConstructor
-class createUserResponse {
+class ApiResponse {
   String status;
   String description;
 }

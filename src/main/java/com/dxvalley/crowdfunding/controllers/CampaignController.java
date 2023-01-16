@@ -1,5 +1,8 @@
 package com.dxvalley.crowdfunding.controllers;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +49,7 @@ public class CampaignController {
         return Campaign ;
   }
 
-  @GetMapping("/getCampaigns/{ownerId}")
+  @GetMapping("/getCampaigns/{owner}")
   List<Campaign> getUserCampaigns(@PathVariable String owner) {
         List<Campaign> Campaign = campaignService.findCampaignsByOwner(owner);
        
@@ -73,11 +76,13 @@ public class CampaignController {
         imageUrl = fileUploadService.uploadFile(campaignImage);
         // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
       } catch (Exception e) {
-        createUserResponse response = new createUserResponse("error", "Bad file size or format!");
+        ApiResponse response = new ApiResponse("error", "Bad file size or format!");
   
         return new ResponseEntity<>(response, HttpStatus.OK);
       }
       
+      DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      Date currentDate = new Date();
       campaign.setImageUrl(imageUrl);
       // campaign.setVideoUrl(campaignVideoUrl);
       campaign.setTitle(title);
@@ -90,10 +95,11 @@ public class CampaignController {
       campaign.setReward(null);
       campaign.setOwner(owner);
       campaign.setIsEnabled(false);
-  
+      campaign.setDateCreated(dateFormat.format(currentDate));  
+
       Campaign res = campaignService.addCampaign(campaign);
 
-    return new ResponseEntity<>(res, HttpStatus.OK);
+      return new ResponseEntity<>(res, HttpStatus.OK);
   }
 
   @PutMapping("/{campaignId}")
@@ -119,7 +125,8 @@ public class CampaignController {
 
     campaignService.deleteCampaign(campaignId);
 
-    return new ResponseEntity<String>("Deleted", HttpStatus.OK);
+    ApiResponse response = new ApiResponse("success", "Campaign Deleted successfully!");
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
 }

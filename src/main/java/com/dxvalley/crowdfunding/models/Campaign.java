@@ -2,6 +2,9 @@ package com.dxvalley.crowdfunding.models;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,5 +53,11 @@ public class Campaign {
     private String risks;
     private String projectType;
     private Boolean isEnabled;
+    @JsonFormat(pattern="yyyy-MM-dd",shape = Shape.STRING)
+    @Column(name="date_created")
+    private String dateCreated;
+    @JsonFormat(pattern="yyyy-MM-dd",shape = Shape.STRING)
+    @Column(name="date_deleted")
+    private String dateDeleted;
 
 }
