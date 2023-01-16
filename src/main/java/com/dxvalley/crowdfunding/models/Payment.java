@@ -17,7 +17,6 @@ public class Payment {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long paymentId;
 
-    private String projectType;
     private String bankAccount;
 
 }

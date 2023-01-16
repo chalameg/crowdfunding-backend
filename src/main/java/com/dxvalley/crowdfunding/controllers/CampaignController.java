@@ -53,7 +53,9 @@ public class CampaignController {
     @RequestParam("city") String city,
     @RequestParam("goalAmount") String goalAmount,
     @RequestParam("campaignDuration") String campaignDuration,
-    @RequestParam("campaignImage") MultipartFile campaignImage
+    @RequestParam("campaignImage") MultipartFile campaignImage,
+    @RequestParam("description") String description,
+    @RequestParam("risks") String risks
       // @RequestParam("campaignVideo") MultipartFile campaignVideo
     ) {
       
@@ -76,6 +78,9 @@ public class CampaignController {
       campaign.setCity(city);
       campaign.setCampaignDuration(campaignDuration);
       campaign.setGoalAmount(goalAmount);
+      campaign.setDecription(description);
+      campaign.setRisks(risks);
+      campaign.setReward(null);
       campaign.setIsEnabled(false);
   
       Campaign res = campaignService.addCampaign(campaign);

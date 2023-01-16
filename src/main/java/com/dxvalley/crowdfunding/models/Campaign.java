@@ -47,6 +47,7 @@ public class Campaign {
     private String campaignDuration;
     private String decription;
     private String risks;
+    private String projectType;
     private Boolean isEnabled;
 
 }
