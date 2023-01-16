@@ -11,4 +11,5 @@ public interface CampaignService {
     List<Campaign> getCampaigns ();
     Campaign getCampaignById(Long campaignId);
     void deleteCampaign( Long campaignId);
+    List<Campaign> findCampaignsByOwner(String owner);
 }

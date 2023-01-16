@@ -39,5 +39,10 @@ public class CampaignServiceImpl implements CampaignService {
     public void deleteCampaign(Long campaignId) {
         campaignRepository.deleteById(campaignId);
     }
+    @Override
+    public List<Campaign> findCampaignsByOwner(String owner) {
+        // TODO Auto-generated method stub
+        return campaignRepository.findCampaignsByOwner(owner);
+    }
     
 }

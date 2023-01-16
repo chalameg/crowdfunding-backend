@@ -44,6 +44,7 @@ public class Campaign {
     private String imageUrl;
     private String videoLink;
     private String goalAmount;
+    private String owner;
     private String campaignDuration;
     private String decription;
     private String risks;

@@ -20,7 +20,6 @@ import com.dxvalley.crowdfunding.models.Campaign;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @RestController
@@ -47,6 +46,13 @@ public class CampaignController {
         return Campaign ;
   }
 
+  @GetMapping("/getCampaigns/{ownerId}")
+  List<Campaign> getUserCampaigns(@PathVariable String owner) {
+        List<Campaign> Campaign = campaignService.findCampaignsByOwner(owner);
+       
+        return Campaign ;
+  }
+
   @PostMapping
   public ResponseEntity<?> addCampaign(@RequestParam("title") String title,
     @RequestParam("shortDescription") String shortDescription,
@@ -55,6 +61,7 @@ public class CampaignController {
     @RequestParam("campaignDuration") String campaignDuration,
     @RequestParam("campaignImage") MultipartFile campaignImage,
     @RequestParam("description") String description,
+    @RequestParam("owner") String owner,
     @RequestParam("risks") String risks
       // @RequestParam("campaignVideo") MultipartFile campaignVideo
     ) {
@@ -81,6 +88,7 @@ public class CampaignController {
       campaign.setDecription(description);
       campaign.setRisks(risks);
       campaign.setReward(null);
+      campaign.setOwner(owner);
       campaign.setIsEnabled(false);
   
       Campaign res = campaignService.addCampaign(campaign);
@@ -113,7 +121,9 @@ public class CampaignController {
 
     return new ResponseEntity<String>("Deleted", HttpStatus.OK);
   }
+
 }
+
 
 @Getter
 @Setter
