@@ -101,6 +101,8 @@ public class UserController {
     tempUser.setRoles(roles);
     tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
     userRepository.save(tempUser);
+    //send email verification
+    
     createUserResponse response = new createUserResponse("success", "user created successfully!");
     return new ResponseEntity<>(response, HttpStatus.OK);
   }

@@ -24,10 +24,6 @@ public class Campaign {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long campaignId;
 
-    //campaign story
-    @OneToOne(cascade = CascadeType.ALL)
-    private Story story;
-    
     //campaign reward
     @OneToOne(cascade = CascadeType.ALL)
     private Reward reward;
@@ -49,6 +45,8 @@ public class Campaign {
     private String videoLink;
     private String goalAmount;
     private String campaignDuration;
+    private String decription;
+    private String risks;
     private Boolean isEnabled;
 
 }
