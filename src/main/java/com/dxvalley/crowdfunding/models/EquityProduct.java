@@ -20,4 +20,5 @@ public class EquityProduct {
     private String stage;
     private String valuation;
     private String roi; //share
+    private String productStage;
 }

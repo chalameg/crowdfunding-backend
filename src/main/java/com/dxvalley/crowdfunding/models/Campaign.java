@@ -3,12 +3,14 @@ package com.dxvalley.crowdfunding.models;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -34,10 +36,12 @@ public class Campaign {
     @OneToOne(cascade = CascadeType.ALL)
     private Payment payment;
 
-    //campaign collaborator
-    @OneToMany(targetEntity = Collaborator.class, cascade = CascadeType.ALL)
-    private List<Campaign> campaings;
+    //campaign Promotion
+    @OneToOne(cascade = CascadeType.ALL)
+    private Promotion promotion;
 
+    @Column(nullable = false, length = 512)
+    @NotBlank(message = "Campaign title cannot be empty!")
     private String title;
     private String shortDescription;
     private String city;
@@ -45,4 +49,6 @@ public class Campaign {
     private String videoLink;
     private String goalAmount;
     private String campaignDuration;
+    private Boolean isEnabled;
+
 }

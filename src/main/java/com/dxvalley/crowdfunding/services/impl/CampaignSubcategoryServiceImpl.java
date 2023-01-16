@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
-import com.dxvalley.crowdfunding.services.CampaignSubCatagoryService;
+import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 
 @Service
-public class CampaignSubcategoryServiceImpl implements CampaignSubCatagoryService {
+public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryService {
     private final CampaignSubCategoryRepository campaignSubCategoryRepository;
 
     public CampaignSubcategoryServiceImpl(CampaignSubCategoryRepository campaignSubCategoryRepository) {

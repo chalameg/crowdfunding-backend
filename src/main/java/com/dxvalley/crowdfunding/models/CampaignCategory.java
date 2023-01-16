@@ -15,7 +15,8 @@ import lombok.Setter;
 public class CampaignCategory {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long categoryId;
+    private Long campaignCategoryId;
+
     private String name;
     private String description;
 }

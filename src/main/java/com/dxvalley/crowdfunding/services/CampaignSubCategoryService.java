@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 
-public interface CampaignSubCatagoryService {
+public interface CampaignSubCategoryService {
     CampaignSubCategory addCampaignSubCategory (CampaignSubCategory campaignSubCategory);
     CampaignSubCategory editCampaignSubCategory (CampaignSubCategory campaignSubCategory);
     List<CampaignSubCategory> getCampaignSubCategories ();

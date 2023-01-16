@@ -14,8 +14,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -48,9 +50,8 @@ public class Users {
     private Address address;
 
     //user campaign
-    @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
-    // @JoinColumn(name = "userId", referencedColumnName = "userId")
-    private List<Campaign> campaings;
+    @Transient
+    private Campaign campaigns;
 
     public Users( String username, String password, String fullName, String website,
         String biography, Boolean emailVerified, String createdAt, String deletedAt, Boolean isEnabled) {
