@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.models;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -36,7 +37,6 @@ public class Users {
     private String biography;
     private String website;
     private String password;
-    private Boolean emailVerified;
     private String createdAt;
     private String deletedAt;
     private Boolean isEnabled;
@@ -54,13 +54,12 @@ public class Users {
     private Campaign campaigns;
 
     public Users( String username, String password, String fullName, String website,
-        String biography, Boolean emailVerified, String createdAt, String deletedAt, Boolean isEnabled) {
+                  String biography, String createdAt, String deletedAt, Boolean isEnabled) {
         this.password = new BCryptPasswordEncoder().encode(password);
         this.fullName = fullName;
         this.username= username;
         this.website= website;
         this.biography= biography;
-        this.emailVerified= emailVerified;
         this.createdAt=createdAt;
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
@@ -70,5 +69,5 @@ public class Users {
     public Users orElseThrow(Object object) {
         return null;
     }
-    
+
 }

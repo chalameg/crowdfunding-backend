@@ -7,25 +7,20 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.dxvalley.crowdfunding.models.Role;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
+import com.dxvalley.crowdfunding.services.UserRegistrationService;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +34,8 @@ public class UserController {
   private final UserRepository userRepository;
   private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
+  private final UserRegistrationService registrationService;
+
 
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -91,23 +88,17 @@ public class UserController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<ApiResponse> register(@RequestBody Users tempUser) {
-    var user = userRepository.findByUsername(tempUser.getUsername());
-    if (user != null) {
-      ApiResponse response = new ApiResponse("error", "user already exists");
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    List<Role> roles = new ArrayList<Role>(1);
-    roles.add(this.roleRepo.findByRoleName("user"));
-    tempUser.setRoles(roles);
-    tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
-    userRepository.save(tempUser);
-    // send email verification
-
-    ApiResponse response = new ApiResponse("success", "user created successfully!");
-    return new ResponseEntity<>(response, HttpStatus.OK);
+  public ResponseEntity<?> register(@RequestBody Users tempUser) {
+    return registrationService.register(tempUser);
   }
+
+  @GetMapping(path = "confirm")
+  public String confirmUser(@RequestParam("token") String token) {
+
+    return registrationService.confirmToken(token);
+
+  }
+
 
   @PutMapping("/edit/{userId}")
   public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {
