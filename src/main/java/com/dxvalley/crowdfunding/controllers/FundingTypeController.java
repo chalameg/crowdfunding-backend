@@ -15,7 +15,7 @@ import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 
 @RestController
-@RequestMapping("/api/fundingType")
+@RequestMapping("/api/fundingTypes")
 public class FundingTypeController {
   private final FundingTypeService fundingTypeService;
 
@@ -23,7 +23,7 @@ public class FundingTypeController {
     this.fundingTypeService = fundingTypeService;
   }
 
-  @GetMapping("/getFundingTypes")
+  @GetMapping
   List<FundingType> getFundingTypes() {
     return this.fundingTypeService.getFundingTypes();
   }
@@ -33,12 +33,12 @@ public class FundingTypeController {
     return fundingTypeService.getFundingTypeById(fundingTypeId);
   }
 
-  @PostMapping("/add")
+  @PostMapping
   FundingType addFundingType(@RequestBody FundingType fundingTypes) {
     return fundingTypeService.addFundingType(fundingTypes);
   }
 
-  @PutMapping("/edit/{fundingTypeId}")
+  @PutMapping("/{fundingTypeId}")
   FundingType editFundingType(@RequestBody FundingType tempFundingType, @PathVariable Long fundingTypeId) {
     FundingType fundingType = this.fundingTypeService.getFundingTypeById(fundingTypeId);
     fundingType.setName(tempFundingType.getName());
@@ -46,7 +46,7 @@ public class FundingTypeController {
     return fundingTypeService.editFundingType(fundingType);
   }
 
-  @DeleteMapping("/delete/{fundingTypeId}")
+  @DeleteMapping("/{fundingTypeId}")
   void deleteFundingType(@PathVariable Long fundingTypeId) {
     fundingTypeService.deleteFundingType(fundingTypeId);
   }

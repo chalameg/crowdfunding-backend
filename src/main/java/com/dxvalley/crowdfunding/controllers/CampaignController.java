@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,26 +59,31 @@ public class CampaignController {
   @PostMapping
   public ResponseEntity<?> addCampaign(@RequestParam("title") String title,
     @RequestParam("shortDescription") String shortDescription,
-    @RequestParam("city") String city,
-    @RequestParam("goalAmount") String goalAmount,
-    @RequestParam("campaignDuration") String campaignDuration,
-    @RequestParam("campaignImage") MultipartFile campaignImage,
-    @RequestParam("description") String description,
+    @RequestParam(required = false) String city,
+    @RequestParam(required = false) String goalAmount,
+    @RequestParam(required = false) String campaignDuration,
+    @RequestParam(required = false) MultipartFile campaignImage,
+    @RequestParam(required = false) String description,
     @RequestParam("owner") String owner,
-    @RequestParam("risks") String risks
+    @RequestParam(required = false) String risks
       // @RequestParam("campaignVideo") MultipartFile campaignVideo
     ) {
       
       String imageUrl;
       // String campaignVideoUrl;
       Campaign campaign = new Campaign();
-      try {
-        imageUrl = fileUploadService.uploadFile(campaignImage);
-        // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
-      } catch (Exception e) {
-        ApiResponse response = new ApiResponse("error", "Bad file size or format!");
-  
-        return new ResponseEntity<>(response, HttpStatus.OK);
+
+      if(campaignImage != null){
+        try {
+          imageUrl = fileUploadService.uploadFile(campaignImage);
+          // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
+        } catch (Exception e) {
+          ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+    
+          return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+      }else{
+        imageUrl = null;
       }
       
       DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -103,18 +108,46 @@ public class CampaignController {
   }
 
   @PutMapping("/{campaignId}")
-  Campaign editCampaign(@RequestBody Campaign tempCampaign, @PathVariable Long campaignId) {
-    Campaign campaign = this.campaignService.getCampaignById(campaignId);
-    campaign.setTitle(tempCampaign.getTitle() != null ? tempCampaign.getTitle() : campaign.getTitle());
-    campaign.setShortDescription(tempCampaign.getShortDescription() != null ? tempCampaign.getShortDescription() : campaign.getShortDescription());
-    campaign.setCity(tempCampaign.getCity() != null ? tempCampaign.getCity() : campaign.getCity());
-    campaign.setImageUrl(tempCampaign.getImageUrl() != null ? tempCampaign.getImageUrl() : campaign.getImageUrl());
-    campaign.setVideoLink(tempCampaign.getVideoLink() != null ? tempCampaign.getVideoLink() : campaign.getVideoLink());
-    campaign.setGoalAmount(tempCampaign.getGoalAmount() != null ? tempCampaign.getGoalAmount() : campaign.getGoalAmount());
-    campaign.setCampaignDuration(tempCampaign.getCampaignDuration() != null ? tempCampaign.getCampaignDuration() : campaign.getCampaignDuration());
-    campaign.setIsEnabled(tempCampaign.getIsEnabled() != null ? tempCampaign.getIsEnabled() : campaign.getIsEnabled());
+  ResponseEntity<?> editCampaign(@RequestParam(required = false) String title,
+    @RequestParam(required = false) String shortDescription,
+    @RequestParam(required = false) String city,
+    @RequestParam(required = false) String goalAmount,
+    @RequestParam(required = false) String campaignDuration,
+    @RequestParam(required = false) MultipartFile campaignImage,
+    @RequestParam(required = false) String description,
+    @RequestParam(required = false) Boolean isEnabled,
+    @RequestParam(required = false) String risks, @PathVariable Long campaignId) {
 
-    return campaignService.editCampaign(campaign);
+      Campaign campaign = this.campaignService.getCampaignById(campaignId);
+      String imageUrl;
+      // String campaignVideoUrl;
+      if(campaignImage != null){
+        try {
+          imageUrl = fileUploadService.uploadFile(campaignImage);
+          // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
+        } catch (Exception e) {
+          ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+    
+          return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+      }else{
+        imageUrl = null;
+      }
+
+    campaign.setTitle(title != null ? title : campaign.getTitle());
+    campaign.setShortDescription(shortDescription != null ? shortDescription : campaign.getShortDescription());
+    campaign.setCity(city != null ? city : campaign.getCity());
+    campaign.setImageUrl(imageUrl != null ? imageUrl : campaign.getImageUrl());
+    // campaign.setVideoLink(tempCampaign.getVideoLink() != null ? tempCampaign.getVideoLink() : campaign.getVideoLink());
+    campaign.setGoalAmount(goalAmount != null ? goalAmount : campaign.getGoalAmount());
+    campaign.setCampaignDuration(campaignDuration != null ? campaignDuration : campaign.getCampaignDuration());
+    campaign.setRisks(risks != null ? risks : campaign.getRisks());
+    campaign.setDecription(description != null ? description : campaign.getDecription());
+    campaign.setIsEnabled(isEnabled != null ? isEnabled : campaign.getIsEnabled());
+
+    campaignService.editCampaign(campaign);
+
+    return new ResponseEntity<>(campaign, HttpStatus.OK);
   }
 
   @DeleteMapping("/{campaignId}")

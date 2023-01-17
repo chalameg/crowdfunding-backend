@@ -2,6 +2,8 @@ package com.dxvalley.crowdfunding.controllers;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +17,7 @@ import com.dxvalley.crowdfunding.models.CampaignCategory;
 import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 
 @RestController
-@RequestMapping("/api/campaignCategory")
+@RequestMapping("/api/campaignCategorys")
 public class CampaignCategoryController {
   private final CampaignCategoryService campaignCategoryService;
 
@@ -23,7 +25,7 @@ public class CampaignCategoryController {
     this.campaignCategoryService = campaignCategoryService;
   }
 
-  @GetMapping("/getCategories")
+  @GetMapping
   List<CampaignCategory> getcampaignCategories() {
     return this.campaignCategoryService.getCampaignCategories();
   }
@@ -33,12 +35,12 @@ public class CampaignCategoryController {
     return campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
   }
 
-  @PostMapping("/add")
+  @PostMapping
   CampaignCategory addCategory(@RequestBody CampaignCategory campaignCategories) {
     return campaignCategoryService.addCampaignCategory(campaignCategories);
   }
 
-  @PutMapping("/edit/{campaignCategoryId}")
+  @PutMapping("/{campaignCategoryId}")
   CampaignCategory editcampaignCategory(@RequestBody CampaignCategory tempcampaignCategory,
       @PathVariable Long campaignCategoryId) {
     CampaignCategory campaignCategory = this.campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
@@ -47,8 +49,16 @@ public class CampaignCategoryController {
     return campaignCategoryService.editCampaignCategory(campaignCategory);
   }
 
-  @DeleteMapping("/delete/{campaignCategoryId}")
-  void deletecampaignCategory(@PathVariable Long campaignCategoryId) {
+  @DeleteMapping("/{campaignCategoryId}")
+  ResponseEntity<?> deletecampaignCategory(@PathVariable Long campaignCategoryId) {
+
+    CampaignCategory campaignCategory = this.campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
+
+    if(campaignCategory == null) return new ResponseEntity<String>("Entry does not exist!", HttpStatus.BAD_REQUEST);
+
     campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
+
+    ApiResponse response = new ApiResponse("success", "CampaignCategory Deleted successfully!");
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }

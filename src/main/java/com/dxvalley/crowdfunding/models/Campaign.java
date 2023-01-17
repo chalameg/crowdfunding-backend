@@ -11,8 +11,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class Campaign {
     @Column(nullable = false, length = 512)
     @NotBlank(message = "Campaign title cannot be empty!")
     private String title;
+    
     private String shortDescription;
     private String city;
     private String imageUrl;
@@ -49,7 +52,11 @@ public class Campaign {
     private String goalAmount;
     private String owner;
     private String campaignDuration;
+
+   @Column(columnDefinition="TEXT")
     private String decription;
+
+   @Column(columnDefinition="TEXT")
     private String risks;
     private String projectType;
     private Boolean isEnabled;
@@ -59,5 +66,8 @@ public class Campaign {
     @JsonFormat(pattern="yyyy-MM-dd",shape = Shape.STRING)
     @Column(name="date_deleted")
     private String dateDeleted;
+
+    @Transient
+    private List<Collaborator> collaborators;
 
 }

@@ -19,6 +19,7 @@ public class Collaborator {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long collaboratorId;
     private boolean isCampaignCreator;
+    private boolean isEnabled;
 
     @ManyToOne
     @JoinColumn(name = "userId") 
