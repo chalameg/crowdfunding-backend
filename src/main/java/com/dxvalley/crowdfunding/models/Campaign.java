@@ -41,6 +41,16 @@ public class Campaign {
     @OneToOne(cascade = CascadeType.ALL)
     private Promotion promotion;
 
+    //campaign FundingType
+    @OneToOne(cascade = CascadeType.ALL)
+    private FundingType fundingType;
+
+    //campaign CampaignCategory
+    @OneToOne(cascade = CascadeType.ALL)
+    private CampaignCategory campaignCategory;
+
+
+
     @Column(nullable = false, length = 512)
     @NotBlank(message = "Campaign title cannot be empty!")
     private String title;

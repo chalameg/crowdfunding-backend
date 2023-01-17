@@ -59,6 +59,7 @@ public class CampaignCategoryController {
     campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
 
     ApiResponse response = new ApiResponse("success", "CampaignCategory Deleted successfully!");
+    
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }

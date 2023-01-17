@@ -17,9 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.FileUploadService;
+import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
+import com.dxvalley.crowdfunding.models.CampaignCategory;
+import com.dxvalley.crowdfunding.models.FundingType;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,11 +34,17 @@ import lombok.Setter;
 public class CampaignController {
   private final CampaignService campaignService;
   private final FileUploadService fileUploadService;
+  private final FundingTypeService fundingTypeService;
+  private final CampaignCategoryService campaignCategoryService;
   
   
-  public CampaignController(CampaignService campaignService, FileUploadService fileUploadService) {
+
+  public CampaignController(CampaignService campaignService, FileUploadService fileUploadService,
+      FundingTypeService fundingTypeService, CampaignCategoryService campaignCategoryService) {
     this.campaignService = campaignService;
     this.fileUploadService = fileUploadService;
+    this.fundingTypeService = fundingTypeService;
+    this.campaignCategoryService = campaignCategoryService;
   }
 
   @GetMapping
@@ -56,7 +66,7 @@ public class CampaignController {
         return Campaign ;
   }
 
-  @PostMapping
+  @PostMapping("/{fundingTypeId}/{campaignCategoryId}")
   public ResponseEntity<?> addCampaign(@RequestParam("title") String title,
     @RequestParam("shortDescription") String shortDescription,
     @RequestParam(required = false) String city,
@@ -65,7 +75,9 @@ public class CampaignController {
     @RequestParam(required = false) MultipartFile campaignImage,
     @RequestParam(required = false) String description,
     @RequestParam("owner") String owner,
-    @RequestParam(required = false) String risks
+    @RequestParam(required = false) String risks,
+    @PathVariable Long fundingTypeId,
+    @PathVariable Long campaignCategoryId
       // @RequestParam("campaignVideo") MultipartFile campaignVideo
     ) {
       
@@ -85,6 +97,9 @@ public class CampaignController {
       }else{
         imageUrl = null;
       }
+
+      FundingType fundingType = fundingTypeService.getFundingTypeById(fundingTypeId);
+      CampaignCategory campaignCategory = campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
       
       DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
       Date currentDate = new Date();
@@ -101,6 +116,8 @@ public class CampaignController {
       campaign.setOwner(owner);
       campaign.setIsEnabled(false);
       campaign.setDateCreated(dateFormat.format(currentDate));  
+      campaign.setCampaignCategory(campaignCategory);
+      campaign.setFundingType(fundingType);
 
       Campaign res = campaignService.addCampaign(campaign);
 
