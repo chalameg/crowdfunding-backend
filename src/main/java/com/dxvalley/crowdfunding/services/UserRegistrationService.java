@@ -1,6 +1,5 @@
 package com.dxvalley.crowdfunding.services;
 
-//import com.dxvalley.crowdfunding.utils.CreateUserResponse;
 import com.dxvalley.crowdfunding.email.EmailSender;
 import com.dxvalley.crowdfunding.models.Role;
 import com.dxvalley.crowdfunding.models.Users;
@@ -28,8 +27,7 @@ public class UserRegistrationService {
     private final PasswordEncoder passwordEncoder;
 
     public ResponseEntity register(Users tempUser) {
-        var user = userRepository.findByUsername(tempUser.getUsername());
-        System.out.println("user " + user);
+        var user = userRepository.findUser(tempUser.getUsername());
         if (user != null) {
             return new ResponseEntity<>(
                     "user already exists",
@@ -66,26 +64,36 @@ public class UserRegistrationService {
     }
 //    "user created successfully! Please check your email to verify "
     @Transactional
-    public String confirmToken(String token) {
+    public ResponseEntity confirmToken(String token) {
         ConfirmationToken confirmationToken = confirmationTokenService
-                .getToken(token)
-                .orElseThrow(() ->
-                        new IllegalStateException("token not found"));
+                .getToken(token);
 
-        if (confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("email already confirmed");
+        if (confirmationToken == null){
+            return new ResponseEntity<>(
+                    "token not found ",
+                    HttpStatus.BAD_REQUEST);
+
         }
 
+        if (confirmationToken.getConfirmedAt() != null) {
+            return new ResponseEntity<>(
+                    "email already confirmed",
+                    HttpStatus.BAD_REQUEST);
+        }
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("token expired");
+            return new ResponseEntity<>(
+                    "token expired",
+                    HttpStatus.BAD_REQUEST);
         }
 
         confirmationTokenService.setConfirmedAt(token);
-//        appUserService.enableAppUser(
-//                confirmationToken.getAppUser().getUsername());
-        return "confirmed";
+        var username = confirmationToken.getUser().getUsername();
+        userRepository.enableUser(username);
+        return new ResponseEntity<>(
+                "Confirmed",
+                HttpStatus.OK);
     }
 
     private String buildEmail(String name, String link) {

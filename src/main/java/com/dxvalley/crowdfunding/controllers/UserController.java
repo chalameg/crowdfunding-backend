@@ -1,14 +1,10 @@
 package com.dxvalley.crowdfunding.controllers;
 
 import java.nio.file.AccessDeniedException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.dxvalley.crowdfunding.models.Role;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
@@ -51,9 +46,10 @@ public class UserController {
   @GetMapping("/getUsers")
   List<Users> getUsers() {
     if (isSysAdmin()) {
-      return this.userRepository.findAll(Sort.by("username"));
+      return this.userRepository.findAll();
     }
-    var users = this.userRepository.findAll(Sort.by("username"));
+    var users = this.userRepository.findAll();
+
     users.removeIf(user -> {
       var containsAdmin = false;
       for (var role : user.getRoles()) {
@@ -71,7 +67,6 @@ public class UserController {
       ApiResponse response = new ApiResponse("error", "Cannot find this user!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
@@ -83,7 +78,6 @@ public class UserController {
       ApiResponse response = new ApiResponse("error", "Cannot find user with this phone number/email!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
@@ -93,12 +87,9 @@ public class UserController {
   }
 
   @GetMapping(path = "confirm")
-  public String confirmUser(@RequestParam("token") String token) {
-
+  public ResponseEntity<?> confirmUser(@RequestParam("token") String token) {
     return registrationService.confirmToken(token);
-
   }
-
 
   @PutMapping("/edit/{userId}")
   public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {

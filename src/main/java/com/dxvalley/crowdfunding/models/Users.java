@@ -5,26 +5,21 @@ import java.util.Collection;
 import java.util.List;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "Users_email_unique",
+                columnNames = "username"
+        )
+})
 @Getter
 @Setter
 @RequiredArgsConstructor
@@ -64,7 +59,6 @@ public class Users {
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
     }
-
 
     public Users orElseThrow(Object object) {
         return null;

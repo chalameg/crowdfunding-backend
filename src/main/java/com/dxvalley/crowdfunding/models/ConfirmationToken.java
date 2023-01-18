@@ -28,15 +28,15 @@ public class ConfirmationToken {
 
     @ManyToOne
     @JoinColumn(name = "app_user_id")
-    private Users appUser;
+    private Users user;
 
     public ConfirmationToken(String token,
                              LocalDateTime createdAt,
                              LocalDateTime expiresAt,
-                             Users users) {
+                             Users user) {
         this.token = token;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
-        this.appUser = users;
+        this.user = user;
     }
 }
