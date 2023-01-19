@@ -18,7 +18,6 @@ public class CampaignSubCategory {
     private Long campaignSubCategoryId;
     private String name;
     private String description;
-    
     @ManyToOne
     private CampaignCategory category;
 }

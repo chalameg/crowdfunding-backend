@@ -2,6 +2,10 @@ package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
 
+
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.services.CampaignCategoryService;
@@ -9,38 +13,79 @@ import com.dxvalley.crowdfunding.models.CampaignCategory;
 import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
 
 @Service
+@AllArgsConstructor
 public class CampaignCategoryServiceIml implements CampaignCategoryService {
-
-    private final CampaignCategoryRepository CampaignCategoryRepository;
-
-    public CampaignCategoryServiceIml(CampaignCategoryRepository campaignCategoryRepository) {
-        this.CampaignCategoryRepository = campaignCategoryRepository;
+    private final CampaignCategoryRepository campaignCategoryRepository;
+    @Override
+    public ResponseEntity<?> addCampaignCategory(CampaignCategory tempCampaignCategory) {
+        var campaignCategory = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
+        if(campaignCategory != null){
+            return new ResponseEntity<>(
+                    tempCampaignCategory.getName() + " Category already exist!",
+                    HttpStatus.BAD_REQUEST);
+        }
+        var result = campaignCategoryRepository.save(tempCampaignCategory);
+        return new ResponseEntity<>(
+                result,
+                HttpStatus.OK);
     }
 
     @Override
-    public CampaignCategory addCampaignCategory(CampaignCategory campaignCategory) {
-        return this.CampaignCategoryRepository.save(campaignCategory);
-    }
+    public ResponseEntity<?> editCampaignCategory(CampaignCategory tempCampaignCategory, Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
+        if(campaignCategory == null){
+            return new ResponseEntity<>(
+                    "Category does not exist with this ID!",
+                    HttpStatus.BAD_REQUEST);
 
-    @Override
-    public CampaignCategory editCampaignCategory(CampaignCategory campaignCategory) {
-        return this.CampaignCategoryRepository.save(campaignCategory);
+        }
+        campaignCategory.setName(
+                tempCampaignCategory.getName() != null ?
+                        tempCampaignCategory.getName() :
+                        campaignCategory.getName());
+
+        campaignCategory.setDescription(
+                tempCampaignCategory.getDescription() != null ?
+                        tempCampaignCategory.getDescription() :
+                        campaignCategory.getDescription());
+
+        var category =  campaignCategoryRepository.save(campaignCategory);
+        return new ResponseEntity<>(
+                category,
+                HttpStatus.OK);
     }
 
     @Override
     public List<CampaignCategory> getCampaignCategories() {
-        return this.CampaignCategoryRepository.findAll();
+        return this.campaignCategoryRepository.findAll();
     }
 
     @Override
-    public CampaignCategory getCampaignCategoryById(Long campaignCategoryId) {
-        return this.CampaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
+    public ResponseEntity<?> getCampaignCategoryById(Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
+        if(campaignCategory == null){
+            return new ResponseEntity<>(
+                    "Category does not exist with this ID!",
+                    HttpStatus.BAD_REQUEST);
+
+        }
+        return new ResponseEntity<>(
+                campaignCategory,
+                HttpStatus.OK);
     }
 
     @Override
-    public void deleteCampaignCategory(Long campaignCategoryId) {
-        CampaignCategoryRepository.deleteById(campaignCategoryId);
+    public ResponseEntity<?> deleteCampaignCategory(Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
+        if(campaignCategory == null){
+            return new ResponseEntity<>(
+                    "Category does not exist with this ID!",
+                    HttpStatus.BAD_REQUEST);
 
+        }
+        campaignCategoryRepository.deleteById(campaignCategoryId);
+        return new ResponseEntity<>(
+                "CampaignCategory Deleted successfully!",
+                HttpStatus.OK);
     }
-
 }

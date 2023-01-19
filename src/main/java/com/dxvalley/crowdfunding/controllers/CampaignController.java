@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,16 +36,16 @@ public class CampaignController {
   private final CampaignService campaignService;
   private final FileUploadService fileUploadService;
   private final FundingTypeService fundingTypeService;
-  private final CampaignCategoryService campaignCategoryService;
-  
+
+  private final CampaignCategoryRepository campaignCategoryRepository;
   
 
   public CampaignController(CampaignService campaignService, FileUploadService fileUploadService,
-      FundingTypeService fundingTypeService, CampaignCategoryService campaignCategoryService) {
+      FundingTypeService fundingTypeService, CampaignCategoryRepository campaignCategoryRepository) {
     this.campaignService = campaignService;
     this.fileUploadService = fileUploadService;
     this.fundingTypeService = fundingTypeService;
-    this.campaignCategoryService = campaignCategoryService;
+    this.campaignCategoryRepository = campaignCategoryRepository;
   }
 
   @GetMapping
@@ -99,7 +100,7 @@ public class CampaignController {
       }
 
       FundingType fundingType = fundingTypeService.getFundingTypeById(fundingTypeId);
-      CampaignCategory campaignCategory = campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
+      CampaignCategory campaignCategory =   campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
       
       DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
       Date currentDate = new Date();

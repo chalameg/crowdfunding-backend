@@ -3,11 +3,12 @@ package com.dxvalley.crowdfunding.services;
 import java.util.List;
 
 import com.dxvalley.crowdfunding.models.CampaignCategory;
+import org.springframework.http.ResponseEntity;
 
 public interface CampaignCategoryService {
-    CampaignCategory addCampaignCategory (CampaignCategory campaignCategory);
-    CampaignCategory editCampaignCategory (CampaignCategory campaignCategory);
+    ResponseEntity<?> addCampaignCategory (CampaignCategory campaignCategory);
+    ResponseEntity<?> editCampaignCategory (CampaignCategory campaignCategory,Long campaignCategoryId);
     List<CampaignCategory> getCampaignCategories ();
-    CampaignCategory getCampaignCategoryById(Long campaignCategoryId);
-    void deleteCampaignCategory( Long campaignCategoryId);
+    ResponseEntity<?> getCampaignCategoryById(Long campaignCategoryId);
+    ResponseEntity<?> deleteCampaignCategory(Long campaignCategoryId);
 }
