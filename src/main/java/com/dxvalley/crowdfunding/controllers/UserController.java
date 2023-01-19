@@ -31,7 +31,6 @@ public class UserController {
   private final PasswordEncoder passwordEncoder;
   private final UserRegistrationService registrationService;
 
-
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -64,7 +63,7 @@ public class UserController {
   public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
     var user = userRepository.findByUserId(userId);
     if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find this user!");
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this user!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity<>(user, HttpStatus.OK);
@@ -83,6 +82,7 @@ public class UserController {
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody Users tempUser) {
+
     return registrationService.register(tempUser);
   }
 
@@ -97,7 +97,6 @@ public class UserController {
     if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
-
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
     user.setRoles(tempUser.getRoles() != null
@@ -107,6 +106,10 @@ public class UserController {
             .collect(Collectors.toList()));
 
     user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
+
+    user.setBiography(tempUser.getBiography() != null ? tempUser.getBiography() : user.getBiography());
+
+    user.setWebsite(tempUser.getWebsite() != null ? tempUser.getWebsite() : user.getWebsite());
 
     user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
         : passwordEncoder.encode(user.getPassword()));
@@ -124,11 +127,16 @@ public class UserController {
   
       Users user = userRepository.findByUsername(userName);
 
+      if (user == null){
+        ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+      }
+
       if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
         user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+        System.out.println("password reset");
       }else{
         ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
-      
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
       }
       user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
@@ -147,6 +155,8 @@ public class UserController {
     if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
+
+     user.getUserId();
     this.userRepository.deleteById(userId);
 
     return new ResponseEntity<>("Deleted", HttpStatus.OK);

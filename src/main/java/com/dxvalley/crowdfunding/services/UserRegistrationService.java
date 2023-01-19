@@ -54,9 +54,11 @@ public class UserRegistrationService {
                 confirmationToken);
 
         String link = "http://localhost:9000/api/v1/registration/confirm?token=" + token;
-        emailSender.send(
-                tempUser.getUsername(),
-                buildEmail(tempUser.getFullName(), link));
+//        emailSender.send(
+//                tempUser.getUsername(),
+//                buildEmail(tempUser.getFullName(), link));
+
+        System.out.println("email sent");
 
         return new ResponseEntity<>(
                 token,
