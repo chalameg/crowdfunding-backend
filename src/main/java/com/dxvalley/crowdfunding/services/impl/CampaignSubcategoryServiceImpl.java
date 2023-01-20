@@ -2,6 +2,7 @@ package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
@@ -9,12 +10,11 @@ import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 
 @Service
+@AllArgsConstructor
 public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryService {
     private final CampaignSubCategoryRepository campaignSubCategoryRepository;
 
-    public CampaignSubcategoryServiceImpl(CampaignSubCategoryRepository campaignSubCategoryRepository) {
-        this.campaignSubCategoryRepository = campaignSubCategoryRepository;
-    }
+    
     @Override
     public CampaignSubCategory addCampaignSubCategory(CampaignSubCategory campaignSubCategory) {
         return this.campaignSubCategoryRepository.save(campaignSubCategory);
