@@ -3,27 +3,23 @@ package com.dxvalley.crowdfunding.models;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "Users_email_unique",
+                columnNames = "username"
+        )
+})
 @Getter
 @Setter
 @RequiredArgsConstructor
@@ -36,7 +32,6 @@ public class Users {
     private String biography;
     private String website;
     private String password;
-    private Boolean emailVerified;
     private String createdAt;
     private String deletedAt;
     private Boolean isEnabled;
@@ -54,21 +49,19 @@ public class Users {
     private Campaign campaigns;
 
     public Users( String username, String password, String fullName, String website,
-        String biography, Boolean emailVerified, String createdAt, String deletedAt, Boolean isEnabled) {
+                  String biography, String createdAt, String deletedAt, Boolean isEnabled) {
         this.password = new BCryptPasswordEncoder().encode(password);
         this.fullName = fullName;
         this.username= username;
         this.website= website;
         this.biography= biography;
-        this.emailVerified= emailVerified;
         this.createdAt=createdAt;
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
     }
 
-
     public Users orElseThrow(Object object) {
         return null;
     }
-    
+
 }

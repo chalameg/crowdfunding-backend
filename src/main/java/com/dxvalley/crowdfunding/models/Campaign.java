@@ -50,7 +50,6 @@ public class Campaign {
     private CampaignCategory campaignCategory;
 
 
-
     @Column(nullable = false, length = 512)
     @NotBlank(message = "Campaign title cannot be empty!")
     private String title;

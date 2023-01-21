@@ -1,31 +1,21 @@
 package com.dxvalley.crowdfunding.controllers;
 
 import java.nio.file.AccessDeniedException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.dxvalley.crowdfunding.models.Role;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
+import com.dxvalley.crowdfunding.services.UserRegistrationService;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +29,7 @@ public class UserController {
   private final UserRepository userRepository;
   private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
+  private final UserRegistrationService registrationService;
 
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -54,9 +45,10 @@ public class UserController {
   @GetMapping("/getUsers")
   List<Users> getUsers() {
     if (isSysAdmin()) {
-      return this.userRepository.findAll(Sort.by("username"));
+      return this.userRepository.findAll();
     }
-    var users = this.userRepository.findAll(Sort.by("username"));
+    var users = this.userRepository.findAll();
+
     users.removeIf(user -> {
       var containsAdmin = false;
       for (var role : user.getRoles()) {
@@ -71,10 +63,9 @@ public class UserController {
   public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
     var user = userRepository.findByUserId(userId);
     if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find this user!");
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this user!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
@@ -86,27 +77,18 @@ public class UserController {
       ApiResponse response = new ApiResponse("error", "Cannot find user with this phone number/email!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
   @PostMapping("/register")
-  public ResponseEntity<ApiResponse> register(@RequestBody Users tempUser) {
-    var user = userRepository.findByUsername(tempUser.getUsername());
-    if (user != null) {
-      ApiResponse response = new ApiResponse("error", "user already exists");
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+  public ResponseEntity<?> register(@RequestBody Users tempUser) {
 
-    List<Role> roles = new ArrayList<Role>(1);
-    roles.add(this.roleRepo.findByRoleName("user"));
-    tempUser.setRoles(roles);
-    tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
-    userRepository.save(tempUser);
-    // send email verification
+    return registrationService.register(tempUser);
+  }
 
-    ApiResponse response = new ApiResponse("success", "user created successfully!");
-    return new ResponseEntity<>(response, HttpStatus.OK);
+  @GetMapping(path = "confirm")
+  public ResponseEntity<?> confirmUser(@RequestParam("token") String token) {
+    return registrationService.confirmToken(token);
   }
 
   @PutMapping("/edit/{userId}")
@@ -115,7 +97,6 @@ public class UserController {
     if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
-
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
     user.setRoles(tempUser.getRoles() != null
@@ -125,6 +106,10 @@ public class UserController {
             .collect(Collectors.toList()));
 
     user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
+
+    user.setBiography(tempUser.getBiography() != null ? tempUser.getBiography() : user.getBiography());
+
+    user.setWebsite(tempUser.getWebsite() != null ? tempUser.getWebsite() : user.getWebsite());
 
     user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
         : passwordEncoder.encode(user.getPassword()));
@@ -142,11 +127,16 @@ public class UserController {
   
       Users user = userRepository.findByUsername(userName);
 
+      if (user == null){
+        ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+      }
+
       if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
         user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+        System.out.println("password reset");
       }else{
         ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
-      
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
       }
       user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
@@ -165,6 +155,8 @@ public class UserController {
     if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
+
+     user.getUserId();
     this.userRepository.deleteById(userId);
 
     return new ResponseEntity<>("Deleted", HttpStatus.OK);

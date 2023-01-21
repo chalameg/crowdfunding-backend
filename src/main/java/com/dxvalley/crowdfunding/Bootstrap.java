@@ -19,29 +19,29 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "database", name = "seed", havingValue = "true")
 public class Bootstrap {
 
-   Role admin = new Role("admin", "System Administrator");
-   Role sysAdmin = new Role("sysAdmin", "Highest Level System Administrator");
-   Role user = new Role("user", "crowdfunding Application User");
-   Role vetter = new Role("vetter", "funding campaigns vetter");
+    Role admin = new Role("admin", "System Administrator");
+    Role sysAdmin = new Role("sysAdmin", "Highest Level System Administrator");
+    Role user = new Role("user", "crowdfunding Application User");
+    Role vetter = new Role("vetter", "funding campaigns vetter");
 
-   Users users = new Users("chalamegersa5@gmail.com", "1234", "Chala Megersa", "", "", true, "", "", true);
-   Collection<Role> roles = new ArrayList<>();
+    Users users = new Users("chalamegersa5@gmail.com", "1234", "Chala Megersa", "", "",  "", "", true);
+    Collection<Role> roles = new ArrayList<>();
 
-   void setUp () {
-       roles.add(admin);
-       roles.add(sysAdmin);
-       users.setRoles(roles);
-   }
+    void setUp () {
+        roles.add(admin);
+        roles.add(sysAdmin);
+        users.setRoles(roles);
+    }
 
-   @Bean
-   CommandLineRunner initDatabase(UserRepository userRepository, RoleRepository roleRepository) {
-       setUp();
-       return args -> {
-           log.info("Preloading " + roleRepository.save(admin));
-           log.info("Preloading " + roleRepository.save(sysAdmin));
-           log.info("Preloading " + userRepository.save(users));
-           log.info("Preloading " + roleRepository.save(vetter));
-           log.info("Preloading " + roleRepository.save(user));
-       };
-   }
+    @Bean
+    CommandLineRunner initDatabase(UserRepository userRepository, RoleRepository roleRepository) {
+        setUp();
+        return args -> {
+            log.info("Preloading " + roleRepository.save(admin));
+            log.info("Preloading " + roleRepository.save(sysAdmin));
+            log.info("Preloading " + userRepository.save(users));
+            log.info("Preloading " + roleRepository.save(vetter));
+            log.info("Preloading " + roleRepository.save(user));
+        };
+    }
 }
