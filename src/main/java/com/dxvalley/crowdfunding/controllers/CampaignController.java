@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;

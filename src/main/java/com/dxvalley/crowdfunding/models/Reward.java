@@ -24,7 +24,6 @@ public class Reward {
     private String amountToCollect;
     private String deliveryTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
 	private Campaign campaign;
-
 }

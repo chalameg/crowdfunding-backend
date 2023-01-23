@@ -27,7 +27,7 @@ public class CampaignCategoryController {
     return campaignCategoryService.getCampaignCategories();
   }
   @GetMapping("/{campaignCategoryId}")
-  ResponseEntity getCampaignCategory(@PathVariable Long campaignCategoryId) {
+  ResponseEntity<?> getCampaignCategory(@PathVariable Long campaignCategoryId) {
     return campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
   }
 

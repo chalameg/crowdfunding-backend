@@ -1,8 +1,5 @@
 package com.dxvalley.crowdfunding.exceptions;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,7 +14,6 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @Nullable
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        // TODO Auto-generated method stub
 
         // Map<String, Object> responseBody = new LinkedHashMap<>();
         // responseBody.put("timestamp", new Date());

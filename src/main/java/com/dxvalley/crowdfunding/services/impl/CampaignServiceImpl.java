@@ -41,7 +41,6 @@ public class CampaignServiceImpl implements CampaignService {
     }
     @Override
     public List<Campaign> findCampaignsByOwner(String owner) {
-        // TODO Auto-generated method stub
         return campaignRepository.findCampaignsByOwner(owner);
     }
     

@@ -32,16 +32,16 @@ public class RewardController {
     this.campaignService = campaignService;
   }
 
-  @GetMapping
-  List<Reward> getRewards() {
-    return this.rewardService.getRewards();
+  @GetMapping("/getByCampaignId/{campaignId}")
+  ResponseEntity<?> getRewards(@PathVariable Long campaignId) {
+    System.out.println(">>>>>>>>>>>> "+ rewardService.findRewardsByCampaignId(campaignId).get(0).getDescription());
+    return new ResponseEntity<>(this.rewardService.findRewardsByCampaignId(campaignId), HttpStatus.OK);
   }
 
   @GetMapping("/{rewardId}")
   ResponseEntity<?> getReward(@PathVariable Long rewardId) {
     Reward reward;
       try{
-
         reward = rewardService.getRewardById(rewardId);
       }catch(Exception e){
         e.printStackTrace();
@@ -67,7 +67,7 @@ public class RewardController {
       return new ResponseEntity<>(res, HttpStatus.OK);
   }
 
-  @PutMapping("/{ewardId}")
+  @PutMapping("/{rewardId}")
   ResponseEntity<?> editReward(@RequestBody Reward reward, @PathVariable Long rewardId) {
 
       Reward tempReward = this.rewardService.getRewardById(rewardId);

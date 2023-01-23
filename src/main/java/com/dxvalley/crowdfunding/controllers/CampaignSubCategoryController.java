@@ -2,7 +2,6 @@ package com.dxvalley.crowdfunding.controllers;
 
 import java.util.List;
 
-import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,6 @@ import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 @RequestMapping("/api/campaignSubCategory")
 public class CampaignSubCategoryController {
   private final CampaignSubCategoryService campaignSubCategoryService;
-  private final CampaignCategoryService campaignCategoryService;
 
   @GetMapping("/getSubCategories")
   List<CampaignSubCategory> getCampaignSubcategories() {
@@ -42,7 +40,6 @@ public class CampaignSubCategoryController {
 
   @PostMapping("/add")
   ResponseEntity<?> addCampaignSubCategory(@RequestBody CampaignSubCategory tempCampaignSubCategories) {
-    //TODO: check existence of category before adding subcategory
     var campaignSubCategories =  campaignSubCategoryService.addCampaignSubCategory(tempCampaignSubCategories);
       return new ResponseEntity<>(campaignSubCategories, HttpStatus.OK);
   }
@@ -66,7 +63,7 @@ public class CampaignSubCategoryController {
             tempSubCampaignCategory.getDescription() != null && tempSubCampaignCategory.getDescription().length() > 0 ?
                     tempSubCampaignCategory.getDescription() :
                     campaignSubCategory.getDescription());
-    //TODO: check existence of category before updating subcategory
+                    
     campaignSubCategory.setCategory(
             tempSubCampaignCategory.getCategory() != null ?
                     tempSubCampaignCategory.getCategory() :
