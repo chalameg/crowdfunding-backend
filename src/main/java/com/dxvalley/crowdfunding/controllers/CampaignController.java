@@ -113,7 +113,7 @@ public class CampaignController {
       campaign.setGoalAmount(goalAmount);
       campaign.setDecription(description);
       campaign.setRisks(risks);
-      campaign.setReward(null);
+      // campaign.setRewards(null);
       campaign.setOwner(owner);
       campaign.setIsEnabled(false);
       campaign.setDateCreated(dateFormat.format(currentDate));  

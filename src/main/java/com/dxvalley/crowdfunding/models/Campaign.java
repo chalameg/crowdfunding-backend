@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -29,9 +30,8 @@ public class Campaign {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long campaignId;
 
-    //campaign reward
-    @OneToOne(cascade = CascadeType.ALL)
-    private Reward reward;
+    @Transient
+    private List<Reward> rewards;
 
     //campaign payment
     @OneToOne(cascade = CascadeType.ALL)

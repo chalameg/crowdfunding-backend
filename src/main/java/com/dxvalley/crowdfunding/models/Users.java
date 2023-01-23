@@ -45,8 +45,8 @@ public class Users {
     private Address address;
 
     //user campaign
-    @Transient
-    private Campaign campaigns;
+    @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
+    private List<Campaign> campaigns;
 
     public Users( String username, String password, String fullName, String website,
                   String biography, String createdAt, String deletedAt, Boolean isEnabled) {

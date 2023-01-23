@@ -12,9 +12,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
+import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.UserRegistrationService;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +32,7 @@ public class UserController {
   private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
   private final UserRegistrationService registrationService;
+  private final CampaignService campaignService;
 
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -63,9 +66,14 @@ public class UserController {
   public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
     var user = userRepository.findByUserId(userId);
     if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find user with this user!");
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this user ID!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    List<Campaign> campaigns = campaignService.findCampaignsByOwner(user.getUsername());
+
+    user.setCampaigns(campaigns);
+    
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 

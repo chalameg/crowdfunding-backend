@@ -1,12 +1,9 @@
 package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
-
 import org.springframework.stereotype.Service;
-
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.FundingTypeRepository;
-
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 
 @Service
@@ -17,6 +14,7 @@ public class FundingTypeServiceImpl implements FundingTypeService{
     public FundingTypeServiceImpl(FundingTypeRepository fundingTypeRepository) {
         this.fundingTypeRepository = fundingTypeRepository;
     }
+
     @Override
     public FundingType addFundingType(FundingType fundingType) {
         return this.fundingTypeRepository.save(fundingType);
@@ -41,5 +39,4 @@ public class FundingTypeServiceImpl implements FundingTypeService{
     public void deleteFundingType(Long fundingTypeId) {
         fundingTypeRepository.deleteById(fundingTypeId);
     }
-    
 }
