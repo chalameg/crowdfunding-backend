@@ -7,6 +7,7 @@ import com.dxvalley.crowdfunding.models.ConfirmationToken;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,7 +54,8 @@ public class UserRegistrationService {
         confirmationTokenService.saveConfirmationToken(
                 confirmationToken);
 
-        String link = "http://localhost:9000/api/v1/registration/confirm?token=" + token;
+
+        String link = "http://localhost:8181/api/users/confirm?token=" + token;
        emailSender.send(
                tempUser.getUsername(),
                buildEmail(tempUser.getFullName(), link));
@@ -92,8 +94,10 @@ public class UserRegistrationService {
         confirmationTokenService.setConfirmedAt(token);
         var username = confirmationToken.getUser().getUsername();
         userRepository.enableUser(username);
+
+        var result = userRepository.findIsEnabled(username);
         return new ResponseEntity<>(
-                "Confirmed",
+                result,
                 HttpStatus.OK);
     }
 

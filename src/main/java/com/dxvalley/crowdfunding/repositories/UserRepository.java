@@ -1,4 +1,5 @@
 package com.dxvalley.crowdfunding.repositories;
+import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -27,4 +28,6 @@ public interface UserRepository extends JpaRepository<Users,Long>{
             "SET u.isEnabled = TRUE WHERE u.username = ?1")
     int enableUser(String username);
 
+    @Query("SELECT new Users(u.isEnabled) FROM Users u WHERE u.username = ?1 AND u.isEnabled = TRUE" )
+    Users findIsEnabled(String username);
 }
