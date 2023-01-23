@@ -72,7 +72,6 @@ public class UserController {
 
     List<Campaign> campaigns = campaignService.findCampaignsByOwner(user.getUsername());
 
-    user.setCampaigns(campaigns);
     
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
@@ -94,7 +93,7 @@ public class UserController {
     return registrationService.register(tempUser);
   }
 
-  @GetMapping(path = "confirm")
+  @GetMapping("/confirm")
   public ResponseEntity<?> confirmUser(@RequestParam("token") String token) {
     return registrationService.confirmToken(token);
   }

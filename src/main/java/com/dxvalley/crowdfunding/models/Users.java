@@ -36,7 +36,7 @@ public class Users {
     private Boolean isEnabled;
 
     //user roles
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     private Collection<Role> roles = new ArrayList<>();
 
     //user address
@@ -57,6 +57,10 @@ public class Users {
         this.createdAt=createdAt;
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
+    }
+
+    public Users(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
     }
 
     public Users orElseThrow(Object object) {
