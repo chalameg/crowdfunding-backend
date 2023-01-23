@@ -36,7 +36,7 @@ public class Users {
     private Boolean isEnabled;
 
     //user roles
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
     //user address
