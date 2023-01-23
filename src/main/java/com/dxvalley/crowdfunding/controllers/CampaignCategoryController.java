@@ -42,6 +42,7 @@ public class CampaignCategoryController {
   }
   @DeleteMapping("/{campaignCategoryId}")
   ResponseEntity<?> deleteCampaignCategory(@PathVariable Long campaignCategoryId) {
+    //TODO: fix "campaign_category" violates foreign key constraint
    return campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
   }
 }

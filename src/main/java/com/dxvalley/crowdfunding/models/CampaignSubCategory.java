@@ -1,20 +1,15 @@
 package com.dxvalley.crowdfunding.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+
 
 @Entity
 @Getter
 @Setter
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class CampaignSubCategory {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
@@ -23,5 +18,12 @@ public class CampaignSubCategory {
     private String description;
     
     @ManyToOne
-    private CampaignCategory category;
+    @JoinColumn(name ="campaignCategoryId")
+    private CampaignCategory campaignCategory;
+
+    public CampaignSubCategory(Long campaignSubCategoryId, String name, String description) {
+        this.campaignSubCategoryId = campaignSubCategoryId;
+        this.name = name;
+        this.description = description;
+    }
 }
