@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -94,7 +95,8 @@ public class UserController {
   }
 
   @GetMapping("/confirm")
-  public ResponseEntity<?> confirmUser(@RequestParam("token") String token) {
+  public String confirmUser(@RequestParam("token") String token) {
+
     return registrationService.confirmToken(token);
   }
 
