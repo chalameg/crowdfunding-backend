@@ -34,6 +34,7 @@ public class Users {
     private String createdAt;
     private String deletedAt;
     private Boolean isEnabled;
+    private String otp;
 
     //user roles
     @ManyToMany(fetch = FetchType.EAGER)
@@ -48,7 +49,7 @@ public class Users {
     private List<Campaign> campaigns;
 
     public Users( String username, String password, String fullName, String website,
-                  String biography, String createdAt, String deletedAt, Boolean isEnabled) {
+                  String biography, String createdAt, String deletedAt, String otp, Boolean isEnabled) {
         this.password = new BCryptPasswordEncoder().encode(password);
         this.fullName = fullName;
         this.username= username;
@@ -57,6 +58,7 @@ public class Users {
         this.createdAt=createdAt;
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
+        this.otp=otp;
     }
 
     public Users(Boolean isEnabled) {
