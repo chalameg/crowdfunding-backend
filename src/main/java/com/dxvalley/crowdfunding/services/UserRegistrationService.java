@@ -7,9 +7,6 @@ import com.dxvalley.crowdfunding.models.ConfirmationToken;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,18 +42,18 @@ public class UserRegistrationService {
         public ResponseEntity<?> register(Users tempUser) {
                 var user = userRepository.findUser(tempUser.getUsername());
 
-                if (user != null) 
+                if (user != null){
                         return new ResponseEntity<>("user already exists", HttpStatus.BAD_REQUEST);
-                
+                }
 
-                //validate email and phone number before registration
-                if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")){
-                        
-                        //validate email
-                }else{
-                        if(tempUser.getUsername().length() < 9){
+                // validate email and phone number before registration
+                if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
+
+                        // validate email
+                } else {
+                        if (tempUser.getUsername().length() < 9) {
                                 createUserResponse response = new createUserResponse("error",
-                                                        "Please Inter valid Mobile number!");
+                                                "Please Inter a valid Mobile number!");
                                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
                         }
                 }
@@ -98,7 +95,8 @@ public class UserRegistrationService {
                                 // String requestBody = "{\"Mobile\":\"251967434568\",\"Text\":\"154624\"}";
 
                                 String otp = getRandomNumberString();
-                                String requestBody = "{\"Mobile\":" +"\"" + tempUser.getUsername() + "\"" +",\"Text\":" + "\"" + otp + "\"" +"}";
+                                String requestBody = "{\"Mobile\":" + "\"" + tempUser.getUsername() + "\""
+                                                + ",\"Text\":" + "\"" + otp + "\"" + "}";
 
                                 System.out.println(requestBody);
                                 HttpEntity<String> request = new HttpEntity<String>(requestBody, headers);
@@ -141,25 +139,15 @@ public class UserRegistrationService {
 
                 if (confirmationToken == null) {
                         return "token not found";
-                        // new ResponseEntity<>(
-                        // "token not found ",
-                        // HttpStatus.BAD_REQUEST);
-
                 }
 
                 if (confirmationToken.getConfirmedAt() != null) {
                         return "email already confirmed";
-                        // new ResponseEntity<>(
-                        // "email already confirmed",
-                        // HttpStatus.BAD_REQUEST);
                 }
                 LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
                 if (expiredAt.isBefore(LocalDateTime.now())) {
                         return "token expired";
-                        // new ResponseEntity<>(
-                        // "token expired",
-                        // HttpStatus.BAD_REQUEST);
                 }
                 confirmationTokenService.setConfirmedAt(token);
                 var username = confirmationToken.getUser().getUsername();
