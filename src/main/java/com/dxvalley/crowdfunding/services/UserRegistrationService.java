@@ -7,7 +7,6 @@ import com.dxvalley.crowdfunding.models.ConfirmationToken;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -96,11 +95,6 @@ public class UserRegistrationService {
         confirmationTokenService.setConfirmedAt(token);
         var username = confirmationToken.getUser().getUsername();
         userRepository.enableUser(username);
-
-        var result = userRepository.findIsEnabled(username);
-//        return new ResponseEntity<>(
-//                result,
-//                HttpStatus.OK);
         return emailConfirmed(confirmationToken.getUser().getFullName());
     }
 
