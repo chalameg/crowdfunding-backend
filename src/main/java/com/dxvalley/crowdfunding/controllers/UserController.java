@@ -107,6 +107,10 @@ public class UserController {
 
     if(user.getOtp().equals(otp)){
       //make enable true here
+      user.setIsEnabled(true);
+
+      userRepository.save(user);
+      
       ApiResponse response = new ApiResponse("success", "Otp Confirmed.");
       return new ResponseEntity<>(response, HttpStatus.OK);
     }
