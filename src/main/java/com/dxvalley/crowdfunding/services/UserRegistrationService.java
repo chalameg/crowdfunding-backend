@@ -7,6 +7,9 @@ import com.dxvalley.crowdfunding.models.ConfirmationToken;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,10 +45,21 @@ public class UserRegistrationService {
 
         public ResponseEntity<?> register(Users tempUser) {
                 var user = userRepository.findUser(tempUser.getUsername());
-                if (user != null) {
-                        return new ResponseEntity<>(
-                                        "user already exists",
-                                        HttpStatus.BAD_REQUEST);
+
+                if (user != null) 
+                        return new ResponseEntity<>("user already exists", HttpStatus.BAD_REQUEST);
+                
+
+                //validate email and phone number before registration
+                if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")){
+                        
+                        //validate email
+                }else{
+                        if(tempUser.getUsername().length() < 9){
+                                createUserResponse response = new createUserResponse("error",
+                                                        "Please Inter valid Mobile number!");
+                                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+                        }
                 }
 
                 List<Role> roles = new ArrayList<Role>(1);
@@ -55,6 +69,7 @@ public class UserRegistrationService {
                 tempUser.setIsEnabled(false);
                 userRepository.save(tempUser);
 
+                // if user used email send email else send message to phone
                 String token = UUID.randomUUID().toString();
                 if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
 
@@ -63,8 +78,6 @@ public class UserRegistrationService {
                                         LocalDateTime.now(),
                                         LocalDateTime.now().plusMinutes(15),
                                         tempUser);
-
-                        // if user used email send email else send message to phone
 
                         confirmationTokenService.saveConfirmationToken(
                                         confirmationToken);
@@ -83,7 +96,7 @@ public class UserRegistrationService {
                                 HttpHeaders headers = new HttpHeaders();
                                 headers.setContentType(MediaType.APPLICATION_JSON);
 
-                                // String requestBody = "{\"Mobile\":\"+251967434568\",\"Text\":\"154624\"}";
+                                // String requestBody = "{\"Mobile\":\"251967434568\",\"Text\":\"154624\"}";
 
                                 String otp = getRandomNumberString();
                                 String requestBody = "{\"Mobile\":" +"\"" + tempUser.getUsername() + "\"" +",\"Text\":" + "\"" + otp + "\"" +"}";
@@ -104,7 +117,7 @@ public class UserRegistrationService {
                                         return new ResponseEntity<>(response, HttpStatus.OK);
                                 } else {
                                         createUserResponse response = new createUserResponse("error",
-                                                        "Please insert valid Mobile number!");
+                                                        "Please inter valid Mobile number!");
                                         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
                                 }
 
