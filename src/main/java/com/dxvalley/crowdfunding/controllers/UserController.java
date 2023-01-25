@@ -71,7 +71,7 @@ public class UserController {
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    List<Campaign> campaigns = campaignService.findCampaignsByOwner(user.getUsername());
+    List<Campaign> campaigns = campaignService.getCampaignsByOwner(user.getUsername());
 
     
     return new ResponseEntity<>(user, HttpStatus.OK);
@@ -176,16 +176,13 @@ public class UserController {
     
   }
 
-  @DeleteMapping("/delete/{userId}")
-  ResponseEntity<?> deleteUser(@PathVariable Long userId) {
-    Users user = userRepository.findByUserId(userId);
+  @DeleteMapping("/delete/{username}")
+  ResponseEntity<?> deleteUser(@PathVariable String username) {
+    Users user = userRepository.findUser(username);
     if (user == null) {
-      return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>("Cannot find user with this username!", HttpStatus.BAD_REQUEST);
     }
-
-     user.getUserId();
-    this.userRepository.deleteById(userId);
-
+    this.userRepository.deleteById(user.getUserId());
     return new ResponseEntity<>("Deleted", HttpStatus.OK);
   }
 

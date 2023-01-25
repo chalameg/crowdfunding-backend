@@ -13,7 +13,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -153,10 +152,6 @@ public class UserRegistrationService {
                 var username = confirmationToken.getUser().getUsername();
                 userRepository.enableUser(username);
 
-                var result = userRepository.findIsEnabled(username);
-                // return new ResponseEntity<>(
-                // result,
-                // HttpStatus.OK);
                 return emailConfirmed(confirmationToken.getUser().getFullName());
         }
 
