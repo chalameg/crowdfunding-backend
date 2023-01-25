@@ -24,7 +24,7 @@ public class Bootstrap {
     Role user = new Role("user", "crowdfunding Application User");
     Role vetter = new Role("vetter", "funding campaigns vetter");
 
-    Users users = new Users("chalamegersa5@gmail.com", "1234", "Chala Megersa", "", "",  "", "", true);
+    Users users = new Users("chalamegersa5@gmail.com", "1234", "Chala Megersa", "", "",  "", "", "", true);
     Collection<Role> roles = new ArrayList<>();
 
     void setUp () {

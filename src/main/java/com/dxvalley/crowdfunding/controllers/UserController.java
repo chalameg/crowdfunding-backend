@@ -100,6 +100,24 @@ public class UserController {
     return registrationService.confirmToken(token);
   }
 
+  @PostMapping("/confirmPhone/{phoneNumber}")
+  public ResponseEntity<?> confirmOTP(@RequestParam("otp") String otp, @PathVariable String phoneNumber){
+
+    Users user = userRepository.findUserByUsername(phoneNumber);
+
+    if(user.getOtp().equals(otp)){
+      //make enable true here
+      user.setIsEnabled(true);
+
+      userRepository.save(user);
+      
+      ApiResponse response = new ApiResponse("success", "Otp Confirmed.");
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    ApiResponse response = new ApiResponse("error", "Cannot confirm the otp provided.");
+    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+  }
+
   @PutMapping("/edit/{userId}")
   public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {
     Users user = userRepository.findByUserId(userId);
