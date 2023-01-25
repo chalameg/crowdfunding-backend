@@ -43,7 +43,6 @@ public class Users {
     //user address
     @OneToOne(cascade = CascadeType.ALL)
     private Address address;
-
     //user campaign
     @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
     private List<Campaign> campaigns;
@@ -59,10 +58,6 @@ public class Users {
         this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
         this.otp=otp;
-    }
-
-    public Users(Boolean isEnabled) {
-        this.isEnabled = isEnabled;
     }
 
     public Users orElseThrow(Object object) {

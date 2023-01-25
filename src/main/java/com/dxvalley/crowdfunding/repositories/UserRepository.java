@@ -23,6 +23,7 @@ public interface UserRepository extends JpaRepository<Users,Long>{
 
     @Query("SELECT u FROM Users u WHERE u.userId = ?1 AND u.isEnabled = TRUE")
     Users findByUserId (Long userId);
+
     @Query("SELECT u FROM Users u WHERE u.isEnabled = TRUE")
     List<Users> findAll();
 
@@ -31,7 +32,4 @@ public interface UserRepository extends JpaRepository<Users,Long>{
     @Query("UPDATE Users u " +
             "SET u.isEnabled = TRUE WHERE u.username = ?1")
     int enableUser(String username);
-
-    @Query("SELECT new Users(u.isEnabled) FROM Users u WHERE u.username = ?1 AND u.isEnabled = TRUE" )
-    Users findIsEnabled(String username);
 }
