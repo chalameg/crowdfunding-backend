@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
@@ -71,9 +69,6 @@ public class UserController {
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    List<Campaign> campaigns = campaignService.getCampaignsByOwner(user.getUsername());
-
-    
     return new ResponseEntity<>(user, HttpStatus.OK);
   }
 
