@@ -5,7 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
+import com.dxvalley.crowdfunding.models.CampaignSubCategory;
+import com.dxvalley.crowdfunding.repositories.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,7 +24,6 @@ import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
-import com.dxvalley.crowdfunding.models.CampaignCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 
 import lombok.AllArgsConstructor;
@@ -30,154 +31,146 @@ import lombok.Getter;
 import lombok.Setter;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/campaigns")
 public class CampaignController {
-  private final CampaignService campaignService;
-  private final FileUploadService fileUploadService;
-  private final FundingTypeService fundingTypeService;
+    private final CampaignService campaignService;
+    private final FileUploadService fileUploadService;
+    private final FundingTypeService fundingTypeService;
+    private final PaymentRepository paymentRepository;
+    private final CollaboratorRepository collaboratorRepository;
+    private final RewardRepository rewardRepository;
+    private final CampaignSubCategoryRepository campaignSubCategoryRepository;
+    private final CampaignRepository campaignRepository;
 
-  private final CampaignCategoryRepository campaignCategoryRepository;
-  
 
-  public CampaignController(CampaignService campaignService, FileUploadService fileUploadService,
-      FundingTypeService fundingTypeService, CampaignCategoryRepository campaignCategoryRepository) {
-    this.campaignService = campaignService;
-    this.fileUploadService = fileUploadService;
-    this.fundingTypeService = fundingTypeService;
-    this.campaignCategoryRepository = campaignCategoryRepository;
-  }
+    @GetMapping("/getCampaigns")
+    List<Campaign> getCampaigns() {
+        return this.campaignService.getCampaigns();
+    }
 
-  @GetMapping
-  List<Campaign> getCampaigns() {
-    return this.campaignService.getCampaigns();
-  }
+    @GetMapping("getCampaignById/{campaignId}")
+    Campaign getCampaign(@PathVariable Long campaignId) {
+        var campaign =  campaignService.getCampaignById(campaignId);
+        var payment =  paymentRepository.findPaymentByCampaignId(campaignId);
+        var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
+        var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
+        campaign.setPayment(payment);
+        campaign.setCollaborators(collaborators);
+        campaign.setRewards(rewards);
 
-  @GetMapping("/{campaignId}")
-  Campaign getCampaign(@PathVariable Long campaignId) {
-        Campaign Campaign = campaignService.getCampaignById(campaignId);
-       
-        return Campaign ;
-  }
+        return campaign;
+    }
 
-  @GetMapping("/getCampaigns/{owner}")
-  List<Campaign> getUserCampaigns(@PathVariable String owner) {
-        List<Campaign> Campaign = campaignService.findCampaignsByOwner(owner);
-       
-        return Campaign ;
-  }
+    @GetMapping("/getCampaignByOwner/{owner}")
+    List<Campaign> getUserCampaigns(@PathVariable String owner) {
+        return campaignService.findCampaignsByOwner(owner);
+    }
 
-  @PostMapping("/{fundingTypeId}/{campaignCategoryId}")
-  public ResponseEntity<?> addCampaign(@RequestParam("title") String title,
-    @RequestParam("shortDescription") String shortDescription,
-    @RequestParam(required = false) String city,
-    @RequestParam(required = false) String goalAmount,
-    @RequestParam(required = false) String campaignDuration,
-    @RequestParam(required = false) MultipartFile campaignImage,
-    @RequestParam(required = false) String description,
-    @RequestParam("owner") String owner,
-    @RequestParam(required = false) String risks,
-    @PathVariable Long fundingTypeId,
-    @PathVariable Long campaignCategoryId
-      // @RequestParam("campaignVideo") MultipartFile campaignVideo
+    @PostMapping("/add")
+    public ResponseEntity<?> addCampaign(
+            @RequestParam() String title,
+            @RequestParam() String city,
+            @RequestParam() String owner,
+            @RequestParam() Long fundingTypeId,
+            @RequestParam() Long campaignSubCategoryId) {
+
+        Campaign campaign = new Campaign();
+
+        FundingType fundingType = fundingTypeService.getFundingTypeById(fundingTypeId);
+        CampaignSubCategory campaignSubCategory =  campaignSubCategoryRepository
+                .findCampaignSubCategoryByCampaignSubCategoryId(campaignSubCategoryId);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentDate = new Date();
+
+        campaign.setTitle(title);
+        campaign.setCity(city);
+        campaign.setOwner(owner);
+        campaign.setCampaignSubCategory(campaignSubCategory);
+        campaign.setFundingType(fundingType);
+        campaign.setIsEnabled(false);
+        campaign.setDateCreated(dateFormat.format(currentDate));
+        Campaign res = campaignService.addCampaign(campaign);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @PutMapping("edit/{campaignId}")
+    ResponseEntity<?> editCampaign(
+            @PathVariable Long campaignId,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Long fundingTypeId,
+            @RequestParam(required = false) Long campaignSubCategoryId,
+            @RequestParam(required = false) String shortDescription,
+            @RequestParam(required = false) String goalAmount,
+            @RequestParam(required = false) String campaignDuration,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Boolean isEnabled,
+            @RequestParam(required = false) String risks,
+            @RequestParam(required = false) String projectType,
+
+            @RequestParam(required = false) MultipartFile campaignImage,
+            @RequestParam(required = false) MultipartFile campaignVideo
     ) {
-      
-      String imageUrl;
-      // String campaignVideoUrl;
-      Campaign campaign = new Campaign();
 
-      if(campaignImage != null){
-        try {
-          imageUrl = fileUploadService.uploadFile(campaignImage);
-          // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
-        } catch (Exception e) {
-          ApiResponse response = new ApiResponse("error", "Bad file size or format!");
-    
-          return new ResponseEntity<>(response, HttpStatus.OK);
+        Campaign campaign = this.campaignService.getCampaignById(campaignId);
+        String imageUrl;
+        String videoUrl;
+        if(campaignImage != null){
+            try {
+                imageUrl = fileUploadService.uploadFile(campaignImage);
+            } catch (Exception e) {
+                ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+        }else{
+            imageUrl = null;
         }
-      }else{
-        imageUrl = null;
-      }
 
-      FundingType fundingType = fundingTypeService.getFundingTypeById(fundingTypeId);
-      CampaignCategory campaignCategory =   campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
-      
-      DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-      Date currentDate = new Date();
-      campaign.setImageUrl(imageUrl);
-      // campaign.setVideoUrl(campaignVideoUrl);
-      campaign.setTitle(title);
-      campaign.setShortDescription(shortDescription);
-      campaign.setCity(city);
-      campaign.setCampaignDuration(campaignDuration);
-      campaign.setGoalAmount(goalAmount);
-      campaign.setDecription(description);
-      campaign.setRisks(risks);
-      // campaign.setRewards(null);
-      campaign.setOwner(owner);
-      campaign.setIsEnabled(false);
-      campaign.setDateCreated(dateFormat.format(currentDate));  
-      campaign.setCampaignCategory(campaignCategory);
-      campaign.setFundingType(fundingType);
-
-      Campaign res = campaignService.addCampaign(campaign);
-
-      return new ResponseEntity<>(res, HttpStatus.OK);
-  }
-
-  @PutMapping("/{campaignId}")
-  ResponseEntity<?> editCampaign(@RequestParam(required = false) String title,
-    @RequestParam(required = false) String shortDescription,
-    @RequestParam(required = false) String city,
-    @RequestParam(required = false) String goalAmount,
-    @RequestParam(required = false) String campaignDuration,
-    @RequestParam(required = false) MultipartFile campaignImage,
-    @RequestParam(required = false) String description,
-    @RequestParam(required = false) Boolean isEnabled,
-    @RequestParam(required = false) String risks, @PathVariable Long campaignId) {
-
-      Campaign campaign = this.campaignService.getCampaignById(campaignId);
-      String imageUrl;
-      // String campaignVideoUrl;
-      if(campaignImage != null){
-        try {
-          imageUrl = fileUploadService.uploadFile(campaignImage);
-          // campaignVideoUrl = fileUploadService.uploadFileVideo(campaignVideo);
-        } catch (Exception e) {
-          ApiResponse response = new ApiResponse("error", "Bad file size or format!");
-    
-          return new ResponseEntity<>(response, HttpStatus.OK);
+        if(campaignVideo != null){
+            try {
+                videoUrl = fileUploadService.uploadFileVideo(campaignVideo);
+            } catch (Exception e) {
+                ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+        }else{
+            videoUrl = null;
         }
-      }else{
-        imageUrl = null;
-      }
 
-    campaign.setTitle(title != null ? title : campaign.getTitle());
-    campaign.setShortDescription(shortDescription != null ? shortDescription : campaign.getShortDescription());
-    campaign.setCity(city != null ? city : campaign.getCity());
-    campaign.setImageUrl(imageUrl != null ? imageUrl : campaign.getImageUrl());
-    // campaign.setVideoLink(tempCampaign.getVideoLink() != null ? tempCampaign.getVideoLink() : campaign.getVideoLink());
-    campaign.setGoalAmount(goalAmount != null ? goalAmount : campaign.getGoalAmount());
-    campaign.setCampaignDuration(campaignDuration != null ? campaignDuration : campaign.getCampaignDuration());
-    campaign.setRisks(risks != null ? risks : campaign.getRisks());
-    campaign.setDecription(description != null ? description : campaign.getDecription());
-    campaign.setIsEnabled(isEnabled != null ? isEnabled : campaign.getIsEnabled());
+        FundingType fundingType = fundingTypeService.getFundingTypeById(fundingTypeId);
+        CampaignSubCategory campaignSubCategory =  campaignSubCategoryRepository
+                .findCampaignSubCategoryByCampaignSubCategoryId(campaignSubCategoryId);
 
-    campaignService.editCampaign(campaign);
+        campaign.setFundingType(fundingType != null? fundingType : campaign.getFundingType());
+        campaign.setCampaignSubCategory(campaignSubCategory != null? campaignSubCategory : campaign.getCampaignSubCategory());
 
-    return new ResponseEntity<>(campaign, HttpStatus.OK);
-  }
+        campaign.setTitle(title != null ? title : campaign.getTitle());
+        campaign.setShortDescription(shortDescription != null ? shortDescription : campaign.getShortDescription());
+        campaign.setCity(city != null ? city : campaign.getCity());
+        campaign.setProjectType(projectType != null? projectType : campaign.getProjectType());
+        campaign.setGoalAmount(goalAmount != null ? goalAmount : campaign.getGoalAmount());
+        campaign.setCampaignDuration(campaignDuration != null ? campaignDuration : campaign.getCampaignDuration());
+        campaign.setRisks(risks != null ? risks : campaign.getRisks());
+        campaign.setDescription(description != null ? description : campaign.getDescription());
+        campaign.setIsEnabled(isEnabled != null ? isEnabled : campaign.getIsEnabled());
 
-  @DeleteMapping("/{campaignId}")
-  ResponseEntity<?> deleteCampaign(@PathVariable Long campaignId) {
-    Campaign campaign = this.campaignService.getCampaignById(campaignId);
+        campaign.setImageUrl(imageUrl != null ? imageUrl : campaign.getImageUrl());
+        campaign.setVideoLink(videoUrl != null ? videoUrl : campaign.getVideoLink());
 
-    if(campaign == null) return new ResponseEntity<String>("Entry does not exist!", HttpStatus.BAD_REQUEST);
+        campaignService.editCampaign(campaign);
+        return new ResponseEntity<>(campaign, HttpStatus.OK);
+    }
 
-    campaignService.deleteCampaign(campaignId);
-
-    ApiResponse response = new ApiResponse("success", "Campaign Deleted successfully!");
-    return new ResponseEntity<>(response, HttpStatus.OK);
-  }
+    @DeleteMapping("/{campaignId}")
+    ResponseEntity<?> deleteCampaign(@PathVariable Long campaignId) {
+        Campaign campaign = this.campaignService.getCampaignById(campaignId);
+        if(campaign == null) return new ResponseEntity<String>("Entry does not exist!", HttpStatus.BAD_REQUEST);
+        campaignService.deleteCampaign(campaignId);
+        ApiResponse response = new ApiResponse("success", "Campaign Deleted successfully!");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }
 
@@ -186,6 +179,6 @@ public class CampaignController {
 @Setter
 @AllArgsConstructor
 class CampaignResponse {
-  Campaign Campaign;
-  String status;
+    Campaign Campaign;
+    String status;
 }
