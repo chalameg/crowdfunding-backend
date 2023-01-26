@@ -20,13 +20,16 @@ public class Collaborator {
     private Long collaboratorId;
     private boolean isCampaignCreator;
     private boolean isEnabled;
-
     @ManyToOne
     @JoinColumn(name = "userId") 
     Users users; 
  
     @ManyToOne 
     @JoinColumn(name = "campaignId") 
-    Campaign campaign; 
- 
+    Campaign campaign;
+
+    public Collaborator(Long collaboratorId, Users users) {
+        this.collaboratorId = collaboratorId;
+        this.users = users;
+    }
 }

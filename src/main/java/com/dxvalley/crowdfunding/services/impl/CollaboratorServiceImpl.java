@@ -44,7 +44,7 @@ public class CollaboratorServiceImpl implements CollaboratorService {
 
     @Override
     public List<Collaborator> findAllCollaboratorByCampaignCampaignId(Long campaignId) {
-        return collaboratorRepository.findAllCollaboratorByCampaignCampaignId(campaignId);
+        return collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
     }
     
     
