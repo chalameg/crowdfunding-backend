@@ -71,22 +71,39 @@ public class CollaboratorController {
       collaborator.setCampaignCreator(false);
       collaborator.setEnabled(false);
       var res =  collaboratorService.addCollaborator(collaborator);
-      System.out.println(res.getCollaboratorId());
-      String link = "http://localhost:8181/api/collaborators/accept/" + res.getCollaboratorId();
+      String link = "http://localhost:8181/api/collaborators/invitationDetail/"
+              + campaign.getCampaignId() + "/" + res.getCollaboratorId();
+
+      System.out.println(link);
+
       emailSender.send(
               inviteRequest.getInviterUsername(),
-              registrationService.buildEmailInvitation(user.getFullName(), link));
+              registrationService.buildEmailInvitation(
+                      user.getFullName(),
+                      user.getFullName(),
+                      campaign.getTitle(),
+                      link));
 
       ApiResponse response = new ApiResponse("success", "Invitation sent successfully!");
       return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-    @GetMapping("/accept/{collaboratorId}")
-    public ResponseEntity<?> acceptInvitation(@PathVariable Long collaboratorId){
+    @GetMapping("/invitationDetail/{campaignId}/{collaboratorId}")
+    public String invitationDetail(@PathVariable Long campaignId,@PathVariable Long collaboratorId){
+        Campaign campaign = campaignService.getCampaignById(campaignId);
+        String link = "http://localhost:8181/api/collaborators/acceptOrReject/" + collaboratorId;
+        return registrationService.invitationDetailPage(campaign,link);
+    }
+
+    @GetMapping("/acceptOrReject/{collaboratorId}/{flag}")
+    public String acceptInvitation(@PathVariable Long collaboratorId,@PathVariable Long flag){
+      if (flag==0){
+          return registrationService.invitationRejected();
+      }
     Collaborator collaborator = collaboratorService.getCollaboratorById(collaboratorId);
     collaborator.setEnabled(true);
     collaboratorService.editCollaborator(collaborator);
-    return new ResponseEntity<>("collaboration Accepted", HttpStatus.OK);
+    return registrationService.invitationAccepted();
     }
 
 
