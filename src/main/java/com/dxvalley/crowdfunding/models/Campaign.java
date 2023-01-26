@@ -27,25 +27,16 @@ public class Campaign {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long campaignId;
 
-    @Transient
-    private List<Reward> rewards;
-
-    //campaign payment
-    @OneToOne(cascade = CascadeType.ALL)
-    private Payment payment;
-
     //campaign Promotion
     @OneToOne(cascade = CascadeType.ALL)
     private Promotion promotion;
-
     //campaign FundingType
     @OneToOne(cascade = CascadeType.ALL)
     private FundingType fundingType;
 
-    //campaign CampaignCategory
+    //campaign CampaignSubCategory
     @OneToOne(cascade = CascadeType.ALL)
-    private CampaignCategory campaignCategory;
-
+    private CampaignSubCategory campaignSubCategory;
 
     @Column(nullable = false, length = 512)
     @NotBlank(message = "Campaign title cannot be empty!")
@@ -60,7 +51,7 @@ public class Campaign {
     private String campaignDuration;
 
    @Column(columnDefinition="TEXT")
-    private String decription;
+    private String description;
 
    @Column(columnDefinition="TEXT")
     private String risks;
@@ -75,5 +66,10 @@ public class Campaign {
 
     @Transient
     private List<Collaborator> collaborators;
+    @Transient
+    private Payment payment;
+    @Transient
+    private List<Reward> rewards;
+
 
 }

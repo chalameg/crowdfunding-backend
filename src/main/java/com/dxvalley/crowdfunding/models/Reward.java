@@ -1,11 +1,7 @@
 package com.dxvalley.crowdfunding.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -22,8 +18,17 @@ public class Reward {
     private String title;
     private String description;
     private String amountToCollect;
+    @JsonFormat(pattern="yyyy-MM-dd",shape = JsonFormat.Shape.STRING)
     private String deliveryTime;
 
     @ManyToOne
 	private Campaign campaign;
+
+    public Reward(Long rewardId, String title, String description, String amountToCollect, String deliveryTime) {
+        this.rewardId = rewardId;
+        this.title = title;
+        this.description = description;
+        this.amountToCollect = amountToCollect;
+        this.deliveryTime = deliveryTime;
+    }
 }

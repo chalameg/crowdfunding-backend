@@ -1,9 +1,6 @@
 package com.dxvalley.crowdfunding.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -16,7 +13,12 @@ public class Payment {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long paymentId;
-
     private String bankAccount;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Campaign campaign;
 
+    public Payment(Long paymentId, String bankAccount) {
+        this.paymentId = paymentId;
+        this.bankAccount = bankAccount;
+    }
 }
