@@ -26,7 +26,7 @@ public class RewardServiceImpl implements RewardService {
 
     @Override
     public List<Reward> findRewardsByCampaignId(Long campaignId) {
-        return this.rewardRepository.findRewardsByCampaignCampaignId(campaignId);
+        return this.rewardRepository.findRewardsByCampaignId(campaignId);
     }
 
     @Override

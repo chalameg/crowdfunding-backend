@@ -1,6 +1,7 @@
 package com.dxvalley.crowdfunding.controllers;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,68 +23,53 @@ import lombok.Getter;
 import lombok.Setter;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/rewards")
 public class RewardController {
   private final RewardService rewardService;
   private final CampaignService campaignService;
 
-  public RewardController(RewardService rewardService, CampaignService campaignService) {
-    this.rewardService = rewardService;
-    this.campaignService = campaignService;
-  }
-
   @GetMapping("/getByCampaignId/{campaignId}")
   ResponseEntity<?> getRewards(@PathVariable Long campaignId) {
-    System.out.println(">>>>>>>>>>>> "+ rewardService.findRewardsByCampaignId(campaignId).get(0).getDescription());
     return new ResponseEntity<>(this.rewardService.findRewardsByCampaignId(campaignId), HttpStatus.OK);
   }
 
-  @GetMapping("/{rewardId}")
+  @GetMapping("getRewardById/{rewardId}")
   ResponseEntity<?> getReward(@PathVariable Long rewardId) {
-    Reward reward;
-      try{
-        reward = rewardService.getRewardById(rewardId);
-      }catch(Exception e){
-        e.printStackTrace();
-        return new ResponseEntity<>("null", HttpStatus.BAD_REQUEST);
-      }
-       
-        return new ResponseEntity<>(reward, HttpStatus.OK) ;
+    Reward reward = rewardService.getRewardById(rewardId);
+    if(reward == null){
+      return new ResponseEntity<>("No Reward with this ID", HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(reward, HttpStatus.OK) ;
   }
 
-  @PostMapping("/{campaignId}")
-  public ResponseEntity<?> addReward(
-      @RequestBody Reward reward,
-      @PathVariable Long campaignId
-    ) {
-      
-
+  @PostMapping("add/{campaignId}")
+  public ResponseEntity<?> addReward(@RequestBody Reward reward,@PathVariable Long campaignId) {
       Campaign Campaign = campaignService.getCampaignById(campaignId);
-  
       reward.setCampaign(Campaign);
-
       Reward res = rewardService.addReward(reward);
-
       return new ResponseEntity<>(res, HttpStatus.OK);
   }
 
-  @PutMapping("/{rewardId}")
+  @PutMapping("edit/{rewardId}")
   ResponseEntity<?> editReward(@RequestBody Reward reward, @PathVariable Long rewardId) {
 
-      Reward tempReward = this.rewardService.getRewardById(rewardId);
+    Reward tempReward = this.rewardService.getRewardById(rewardId);
+
+    if (tempReward == null){
+      return new ResponseEntity<>("No reward with this Id", HttpStatus.OK);
+    }
       
     tempReward.setTitle(reward.getTitle() != null ? reward.getTitle() : tempReward.getTitle());
     tempReward.setDescription(reward.getDescription() != null ? reward.getDescription() : tempReward.getDescription());
-
     tempReward.setAmountToCollect(reward.getAmountToCollect() != null ? reward.getAmountToCollect() : tempReward.getAmountToCollect());
     tempReward.setDeliveryTime(reward.getDeliveryTime() != null ? reward.getDeliveryTime() : tempReward.getDeliveryTime());
 
     rewardService.editReward(tempReward);
-
     return new ResponseEntity<>(tempReward, HttpStatus.OK);
   }
 
-  @DeleteMapping("/{RewardId}")
+  @DeleteMapping("delete/{rewardId}")
   ResponseEntity<?> deleteReward(@PathVariable Long rewardId) {
     Reward Reward = this.rewardService.getRewardById(rewardId);
 
