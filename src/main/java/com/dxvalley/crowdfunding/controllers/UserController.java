@@ -105,7 +105,7 @@ public class UserController {
       user.setIsEnabled(true);
 
       userRepository.save(user);
-      
+
       ApiResponse response = new ApiResponse("success", "Otp Confirmed.");
       return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -122,9 +122,9 @@ public class UserController {
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
     user.setRoles(tempUser.getRoles() != null
-        ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+            ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
             .collect(Collectors.toList())
-        : user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+            : user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
             .collect(Collectors.toList()));
 
     user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
@@ -134,7 +134,7 @@ public class UserController {
     user.setWebsite(tempUser.getWebsite() != null ? tempUser.getWebsite() : user.getWebsite());
 
     user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
-        : passwordEncoder.encode(user.getPassword()));
+            : passwordEncoder.encode(user.getPassword()));
 
     Users response = userRepository.save(user);
 
@@ -145,30 +145,30 @@ public class UserController {
 
   @PutMapping("/changePasswordOrUsername/{userName}")
   public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,
-      @PathVariable String userName) throws AccessDeniedException {
-  
-      Users user = userRepository.findByUsername(userName);
+                                         @PathVariable String userName) throws AccessDeniedException {
 
-      if (user == null){
-        ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-      }
+    Users user = userRepository.findByUsername(userName);
 
-      if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
-        user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
-        System.out.println("password reset");
-      }else{
-        ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-      }
-      user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
+    if (user == null){
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 
-      userRepository.save(user);
+    if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
+      user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+      System.out.println("password reset");
+    }else{
+      ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
 
-      ApiResponse response = new ApiResponse("success", "Password / userName Changed Successfully!");
-      
-      return new ResponseEntity<>(response, HttpStatus.OK);
-    
+    userRepository.save(user);
+
+    ApiResponse response = new ApiResponse("success", "Password / userName Changed Successfully!");
+
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
   }
 
   @DeleteMapping("/delete/{username}")

@@ -2,6 +2,8 @@ package com.dxvalley.crowdfunding.controllers;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.email.EmailSender;
+import com.dxvalley.crowdfunding.services.UserRegistrationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,72 +27,73 @@ import lombok.Getter;
 import lombok.Setter;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/collaborators")
 public class CollaboratorController {
   private final CollaboratorService collaboratorService;
   private final UserRepository userRepository;
   private CampaignService campaignService;
-  
-  
-  public CollaboratorController(CollaboratorService collaboratorService, UserRepository userRepository, CampaignService campaignService) {
-    this.collaboratorService = collaboratorService;
-    this.userRepository = userRepository;
-    this.campaignService = campaignService;
-  }
+  private EmailSender emailSender;
+  private final UserRegistrationService registrationService;
 
   @GetMapping
   List<Collaborator> getCollaborators() {
-    return this.collaboratorService.getCollaborators();
+      return this.collaboratorService.getCollaborators();
   }
 
   @GetMapping("/{collaboratorId}")
   Collaborator getCollaborator(@PathVariable Long collaboratorId) {
         Collaborator collaborator = collaboratorService.getCollaboratorById(collaboratorId);
-       
         return collaborator ;
   }
 
   @GetMapping("/getCollaborators/{campaignId}")
   List<Collaborator> getUserCollaborators(@PathVariable Long campaignId) {
         List<Collaborator> collaborator = collaboratorService.findAllCollaboratorByCampaignCampaignId(campaignId);
-       
         return collaborator ;
   }
 
   @PostMapping("/invite")
   public ResponseEntity<?> addCollaborator(@RequestBody InviteRequest inviteRequest) {
-      
-      Users user = userRepository.findByUsername(inviteRequest.getInviterUsername());
+
+      var user = userRepository.findByUsername(inviteRequest.getInviterUsername());
+      if (user == null){
+          ApiResponse response = new ApiResponse(
+                  "Bad Request",
+                  "No user with this email");
+          return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+      }
+
       Campaign campaign = campaignService.getCampaignById(inviteRequest.getCampaignId());
       Collaborator collaborator = new Collaborator();
       collaborator.setCampaign(campaign);
       collaborator.setUsers(user);
       collaborator.setCampaignCreator(false);
       collaborator.setEnabled(false);
-      collaboratorService.addCollaborator(collaborator);
-
-      //send collaborator a link to accept collaboration using email/phone
+      var res =  collaboratorService.addCollaborator(collaborator);
+      System.out.println(res.getCollaboratorId());
+      String link = "http://localhost:8181/api/collaborators/accept/" + res.getCollaboratorId();
+      emailSender.send(
+              inviteRequest.getInviterUsername(),
+              registrationService.buildEmailInvitation(user.getFullName(), link));
 
       ApiResponse response = new ApiResponse("success", "Invitation sent successfully!");
-
       return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-  @PutMapping("/accept/{collaboratorId}")
-  public ResponseEntity<?> accept(@PathVariable Long collaboratorId){
-   
-    Collaborator collaborator = collaboratorService.getCollaborators().stream().filter(c -> c.getCollaboratorId() == collaboratorId).collect(Collectors.toList()).get(0);
+    @GetMapping("/accept/{collaboratorId}")
+    public ResponseEntity<?> acceptInvitation(@PathVariable Long collaboratorId){
+    Collaborator collaborator = collaboratorService.getCollaboratorById(collaboratorId);
     collaborator.setEnabled(true);
+    collaboratorService.editCollaborator(collaborator);
+    return new ResponseEntity<>("collaboration Accepted", HttpStatus.OK);
+    }
 
-    return new ResponseEntity<>(collaborator, HttpStatus.OK);
-  }
 
   @PutMapping("/{collaboratorId}")
   Collaborator editCollaborator(@RequestBody Collaborator tempCollaborator, @PathVariable Long collaboratorId) {
     Collaborator collaborator = this.collaboratorService.getCollaboratorById(collaboratorId);
-
     collaborator.setCollaboratorId(tempCollaborator.getCollaboratorId() != null ? tempCollaborator.getCollaboratorId() : collaborator.getCollaboratorId());
-    
     return collaboratorService.editCollaborator(collaborator);
   }
 
