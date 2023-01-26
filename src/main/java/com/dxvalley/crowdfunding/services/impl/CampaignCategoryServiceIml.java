@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.services.impl;
 import java.util.List;
 
 
+import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
 @AllArgsConstructor
 public class CampaignCategoryServiceIml implements CampaignCategoryService {
     private final CampaignCategoryRepository campaignCategoryRepository;
+    private final CampaignSubCategoryRepository campaignSubCategoryRepository;
     @Override
     public ResponseEntity<?> addCampaignCategory(CampaignCategory tempCampaignCategory) {
         var campaignCategory = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
@@ -69,6 +71,8 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
                     HttpStatus.BAD_REQUEST);
 
         }
+        var subCategory = campaignSubCategoryRepository.findByCampaignCategoryId(campaignCategoryId);
+        campaignCategory.setCampaignSubCategories(subCategory);
         return new ResponseEntity<>(
                 campaignCategory,
                 HttpStatus.OK);

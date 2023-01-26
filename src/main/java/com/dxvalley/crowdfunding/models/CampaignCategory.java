@@ -23,4 +23,6 @@ public class CampaignCategory {
         this.name = name;
         this.description = description;
     }
+    @Transient
+    private List<CampaignSubCategory> campaignSubCategories;
 }
