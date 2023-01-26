@@ -156,7 +156,7 @@ public class UserRegistrationService {
                 return emailConfirmed(confirmationToken.getUser().getFullName());
         }
 
-        public String buildEmail(String name, String link) {
+        private String buildEmail(String name, String link) {
                 return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                         +
                         "\n" +
@@ -240,7 +240,7 @@ public class UserRegistrationService {
                         "</div></div>";
         }
 
-        public String emailConfirmed(String name) {
+        private String emailConfirmed(String name) {
                 return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                         +
                         "\n" +
@@ -325,7 +325,6 @@ public class UserRegistrationService {
                         "\n" +
                         "</div></div>";
         }
-
         public String buildEmailInvitation(String name, String link) {
                 return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                         +
@@ -410,6 +409,8 @@ public class UserRegistrationService {
                         "</div></div>";
         }
 
+
+
         public String getRandomNumberString() {
 
                 Random rnd = new Random();
@@ -447,3 +448,4 @@ class createUserResponse {
         String status;
         String description;
 }
+
