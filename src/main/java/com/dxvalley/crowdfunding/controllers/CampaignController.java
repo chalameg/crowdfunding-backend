@@ -25,6 +25,7 @@ import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.FundingType;
+import com.dxvalley.crowdfunding.models.Payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -109,6 +110,7 @@ public class CampaignController {
             @RequestParam(required = false) Boolean isEnabled,
             @RequestParam(required = false) String risks,
             @RequestParam(required = false) String projectType,
+            @RequestParam(required = false) String campaignStatus,
 
             @RequestParam(required = false) MultipartFile campaignImage,
             @RequestParam(required = false) MultipartFile campaignVideo
@@ -150,6 +152,7 @@ public class CampaignController {
         campaign.setShortDescription(shortDescription != null ? shortDescription : campaign.getShortDescription());
         campaign.setCity(city != null ? city : campaign.getCity());
         campaign.setProjectType(projectType != null? projectType : campaign.getProjectType());
+        campaign.setCampaignStatus(campaignStatus != null? campaignStatus : campaign.getCampaignStatus());
         campaign.setGoalAmount(goalAmount != null ? goalAmount : campaign.getGoalAmount());
         campaign.setCampaignDuration(campaignDuration != null ? campaignDuration : campaign.getCampaignDuration());
         campaign.setRisks(risks != null ? risks : campaign.getRisks());

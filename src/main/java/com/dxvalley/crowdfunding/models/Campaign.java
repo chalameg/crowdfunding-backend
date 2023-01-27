@@ -49,6 +49,7 @@ public class Campaign {
     private String goalAmount;
     private String owner;
     private String campaignDuration;
+    private String campaignStatus;
 
    @Column(columnDefinition="TEXT")
     private String description;
@@ -66,8 +67,10 @@ public class Campaign {
 
     @Transient
     private List<Collaborator> collaborators;
+
     @Transient
     private Payment payment;
+
     @Transient
     private List<Reward> rewards;
 

@@ -14,11 +14,15 @@ public class Payment {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long paymentId;
     private String bankAccount;
+    
     @OneToOne(cascade = CascadeType.ALL)
     private Campaign campaign;
 
     public Payment(Long paymentId, String bankAccount) {
         this.paymentId = paymentId;
+        this.bankAccount = bankAccount;
+    }
+    public Payment(String bankAccount) {
         this.bankAccount = bankAccount;
     }
 }
