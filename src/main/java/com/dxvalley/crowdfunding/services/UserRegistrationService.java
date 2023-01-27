@@ -42,7 +42,7 @@ public class UserRegistrationService {
 
         public ResponseEntity<?> register(Users tempUser) {
                 var user = userRepository.findUser(tempUser.getUsername());
-
+                System.out.println(user);
                 if (user != null){
                         return new ResponseEntity<>("user already exists", HttpStatus.BAD_REQUEST);
                 }
@@ -93,11 +93,11 @@ public class UserRegistrationService {
                                 HttpHeaders headers = new HttpHeaders();
                                 headers.setContentType(MediaType.APPLICATION_JSON);
 
-                                // String requestBody = "{\"Mobile\":\"251967434568\",\"Text\":\"154624\"}";
+                                // String requestBody = "{\"mobile\":\"251967434568\",\"text\":\"154624\"}";
 
                                 String otp = getRandomNumberString();
-                                String requestBody = "{\"Mobile\":" + "\"" + tempUser.getUsername() + "\""
-                                        + ",\"Text\":" + "\"" + otp + "\"" + "}";
+                                String requestBody = "{\"mobile\":" + "\"" + tempUser.getUsername() + "\""
+                                        + ",\"text\":" + "\"" + otp + "\"" + "}";
 
                                 System.out.println(requestBody);
                                 HttpEntity<String> request = new HttpEntity<String>(requestBody, headers);
