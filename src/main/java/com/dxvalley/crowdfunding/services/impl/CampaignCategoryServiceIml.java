@@ -59,7 +59,13 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
 
     @Override
     public List<CampaignCategory> getCampaignCategories() {
-        return this.campaignCategoryRepository.findAll();
+        var res = campaignCategoryRepository.findAll();
+        for (CampaignCategory campaignCategory : res) {
+            var subCategory = campaignSubCategoryRepository
+                    .findByCampaignCategoryId(campaignCategory.getCampaignCategoryId());
+            campaignCategory.setCampaignSubCategories(subCategory);
+        }
+        return res;
     }
 
     @Override
