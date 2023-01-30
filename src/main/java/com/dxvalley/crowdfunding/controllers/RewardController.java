@@ -47,8 +47,9 @@ public class RewardController {
   public ResponseEntity<?> addReward(@RequestBody Reward reward,@PathVariable Long campaignId) {
       Campaign Campaign = campaignService.getCampaignById(campaignId);
       reward.setCampaign(Campaign);
-      Reward res = rewardService.addReward(reward);
-      return new ResponseEntity<>(res, HttpStatus.OK);
+      rewardService.addReward(reward);
+
+      return new ResponseEntity<>(this.rewardService.findRewardsByCampaignId(campaignId), HttpStatus.OK);
   }
 
   @PutMapping("edit/{rewardId}")
@@ -66,7 +67,8 @@ public class RewardController {
     tempReward.setDeliveryTime(reward.getDeliveryTime() != null ? reward.getDeliveryTime() : tempReward.getDeliveryTime());
 
     rewardService.editReward(tempReward);
-    return new ResponseEntity<>(tempReward, HttpStatus.OK);
+    // return new ResponseEntity<>(tempReward, HttpStatus.OK);
+    return new ResponseEntity<>(this.rewardService.findRewardsByCampaignId(tempReward.getCampaign().getCampaignId()), HttpStatus.OK);
   }
 
   @DeleteMapping("delete/{rewardId}")
