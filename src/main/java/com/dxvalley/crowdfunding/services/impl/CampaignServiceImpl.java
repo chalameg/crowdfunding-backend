@@ -36,11 +36,21 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public List<Campaign> getCampaignByCategory(Long categoryId) {
+        return campaignRepository.findByCampaignByCategoryId(categoryId);
+    }
+
+    @Override
+    public List<Campaign> getCampaignBySubCategory(Long subCategoryId) {
+        return campaignRepository.findByCampaignBySubCategoryId(subCategoryId);
+    }
+
+    @Override
     public void deleteCampaign(Long campaignId) {
         campaignRepository.deleteById(campaignId);
     }
     @Override
-    public List<Campaign> findCampaignsByOwner(String owner) {
+    public List<Campaign> getCampaignsByOwner(String owner) {
         return campaignRepository.findCampaignsByOwner(owner);
     }
     

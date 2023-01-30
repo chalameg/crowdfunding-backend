@@ -25,7 +25,6 @@ import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.FundingType;
-import com.dxvalley.crowdfunding.models.Payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -64,10 +63,19 @@ public class CampaignController {
     }
 
     @GetMapping("/getCampaignByOwner/{owner}")
-    List<Campaign> getUserCampaigns(@PathVariable String owner) {
-        return campaignService.findCampaignsByOwner(owner);
+    List<Campaign> getCampaignByOwner(@PathVariable String owner) {
+        return campaignService.getCampaignsByOwner(owner);
     }
 
+    @GetMapping("/getCampaignsByCategory/{categoryId}")
+    List<Campaign> getCampaignsByCategory(@PathVariable Long categoryId) {
+        return campaignService.getCampaignByCategory(categoryId);
+    }
+
+    @GetMapping("/getCampaignsBySubCategory/{subCategoryId}")
+    List<Campaign> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
+        return campaignService.getCampaignBySubCategory(subCategoryId);
+    }
     @PostMapping("/add")
     public ResponseEntity<?> addCampaign(
             @RequestParam() String title,

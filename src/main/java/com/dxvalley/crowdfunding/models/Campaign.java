@@ -74,5 +74,14 @@ public class Campaign {
     @Transient
     private List<Reward> rewards;
 
-
+    public Campaign(String title, String shortDescription, String city, String imageUrl,
+                    String goalAmount,String campaignDuration, String projectType) {
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.city = city;
+        this.imageUrl = imageUrl;
+        this.goalAmount = goalAmount;
+        this.campaignDuration = campaignDuration;
+        this.projectType = projectType;
+    }
 }
