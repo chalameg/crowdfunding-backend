@@ -73,10 +73,19 @@ public class CampaignController {
     }
 
     @GetMapping("/getCampaignByOwner/{owner}")
-    List<Campaign> getUserCampaigns(@PathVariable String owner) {
-        return campaignService.findCampaignsByOwner(owner);
+    List<Campaign> getCampaignByOwner(@PathVariable String owner) {
+        return campaignService.getCampaignsByOwner(owner);
     }
 
+    @GetMapping("/getCampaignsByCategory/{categoryId}")
+    List<Campaign> getCampaignsByCategory(@PathVariable Long categoryId) {
+        return campaignService.getCampaignByCategory(categoryId);
+    }
+
+    @GetMapping("/getCampaignsBySubCategory/{subCategoryId}")
+    List<Campaign> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
+        return campaignService.getCampaignBySubCategory(subCategoryId);
+    }
     @PostMapping("/add")
     public ResponseEntity<?> addCampaign(
             @RequestParam() String title,

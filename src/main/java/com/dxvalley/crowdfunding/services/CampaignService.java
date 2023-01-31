@@ -10,6 +10,8 @@ public interface CampaignService {
     Campaign editCampaign (Campaign campaign);
     List<Campaign> getCampaigns ();
     Campaign getCampaignById(Long campaignId);
+    List<Campaign> getCampaignByCategory(Long categoryId);
+    List<Campaign> getCampaignBySubCategory(Long subCategoryId);
     void deleteCampaign( Long campaignId);
-    List<Campaign> findCampaignsByOwner(String owner);
+    List<Campaign> getCampaignsByOwner(String owner);
 }
