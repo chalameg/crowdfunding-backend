@@ -26,6 +26,7 @@ import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.models.Payment;
+import com.dxvalley.crowdfunding.models.Users;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,6 +44,7 @@ public class CampaignController {
     private final RewardRepository rewardRepository;
     private final CampaignSubCategoryRepository campaignSubCategoryRepository;
     private final CampaignRepository campaignRepository;
+    private final UserRepository userRepository;
 
 
     @GetMapping("/getCampaigns")
@@ -59,6 +61,13 @@ public class CampaignController {
         campaign.setPayment(payment);
         campaign.setCollaborators(collaborators);
         campaign.setRewards(rewards);
+
+        System.out.println(campaign.getOwner());
+        Users user = userRepository.findUserByUsername(campaign.getOwner());
+
+        campaign.setOwnerName(user.getFullName());
+
+        campaign.setNumberOfCampaigns(campaignRepository.findCampaignsByOwner(campaign.getOwner()).size());
 
         return campaign;
     }
