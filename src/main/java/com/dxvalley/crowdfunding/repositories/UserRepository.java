@@ -1,5 +1,4 @@
 package com.dxvalley.crowdfunding.repositories;
-import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

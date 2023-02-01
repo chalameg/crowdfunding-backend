@@ -1,10 +1,8 @@
 package com.dxvalley.crowdfunding.controllers;
 
-import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Payment;
 import com.dxvalley.crowdfunding.repositories.CampaignRepository;
 import com.dxvalley.crowdfunding.repositories.PaymentRepository;
-import com.dxvalley.crowdfunding.services.CampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

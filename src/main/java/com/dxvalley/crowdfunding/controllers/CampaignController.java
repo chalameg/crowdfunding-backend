@@ -25,7 +25,6 @@ import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.FundingType;
-import com.dxvalley.crowdfunding.models.Payment;
 import com.dxvalley.crowdfunding.models.Users;
 
 import lombok.AllArgsConstructor;

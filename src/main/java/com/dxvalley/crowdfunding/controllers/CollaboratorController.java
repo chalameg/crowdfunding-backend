@@ -1,6 +1,5 @@
 package com.dxvalley.crowdfunding.controllers;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.dxvalley.crowdfunding.email.EmailSender;
 import com.dxvalley.crowdfunding.services.UserRegistrationService;
@@ -19,7 +18,6 @@ import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.CollaboratorService;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Collaborator;
-import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 
 import lombok.AllArgsConstructor;
