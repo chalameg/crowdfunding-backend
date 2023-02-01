@@ -2,6 +2,7 @@ package com.dxvalley.crowdfunding.controllers;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,13 @@ import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.UserRegistrationService;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -95,13 +103,59 @@ public class UserController {
     return registrationService.confirmToken(token);
   }
 
-  @PostMapping("/confirmPhone/{phoneNumber}")
-  public ResponseEntity<?> confirmOTP(@RequestParam("otp") String otp, @PathVariable String phoneNumber){
+  @GetMapping("/getOtp/{phoneNumber}")
+  public ResponseEntity<?> getOtp(@PathVariable String phoneNumber) {
+    ResponseEntity<String> res;
+    try {
+      Users user = userRepository.findByUsername(phoneNumber);
+      if (user == null){
+        return new ResponseEntity<>("user does not exist!", HttpStatus.BAD_REQUEST);
+      }
+
+      String uri = "http://10.1.245.150:7080/v1/otp/";
+      RestTemplate restTemplate = new RestTemplate();
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+
+      String otp = getRandomNumberString();
+
+      String requestBody = "{\"mobile\":" + "\"" + user.getUsername() + "\""
+          + ",\"text\":" + "\"" + otp + "\"" + "}";
+
+      HttpEntity<String> request = new HttpEntity<String>(requestBody, headers);
+
+      res = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
+
+      if (res.getStatusCode().toString().trim().equals("200 OK")) {
+        // add otp to database
+        user.setOtp(otp);
+        userRepository.save(user);
+
+        ApiResponse response = new ApiResponse("success", "Message sent to your phone number.");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+      } else {
+        ApiResponse response = new ApiResponse("error","Please inter valid Mobile number!");
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+      }
+
+    } catch (Exception e) {
+      ApiResponse response = new ApiResponse("error","Please insert valid Mobile number!!");
+
+      return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @PostMapping("/confirmOtp/{phoneNumber}")
+  public ResponseEntity<?> confirmOTP(@RequestParam("otp") String otp, @PathVariable String phoneNumber) {
 
     Users user = userRepository.findUserByUsername(phoneNumber);
 
-    if(user.getOtp().equals(otp)){
-      //make enable true here
+    if (user.getOtp().equals(otp)) {
+      // make enable true here
       user.setIsEnabled(true);
 
       userRepository.save(user);
@@ -122,9 +176,9 @@ public class UserController {
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
     user.setRoles(tempUser.getRoles() != null
-            ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+        ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
             .collect(Collectors.toList())
-            : user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
+        : user.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
             .collect(Collectors.toList()));
 
     user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
@@ -134,7 +188,7 @@ public class UserController {
     user.setWebsite(tempUser.getWebsite() != null ? tempUser.getWebsite() : user.getWebsite());
 
     user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
-            : passwordEncoder.encode(user.getPassword()));
+        : passwordEncoder.encode(user.getPassword()));
 
     Users response = userRepository.save(user);
 
@@ -145,11 +199,11 @@ public class UserController {
 
   @PutMapping("/changePasswordOrUsername/{userName}")
   public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,
-                                         @PathVariable String userName) throws AccessDeniedException {
+      @PathVariable String userName) throws AccessDeniedException {
 
     Users user = userRepository.findByUsername(userName);
 
-    if (user == null){
+    if (user == null) {
       ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
@@ -157,7 +211,7 @@ public class UserController {
     if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
       user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
       System.out.println("password reset");
-    }else{
+    } else {
       ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
@@ -181,6 +235,14 @@ public class UserController {
     return new ResponseEntity<>("Deleted", HttpStatus.OK);
   }
 
+  public String getRandomNumberString() {
+  
+    Random rnd = new Random();
+    int number = rnd.nextInt(999999);
+  
+    return String.format("%06d", number);
+  }
+
 }
 
 @Getter
@@ -198,3 +260,4 @@ class ApiResponse {
   String status;
   String description;
 }
+

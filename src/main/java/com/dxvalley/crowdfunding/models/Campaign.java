@@ -30,6 +30,7 @@ public class Campaign {
     //campaign Promotion
     @OneToOne(cascade = CascadeType.ALL)
     private Promotion promotion;
+
     //campaign FundingType
     @OneToOne(cascade = CascadeType.ALL)
     private FundingType fundingType;
@@ -38,10 +39,7 @@ public class Campaign {
     @OneToOne(cascade = CascadeType.ALL)
     private CampaignSubCategory campaignSubCategory;
 
-    @Column(nullable = false, length = 512)
-    @NotBlank(message = "Campaign title cannot be empty!")
     private String title;
-    
     private String shortDescription;
     private String city;
     private String imageUrl;
@@ -50,22 +48,19 @@ public class Campaign {
     private String owner;
     private String campaignDuration;
     private String campaignStatus;
-
-    @Transient
-    private String ownerName;
-    @Transient
-    private Integer numberOfCampaigns;
-
-   @Column(columnDefinition="TEXT")
-    private String description;
-
-   @Column(columnDefinition="TEXT")
-    private String risks;
     private String projectType;
     private Boolean isEnabled;
+
+    @Column(columnDefinition="TEXT")
+    private String description;
+
+    @Column(columnDefinition="TEXT")
+    private String risks;
+
     @JsonFormat(pattern="yyyy-MM-dd",shape = Shape.STRING)
     @Column(name="date_created")
     private String dateCreated;
+
     @JsonFormat(pattern="yyyy-MM-dd",shape = Shape.STRING)
     @Column(name="date_deleted")
     private String dateDeleted;
@@ -78,6 +73,12 @@ public class Campaign {
 
     @Transient
     private List<Reward> rewards;
+
+    @Transient
+    private String ownerName;
+
+    @Transient
+    private Integer numberOfCampaigns;
 
     public Campaign(String title, String shortDescription, String city, String imageUrl,
                     String goalAmount,String campaignDuration, String projectType) {

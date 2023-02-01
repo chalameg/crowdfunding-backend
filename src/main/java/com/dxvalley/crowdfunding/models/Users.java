@@ -40,9 +40,6 @@ public class Users {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
-    //user address
-    @OneToOne(cascade = CascadeType.ALL)
-    private Address address;
     //user campaign
     @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
     private List<Campaign> campaigns;
