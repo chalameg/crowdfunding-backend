@@ -51,6 +51,11 @@ public class Campaign {
     private String campaignDuration;
     private String campaignStatus;
 
+    @Transient
+    private String ownerName;
+    @Transient
+    private Integer numberOfCampaigns;
+
    @Column(columnDefinition="TEXT")
     private String description;
 
