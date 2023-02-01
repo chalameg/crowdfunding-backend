@@ -4,8 +4,8 @@ import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.services.FileUploadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,9 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import com.dxvalley.crowdfunding.models.Users;
-import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
-import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.UserRegistrationService;
 
 import org.springframework.http.HttpEntity;
@@ -30,16 +28,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
   private final UserRepository userRepository;
-  private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
   private final UserRegistrationService registrationService;
-  private final CampaignService campaignService;
+  private final FileUploadService fileUploadService;
 
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -168,13 +166,22 @@ public class UserController {
   }
 
   @PutMapping("/edit/{userId}")
-  public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {
+  public ResponseEntity<?> editUser(
+          @PathVariable Long userId,
+          @RequestParam(required = false) MultipartFile userAvatar,
+          @RequestParam(required = false) String username,
+          @RequestParam(required = false) String fullName,
+          @RequestParam(required = false) String biography,
+          @RequestParam(required = false) String website,
+          @RequestParam(required = false) String address
+  ) {
+
     Users user = userRepository.findByUserId(userId);
     if (user == null) {
       return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
     }
-    user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
+<<<<<<< HEAD
     user.setRoles(tempUser.getRoles() != null
         ? tempUser.getRoles().stream().map(x -> this.roleRepo.findByRoleName(x.getRoleName()))
             .collect(Collectors.toList())
@@ -189,14 +196,32 @@ public class UserController {
 
     user.setPassword(tempUser.getPassword() != null ? passwordEncoder.encode(tempUser.getPassword())
         : passwordEncoder.encode(user.getPassword()));
+=======
+    String avatarUrl;
+    if(userAvatar != null){
+      try {
+        avatarUrl = fileUploadService.uploadFile(userAvatar);
+      } catch (Exception e) {
+        ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+      }
+    }else{
+      avatarUrl = null;
+    }
+>>>>>>> 86853457c38199b84acfe221c5964b0a90871e25
 
+    user.setUsername(username != null ? username : user.getUsername());
+    user.setFullName(fullName != null ? fullName : user.getFullName());
+    user.setBiography(biography != null ? biography : user.getBiography());
+    user.setWebsite(website != null ? website : user.getWebsite());
+    user.setAvatarUrl(avatarUrl != null? avatarUrl : user.getAvatarUrl());
+    user.setAddress(address != null ? address : user.getAddress());
     Users response = userRepository.save(user);
-
     response.setPassword(null);
-
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
+<<<<<<< HEAD
   @PutMapping("/changePasswordOrUsername/{userName}")
   public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,
       @PathVariable String userName) throws AccessDeniedException {
@@ -204,25 +229,31 @@ public class UserController {
     Users user = userRepository.findByUsername(userName);
 
     if (user == null) {
+=======
+  @PutMapping("/changePassword/{userName}")
+  public ResponseEntity<?> manageAccount(
+          @RequestBody UsernamePassword temp,
+          @PathVariable String userName) throws AccessDeniedException {
+    Users user = userRepository.findByUsername(userName);
+    if (user == null){
+>>>>>>> 86853457c38199b84acfe221c5964b0a90871e25
       ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
     if (passwordEncoder.matches(temp.getOldPassword(), user.getPassword())) {
       user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+<<<<<<< HEAD
       System.out.println("password reset");
     } else {
+=======
+    }else{
+>>>>>>> 86853457c38199b84acfe221c5964b0a90871e25
       ApiResponse response = new ApiResponse("error", "Incorrect old Password!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-    user.setUsername(temp.getNewUsername() != null ? temp.getNewUsername() : user.getUsername());
-
     userRepository.save(user);
-
-    ApiResponse response = new ApiResponse("success", "Password / userName Changed Successfully!");
-
+    ApiResponse response = new ApiResponse("success", "Password Changed Successfully!");
     return new ResponseEntity<>(response, HttpStatus.OK);
-
   }
 
   @DeleteMapping("/delete/{username}")

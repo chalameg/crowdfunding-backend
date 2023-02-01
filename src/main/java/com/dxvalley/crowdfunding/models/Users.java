@@ -32,11 +32,11 @@ public class Users {
     private String website;
     private String password;
     private String createdAt;
-    private String deletedAt;
     private Boolean isEnabled;
     private String otp;
+    private String avatarUrl;
+    private String address;
 
-    //user roles
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
@@ -45,16 +45,18 @@ public class Users {
     private List<Campaign> campaigns;
 
     public Users( String username, String password, String fullName, String website,
-                  String biography, String createdAt, String deletedAt, String otp, Boolean isEnabled) {
+                  String biography, String createdAt, String otp,String avatarUrl,
+                  Boolean isEnabled, String address) {
         this.password = new BCryptPasswordEncoder().encode(password);
         this.fullName = fullName;
         this.username= username;
         this.website= website;
         this.biography= biography;
         this.createdAt=createdAt;
-        this.deletedAt=deletedAt;
         this.isEnabled=isEnabled;
         this.otp=otp;
+        this.avatarUrl = avatarUrl;
+        this.address=address;
     }
 
     public Users orElseThrow(Object object) {
