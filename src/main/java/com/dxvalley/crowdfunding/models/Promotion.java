@@ -17,5 +17,10 @@ public class Promotion {
     private String description;
     @ManyToOne
     private Campaign campaign;
-    
+
+    public Promotion(Long promotionId, String promotionLink, String description) {
+        this.promotionId = promotionId;
+        this.promotionLink = promotionLink;
+        this.description = description;
+    }
 }

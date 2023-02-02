@@ -9,8 +9,9 @@ import java.util.List;
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     Promotion findPromotionByPromotionId(Long promotionId);
 
-    @Query("SELECT p from Promotion as p WHERE" +
-            " p.campaign.campaignId = :campaignId")
+
+    @Query("SELECT new Promotion(p.promotionId, p.promotionLink, p.description)" +
+            " FROM Promotion as p WHERE p.campaign.campaignId = :campaignId")
     List<Promotion> findPromotionByCampaignId(Long campaignId);
 
 }
