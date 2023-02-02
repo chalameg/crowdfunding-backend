@@ -1,9 +1,6 @@
 package com.dxvalley.crowdfunding.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -16,8 +13,9 @@ public class Promotion {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long promotionId;
-
-    private String title;
+    private String promotionLink;
     private String description;
+    @ManyToOne
+    private Campaign campaign;
     
 }
