@@ -1,6 +1,8 @@
 package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
+
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.FundingTypeRepository;
@@ -32,9 +34,10 @@ public class FundingTypeServiceImpl implements FundingTypeService{
 
     @Override
     public FundingType getFundingTypeById(Long fundingTypeId) {
-        return this.fundingTypeRepository.findFundingTypeByFundingTypeId(fundingTypeId);
+        return this.fundingTypeRepository.findFundingTypeByFundingTypeId(fundingTypeId).orElseThrow(
+                () ->  new ResourceNotFoundException("There is no Funding Type with this ID.")
+        );
     }
-
     @Override
     public void deleteFundingType(Long fundingTypeId) {
         fundingTypeRepository.deleteById(fundingTypeId);

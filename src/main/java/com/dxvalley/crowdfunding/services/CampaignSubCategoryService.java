@@ -6,8 +6,9 @@ import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 
 public interface CampaignSubCategoryService {
     CampaignSubCategory addCampaignSubCategory (CampaignSubCategory campaignSubCategory);
-    CampaignSubCategory editCampaignSubCategory (CampaignSubCategory campaignSubCategory);
+    CampaignSubCategory editCampaignSubCategory (Long campaignSubCategoryId, CampaignSubCategory campaignSubCategory);
     List<CampaignSubCategory> getCampaignSubCategories ();
     CampaignSubCategory getCampaignSubCategoryById(Long campaignSubCategoryId);
-    void deleteCampaignSubCategory( Long campaignSubCategoryId);
+    String deleteCampaignSubCategory( Long campaignSubCategoryId);
+    List<CampaignSubCategory> getCampaignSubCategoryByCategory(Long campaignCategoryId);
 }

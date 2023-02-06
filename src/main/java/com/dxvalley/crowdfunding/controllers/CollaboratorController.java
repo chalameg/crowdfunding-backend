@@ -1,18 +1,16 @@
 package com.dxvalley.crowdfunding.controllers;
 import java.util.List;
 
+import com.dxvalley.crowdfunding.dto.ApiResponse;
+import com.dxvalley.crowdfunding.dto.InviteRequest;
 import com.dxvalley.crowdfunding.email.EmailSender;
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.services.UserRegistrationService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.dxvalley.crowdfunding.services.CampaignService;
 import com.dxvalley.crowdfunding.services.CollaboratorService;
@@ -20,19 +18,17 @@ import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Collaborator;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/api/collaborators")
 public class CollaboratorController {
   private final CollaboratorService collaboratorService;
   private final UserRepository userRepository;
-  private CampaignService campaignService;
-  private EmailSender emailSender;
+  private final CampaignService campaignService;
+  private final EmailSender emailSender;
   private final UserRegistrationService registrationService;
+
 
   @GetMapping
   List<Collaborator> getCollaborators() {
@@ -52,16 +48,13 @@ public class CollaboratorController {
   }
 
   @PostMapping("/invite")
-  public ResponseEntity<?> addCollaborator(@RequestBody InviteRequest inviteRequest) {
+  public ResponseEntity<?> addCollaborator(@RequestBody @Valid InviteRequest inviteRequest)
+          throws ResourceNotFoundException {
 
-      var user = userRepository.findByUsername(inviteRequest.getInviterUsername());
+      var user = userRepository.findByUsername(inviteRequest.getUsername());
       if (user == null){
-          ApiResponse response = new ApiResponse(
-                  "Bad Request",
-                  "No user with this email");
-          return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+          throw  new ResourceNotFoundException("There is no user with this username.");
       }
-
       Campaign campaign = campaignService.getCampaignById(inviteRequest.getCampaignId());
       Collaborator collaborator = new Collaborator();
       collaborator.setCampaign(campaign);
@@ -75,8 +68,8 @@ public class CollaboratorController {
       System.out.println(link);
 
       emailSender.send(
-              inviteRequest.getInviterUsername(),
-              registrationService.buildEmailInvitation(
+              inviteRequest.getUsername(),
+              emailSender.buildEmailInvitation(
                       user.getFullName(),
                       user.getFullName(),
                       campaign.getTitle(),
@@ -87,21 +80,21 @@ public class CollaboratorController {
   }
 
     @GetMapping("/invitationDetail/{campaignId}/{collaboratorId}")
-    public String invitationDetail(@PathVariable Long campaignId,@PathVariable Long collaboratorId){
+    public String invitationDetail(@PathVariable Long campaignId,@PathVariable Long collaboratorId) throws ResourceNotFoundException {
         Campaign campaign = campaignService.getCampaignById(campaignId);
         String link = "http://localhost:8181/api/collaborators/acceptOrReject/" + collaboratorId;
-        return registrationService.invitationDetailPage(campaign,link);
+        return emailSender.invitationDetailPage(campaign,link);
     }
 
     @GetMapping("/acceptOrReject/{collaboratorId}/{flag}")
     public String acceptInvitation(@PathVariable Long collaboratorId,@PathVariable Long flag){
       if (flag==0){
-          return registrationService.invitationRejected();
+          return emailSender.invitationRejected();
       }
     Collaborator collaborator = collaboratorService.getCollaboratorById(collaboratorId);
     collaborator.setEnabled(true);
     collaboratorService.editCollaborator(collaborator);
-    return registrationService.invitationAccepted();
+    return emailSender.invitationAccepted();
     }
 
 
@@ -124,25 +117,5 @@ public class CollaboratorController {
 
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
-
-}
-
-
-@Getter
-@Setter
-@AllArgsConstructor
-class CollaboratorResponse {
-  Collaborator Collaborator;
-  String status;
-}
-
-@Getter
-@Setter
-@AllArgsConstructor
-class InviteRequest {
-    boolean isCampaignCreator;
-    boolean isEnabled;
-    String inviterUsername;
-    Long campaignId;
 
 }

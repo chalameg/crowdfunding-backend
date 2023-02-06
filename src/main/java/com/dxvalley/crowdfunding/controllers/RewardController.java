@@ -1,5 +1,7 @@
 package com.dxvalley.crowdfunding.controllers;
 
+import com.dxvalley.crowdfunding.dto.ApiResponse;
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +45,7 @@ public class RewardController {
   }
 
   @PostMapping("add/{campaignId}")
-  public ResponseEntity<?> addReward(@RequestBody Reward reward,@PathVariable Long campaignId) {
+  public ResponseEntity<?> addReward(@RequestBody Reward reward,@PathVariable Long campaignId) throws ResourceNotFoundException {
       Campaign Campaign = campaignService.getCampaignById(campaignId);
       reward.setCampaign(Campaign);
       rewardService.addReward(reward);
@@ -85,10 +87,3 @@ public class RewardController {
 }
 
 
-@Getter
-@Setter
-@AllArgsConstructor
-class RewardResponse {
-  Reward Reward;
-  String status;
-}

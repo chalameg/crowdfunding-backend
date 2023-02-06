@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.controllers;
 import com.dxvalley.crowdfunding.models.Payment;
 import com.dxvalley.crowdfunding.repositories.CampaignRepository;
 import com.dxvalley.crowdfunding.repositories.PaymentRepository;
+import com.dxvalley.crowdfunding.services.CampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments")
 public class PaymentController {
     private final PaymentRepository paymentRepository;
-    private final CampaignRepository campaignRepository;
+    private final CampaignService campaignService;
     
     @GetMapping("/getPaymentByCampaign/{campaignId}")
     Payment getPaymentByCampaign(@PathVariable Long campaignId) {
@@ -31,10 +32,8 @@ public class PaymentController {
         if(camp != null){
             return new  ResponseEntity<>( "This campaign already have bank account. try updating", HttpStatus.BAD_REQUEST);
         }
-        var campaign = campaignRepository.findCampaignByCampaignId(campaignId);
-        if (campaign == null){
-            return new  ResponseEntity<>( "No campaign with this id.", HttpStatus.BAD_REQUEST);
-        }
+        var campaign = campaignService.getCampaignById(campaignId);
+
         payment.setBankAccount(bankAccount);
         payment.setCampaign(campaign);
         return new ResponseEntity<>(paymentRepository.save(payment),HttpStatus.OK);

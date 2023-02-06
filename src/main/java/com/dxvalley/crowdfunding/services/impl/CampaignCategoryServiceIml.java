@@ -2,45 +2,36 @@ package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
 
-
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;;
 import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import com.dxvalley.crowdfunding.models.CampaignCategory;
 import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
 
 @Service
-@AllArgsConstructor
 public class CampaignCategoryServiceIml implements CampaignCategoryService {
-    private final CampaignCategoryRepository campaignCategoryRepository;
-    private final CampaignSubCategoryRepository campaignSubCategoryRepository;
+    @Autowired
+    private  CampaignCategoryRepository campaignCategoryRepository;
+    @Autowired
+    private CampaignSubCategoryRepository campaignSubCategoryRepository;
+
     @Override
-    public ResponseEntity<?> addCampaignCategory(CampaignCategory tempCampaignCategory) {
+    public CampaignCategory addCampaignCategory(CampaignCategory tempCampaignCategory) {
         var campaignCategory = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
-        if(campaignCategory != null){
-            return new ResponseEntity<>(
-                    tempCampaignCategory.getName() + " Category already exist!",
-                    HttpStatus.BAD_REQUEST);
-        }
-        var result = campaignCategoryRepository.save(tempCampaignCategory);
-        return new ResponseEntity<>(
-                result,
-                HttpStatus.OK);
+        return campaignCategoryRepository.save(tempCampaignCategory);
+
     }
 
     @Override
-    public ResponseEntity<?> editCampaignCategory(CampaignCategory tempCampaignCategory, Long campaignCategoryId) {
-        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
-        if(campaignCategory == null){
-            return new ResponseEntity<>(
-                    "Category does not exist with this ID!",
-                    HttpStatus.BAD_REQUEST);
+    public CampaignCategory editCampaignCategory(CampaignCategory tempCampaignCategory, Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository
+                .findCampaignCategoryByCampaignCategoryId(campaignCategoryId).orElseThrow(
+                        () -> new ResourceNotFoundException("There is no campaign Category with this ID.")
+                );
 
-        }
         campaignCategory.setName(
                 tempCampaignCategory.getName() != null ?
                         tempCampaignCategory.getName() :
@@ -51,51 +42,42 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
                         tempCampaignCategory.getDescription() :
                         campaignCategory.getDescription());
 
-        var category =  campaignCategoryRepository.save(campaignCategory);
-        return new ResponseEntity<>(
-                category,
-                HttpStatus.OK);
+        return  campaignCategoryRepository.save(campaignCategory);
     }
 
     @Override
     public List<CampaignCategory> getCampaignCategories() {
-        var res = campaignCategoryRepository.findAll();
-        for (CampaignCategory campaignCategory : res) {
-            var subCategory = campaignSubCategoryRepository
-                    .findByCampaignCategoryId(campaignCategory.getCampaignCategoryId());
+        var campaignCategories = campaignCategoryRepository.findAll();
+        if(campaignCategories.size() == 0){
+            throw new ResourceNotFoundException("Currently, There is no Campaign Category.");
+        }
+        for (CampaignCategory campaignCategory : campaignCategories) {
+            var subCategory = campaignSubCategoryRepository.
+                    findCampaignSubCategoryByCampaignCategoryId(campaignCategory.getCampaignCategoryId()).get();
             campaignCategory.setCampaignSubCategories(subCategory);
         }
-        return res;
+        return campaignCategories;
     }
 
     @Override
-    public ResponseEntity<?> getCampaignCategoryById(Long campaignCategoryId) {
-        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
-        if(campaignCategory == null){
-            return new ResponseEntity<>(
-                    "Category does not exist with this ID!",
-                    HttpStatus.BAD_REQUEST);
+    public CampaignCategory getCampaignCategoryById(Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository
+                .findCampaignCategoryByCampaignCategoryId(campaignCategoryId).orElseThrow(
+                        () -> new ResourceNotFoundException("There is no campaign Category with this ID.")
+                );
 
-        }
-        var subCategory = campaignSubCategoryRepository.findByCampaignCategoryId(campaignCategoryId);
+        var subCategory =  campaignSubCategoryRepository.findCampaignSubCategoryByCampaignCategoryId(campaignCategoryId).get();
         campaignCategory.setCampaignSubCategories(subCategory);
-        return new ResponseEntity<>(
-                campaignCategory,
-                HttpStatus.OK);
+      return campaignCategory;
     }
 
     @Override
-    public ResponseEntity<?> deleteCampaignCategory(Long campaignCategoryId) {
-        CampaignCategory campaignCategory = campaignCategoryRepository.findCampaignCategoryByCampaignCategoryId(campaignCategoryId);
-        if(campaignCategory == null){
-            return new ResponseEntity<>(
-                    "Category does not exist with this ID!",
-                    HttpStatus.BAD_REQUEST);
-
-        }
-        campaignCategoryRepository.deleteById(campaignCategoryId);
-        return new ResponseEntity<>(
-                "CampaignCategory Deleted successfully!",
-                HttpStatus.OK);
+    public String deleteCampaignCategory(Long campaignCategoryId) {
+        CampaignCategory campaignCategory = campaignCategoryRepository
+                .findCampaignCategoryByCampaignCategoryId(campaignCategoryId).orElseThrow(
+                        () -> new ResourceNotFoundException("There is no campaign Category with this ID.")
+                );
+        campaignCategoryRepository.delete(campaignCategory);
+        return "CampaignCategory Deleted successfully!";
     }
 }

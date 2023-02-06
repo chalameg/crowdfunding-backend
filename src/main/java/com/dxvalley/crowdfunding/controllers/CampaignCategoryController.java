@@ -1,8 +1,7 @@
 package com.dxvalley.crowdfunding.controllers;
 
-import java.util.List;
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,32 +16,45 @@ import com.dxvalley.crowdfunding.models.CampaignCategory;
 import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/campaignCategories")
 public class CampaignCategoryController {
-  private final CampaignCategoryService campaignCategoryService;
+  @Autowired
+  private CampaignCategoryService campaignCategoryService;
 
   @GetMapping
-  List<CampaignCategory> getCampaignCategories() {
-    return campaignCategoryService.getCampaignCategories();
+  ResponseEntity<?> getCampaignCategories() {
+    return new ResponseEntity<>(
+            campaignCategoryService.getCampaignCategories(),
+            HttpStatus.OK);
   }
+
   @GetMapping("/{campaignCategoryId}")
   ResponseEntity<?> getCampaignCategory(@PathVariable Long campaignCategoryId) {
-    return campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
+    return new ResponseEntity<>(
+            campaignCategoryService.getCampaignCategoryById(campaignCategoryId),
+            HttpStatus.OK);
   }
 
   @PostMapping
   ResponseEntity<?> addCategory(@RequestBody CampaignCategory campaignCategories) {
-    return campaignCategoryService.addCampaignCategory(campaignCategories);
+    return new ResponseEntity<>(
+            campaignCategoryService.addCampaignCategory(campaignCategories),
+            HttpStatus.OK);
   }
+
   @PutMapping("/{campaignCategoryId}")
-  ResponseEntity<?> editCampaignCategory(@RequestBody CampaignCategory tempCampaignCategory,
-      @PathVariable Long campaignCategoryId) {
-    return  campaignCategoryService.editCampaignCategory(tempCampaignCategory,campaignCategoryId);
+  ResponseEntity<?> editCampaignCategory(
+          @RequestBody CampaignCategory tempCampaignCategory,
+          @PathVariable Long campaignCategoryId) {
+    return  new ResponseEntity<>(
+            campaignCategoryService.editCampaignCategory(tempCampaignCategory,
+                    campaignCategoryId), HttpStatus.OK);
   }
+
   @DeleteMapping("/{campaignCategoryId}")
   ResponseEntity<?> deleteCampaignCategory(@PathVariable Long campaignCategoryId) {
-    //TODO: fix "campaign_category" violates foreign key constraint
-   return campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
+   return new ResponseEntity<>(
+           campaignCategoryService.deleteCampaignCategory(campaignCategoryId),
+           HttpStatus.OK);
   }
 }

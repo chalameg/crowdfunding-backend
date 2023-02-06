@@ -50,8 +50,8 @@ public class ApplicationExceptionHandler {
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
-    @ExceptionHandler(ApiRequestException.class)
-    public ResponseEntity<Object> handleApiRequestException(ApiRequestException ex) {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
