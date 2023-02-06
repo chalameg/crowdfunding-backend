@@ -222,6 +222,27 @@ public class UserController {
 
   }
 
+  @PutMapping("/changePassword/{userName}")
+  public ResponseEntity<?> changePassword(@RequestBody ChangePasswordModel temp,
+      @PathVariable String userName) throws AccessDeniedException {
+
+    Users user = userRepository.findByUsername(userName);
+
+    if (user == null) {
+      ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    user.setPassword(passwordEncoder.encode(temp.getPassword()));
+    
+    userRepository.save(user);
+
+    ApiResponse response = new ApiResponse("success", "Password changed Successfully!");
+
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
+  }
+
   @DeleteMapping("/delete/{username}")
   ResponseEntity<?> deleteUser(@PathVariable String username) {
     Users user = userRepository.findUser(username);
@@ -248,6 +269,12 @@ class UsernamePassword {
   private String newUsername;
   private String newPassword;
   private String oldPassword;
+}
+
+@Getter
+@Setter
+class ChangePasswordModel {
+  private String password;
 }
 
 @Getter
