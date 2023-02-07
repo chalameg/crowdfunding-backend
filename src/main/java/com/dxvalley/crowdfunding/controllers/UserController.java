@@ -6,6 +6,10 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.dto.ApiResponse;
+import com.dxvalley.crowdfunding.dto.ResetPassword;
+import com.dxvalley.crowdfunding.dto.UsernamePassword;
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,7 +28,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -94,9 +97,8 @@ public class UserController {
     return registrationService.register(tempUser);
   }
 
-  @GetMapping("/confirm")
+  @PutMapping("/confirm")
   public String confirmUser(@RequestParam("token") String token) {
-
     return registrationService.confirmToken(token);
   }
 
@@ -104,7 +106,7 @@ public class UserController {
   public ResponseEntity<?> getOtp(@PathVariable String phoneNumber) {
     ResponseEntity<String> res;
     try {
-      Users user = userRepository.findByUsername(phoneNumber);
+      Users user = userRepository.findByUsername(phoneNumber).get();
       if (user == null){
         return new ResponseEntity<>("user does not exist!", HttpStatus.BAD_REQUEST);
       }
@@ -149,8 +151,12 @@ public class UserController {
   @PostMapping("/confirmOtp/{phoneNumber}")
   public ResponseEntity<?> confirmOTP(@RequestParam("otp") String otp, @PathVariable String phoneNumber) {
 
-    Users user = userRepository.findUserByUsername(phoneNumber);
+    Users user = userRepository.findUserByUsername(phoneNumber).orElseThrow(
+            ()  -> new ResourceNotFoundException("There is no user with this phoneNumber")
+    );
 
+    System.out.println(user.getOtp());
+    System.out.println(user.getUsername());
     if (user.getOtp().equals(otp)) {
       // make enable true here
       user.setIsEnabled(true);
@@ -198,8 +204,7 @@ public class UserController {
   public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,
       @PathVariable String userName) throws AccessDeniedException {
 
-    Users user = userRepository.findByUsername(userName);
-
+    Users user = userRepository.findByUsername(userName).get();
     if (user == null) {
       ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -222,35 +227,25 @@ public class UserController {
 
   }
 
-  @PutMapping("/changePassword/{userName}")
-  public ResponseEntity<?> changePassword(@RequestBody ChangePasswordModel temp,
-      @PathVariable String userName) throws AccessDeniedException {
-
-    Users user = userRepository.findByUsername(userName);
-
-    if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find user with this username!");
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    user.setPassword(passwordEncoder.encode(temp.getPassword()));
-    
-    userRepository.save(user);
-
-    ApiResponse response = new ApiResponse("success", "Password changed Successfully!");
-
-    return new ResponseEntity<>(response, HttpStatus.OK);
-
-  }
-
   @DeleteMapping("/delete/{username}")
   ResponseEntity<?> deleteUser(@PathVariable String username) {
-    Users user = userRepository.findUser(username);
-    if (user == null) {
-      return new ResponseEntity<>("Cannot find user with this username!", HttpStatus.BAD_REQUEST);
-    }
+    Users user = userRepository.findUser(username).orElseThrow(
+            () -> new ResourceNotFoundException("There is no User with this username.")
+    );
     this.userRepository.deleteById(user.getUserId());
     return new ResponseEntity<>("Deleted", HttpStatus.OK);
+  }
+
+  @PostMapping("/forgotPassword/{username}")
+  ResponseEntity<?> forgotPassword(@PathVariable String username) {
+    var result = registrationService.forgotPassword(username);
+    return new ResponseEntity<>(result, HttpStatus.OK);
+  }
+
+  @PutMapping("/resetPassword")
+  ResponseEntity<?> resetPassword(@RequestBody ResetPassword resetPassword) {
+    var result = registrationService.resetPassword(resetPassword);
+    return new ResponseEntity<>(result, HttpStatus.OK);
   }
 
   public String getRandomNumberString() {
@@ -261,27 +256,5 @@ public class UserController {
     return String.format("%06d", number);
   }
 
-}
-
-@Getter
-@Setter
-class UsernamePassword {
-  private String newUsername;
-  private String newPassword;
-  private String oldPassword;
-}
-
-@Getter
-@Setter
-class ChangePasswordModel {
-  private String password;
-}
-
-@Getter
-@Setter
-@AllArgsConstructor
-class ApiResponse {
-  String status;
-  String description;
 }
 

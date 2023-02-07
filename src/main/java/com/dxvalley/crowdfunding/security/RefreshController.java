@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,7 +42,9 @@ public class RefreshController {
         DecodedJWT decodedJWT = verifier.verify(refresh_token);
         String username = decodedJWT.getSubject();
         String access_token;
-        Users user = userRepository.findByUsername(username);
+        Users user = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException("There is no user with this username")
+        );
         
         access_token = JWT.create()
             .withSubject(user.getUsername())

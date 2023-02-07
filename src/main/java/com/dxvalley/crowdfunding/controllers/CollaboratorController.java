@@ -51,10 +51,9 @@ public class CollaboratorController {
   public ResponseEntity<?> addCollaborator(@RequestBody @Valid InviteRequest inviteRequest)
           throws ResourceNotFoundException {
 
-      var user = userRepository.findByUsername(inviteRequest.getUsername());
-      if (user == null){
-          throw  new ResourceNotFoundException("There is no user with this username.");
-      }
+      var user = userRepository.findByUsername(inviteRequest.getUsername()).orElseThrow(
+              () -> new ResourceNotFoundException("There is no user with this username.")
+      );
       Campaign campaign = campaignService.getCampaignById(inviteRequest.getCampaignId());
       Collaborator collaborator = new Collaborator();
       collaborator.setCampaign(campaign);
@@ -73,7 +72,8 @@ public class CollaboratorController {
                       user.getFullName(),
                       user.getFullName(),
                       campaign.getTitle(),
-                      link));
+                      link),
+              "Asking for collaboration");
 
       ApiResponse response = new ApiResponse("success", "Invitation sent successfully!");
       return new ResponseEntity<>(response, HttpStatus.OK);

@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Transactional(readOnly = true)
 public interface ConfirmationTokenRepository
         extends JpaRepository<ConfirmationToken, Long> {
-    ConfirmationToken findByToken(String token);
+    Optional<ConfirmationToken> findByToken(String token);
     @Transactional
     @Modifying
     @Query("UPDATE ConfirmationToken c " +

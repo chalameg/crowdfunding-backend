@@ -25,5 +25,10 @@ public class Otp {
     @JsonFormat(pattern="yyyy-MM-dd hh:mm:s",shape = Shape.STRING)
     @Column(name="otp_Expire_At")
     private String expiryDate;
+
+    public Otp(String phoneNumber, String code) {
+        this.phoneNumber = phoneNumber;
+        this.code = code;
+    }
 }
 

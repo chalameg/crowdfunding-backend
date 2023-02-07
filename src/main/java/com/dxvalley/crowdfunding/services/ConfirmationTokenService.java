@@ -1,5 +1,6 @@
 package com.dxvalley.crowdfunding.services;
 
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.ConfirmationToken;
 import com.dxvalley.crowdfunding.repositories.ConfirmationTokenRepository;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,9 @@ public class ConfirmationTokenService {
         confirmationTokenRepository.save(token);
     }
     public ConfirmationToken getToken(String token) {
-        return confirmationTokenRepository.findByToken(token);
+        return confirmationTokenRepository.findByToken(token).orElseThrow(
+                () -> new ResourceNotFoundException("Invalid Token")
+        );
     }
     public int setConfirmedAt(String token) {
         return confirmationTokenRepository.updateConfirmedAt(

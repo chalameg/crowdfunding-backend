@@ -7,21 +7,22 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users,Long>{
 
     @Query("SELECT u FROM Users u WHERE u.username = ?1 AND u.isEnabled = TRUE")
-    Users findByUsername(String username);
+    Optional<Users> findByUsername(String username);
 
     @Query("SELECT u FROM Users u WHERE u.username = ?1")
-    Users findUserByUsername(String username);
+    Optional<Users> findUserByUsername(String username);
 
 
     @Query("SELECT u FROM Users u WHERE u.username = ?1")
-    Users findUser(String username);
+    Optional <Users> findUser(String username);
 
     @Query("SELECT u FROM Users u WHERE u.userId = ?1 AND u.isEnabled = TRUE")
-    Users findByUserId (Long userId);
+     Users findByUserId (Long userId);
 
     @Query("SELECT u FROM Users u WHERE u.isEnabled = TRUE")
     List<Users> findAll();

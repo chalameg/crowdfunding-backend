@@ -91,7 +91,7 @@ public class CampaignServiceImpl implements CampaignService {
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-        var user = userRepository.findUserByUsername(campaign.getOwner());
+        var user = userRepository.findByUsername(campaign.getOwner()).get();
 
         campaign.setPayment(payment != null ? payment:null);
         campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);

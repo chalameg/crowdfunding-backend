@@ -37,6 +37,19 @@ public class ApplicationExceptionHandler {
         );
         return new ResponseEntity<>(apiException, httpStatus);
     }
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Object> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+        HttpStatus httpStatus = HttpStatus.CONFLICT;
+        ExceptionResponse apiException = new ExceptionResponse(
+                LocalDateTime.now().format(dateTimeFormatter),
+                httpStatus,
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiException, httpStatus);
+    }
+
+
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(NullPointerException.class)
