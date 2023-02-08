@@ -10,6 +10,7 @@ import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.ResetPassword;
 import com.dxvalley.crowdfunding.dto.UsernamePassword;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.services.FileUploadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,6 +39,7 @@ public class UserController {
   private final UserRepository userRepository;
   private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
+  private final FileUploadService fileUploadService;
   private final UserService userService;
 
   private boolean isSysAdmin() {
@@ -73,21 +75,13 @@ public class UserController {
     return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.OK);
   }
 
-
   @GetMapping("/getUserByUsername/{username}")
   ResponseEntity<?> getByUsername(@PathVariable String username) {
-    var user = userRepository.findByUsername(username);
-
-    if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find user with this phone number/email!");
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-    return new ResponseEntity<>(user, HttpStatus.OK);
+    return new ResponseEntity<>(userService.getUserByUsername(username), HttpStatus.OK);
   }
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody Users tempUser) {
-
     return userService.register(tempUser);
   }
 
@@ -192,6 +186,26 @@ public class UserController {
 
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
+
+  @PutMapping("/uploadUserAvatar/{userName}")
+  public ResponseEntity<?> uploadUserAvatar(
+          @PathVariable String userName,
+          @RequestParam MultipartFile userAvatar){
+    var user = userService.getUserByUsername(userName);
+    String avatarUrl;
+    try {
+      avatarUrl = fileUploadService.uploadFile(userAvatar);
+    } catch (Exception e) {
+      ApiResponse response = new ApiResponse("error", "Bad file size or format!");
+      avatarUrl = null;
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    user.setAvatarUrl(avatarUrl !=null? avatarUrl: user.getAvatarUrl());
+    var result = userRepository.save(user);
+    return new ResponseEntity<>(result, HttpStatus.OK);
+  }
+
 
   @PutMapping("/changePasswordOrUsername/{userName}")
   public ResponseEntity<?> manageAccount(@RequestBody UsernamePassword temp,

@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,6 +61,11 @@ public class UserService {
         public Users getUserById(Long userId){
                return userRepository.findByUserId(userId).orElseThrow(
                         () -> new ResourceNotFoundException("There is no user with this Id")
+                );
+        }
+        public Users getUserByUsername(String username) {
+                return userRepository.findByUsername(username).orElseThrow(
+                        () -> new ResourceNotFoundException("There is no user with this username")
                 );
         }
 
