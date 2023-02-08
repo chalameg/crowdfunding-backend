@@ -39,7 +39,7 @@ import java.util.Random;
 import java.util.UUID;
 
 @Service
-public class UserRegistrationService {
+public class UserService {
         @Autowired
         private ConfirmationTokenService confirmationTokenService;
         @Autowired
@@ -56,6 +56,12 @@ public class UserRegistrationService {
         OtpService otpService;
         @Autowired
         private OtpRepository otpRepository;
+
+        public Users getUserById(Long userId){
+               return userRepository.findByUserId(userId).orElseThrow(
+                        () -> new ResourceNotFoundException("There is no user with this Id")
+                );
+        }
 
         public ResponseEntity<?> register(Users tempUser) {
                 var user = userRepository.findUser(tempUser.getUsername());
@@ -179,7 +185,7 @@ public class UserRegistrationService {
                                 user);
 
                         confirmationTokenService.saveConfirmationToken(confirmationToken);
-                        String link = "http://localhost:3000/resetPassword?token=" + token;
+                        String link = "http://localhost:3000/resetPassword?token=" + token + "&username=" + user.getUsername();
                         emailSender.send(
                                 user.getUsername(),
                                 emailSender.emailBuilderForPasswordReset(user.getFullName(), link),

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
-import com.dxvalley.crowdfunding.services.UserRegistrationService;
+import com.dxvalley.crowdfunding.services.UserService;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,9 +28,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class UserController {
   private final UserRepository userRepository;
   private final RoleRepository roleRepo;
   private final PasswordEncoder passwordEncoder;
-  private final UserRegistrationService registrationService;
+  private final UserService userService;
 
   private boolean isSysAdmin() {
     AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -71,14 +70,9 @@ public class UserController {
 
   @GetMapping("/getUser/{userId}")
   public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
-    var user = userRepository.findByUserId(userId);
-    if (user == null) {
-      ApiResponse response = new ApiResponse("error", "Cannot find user with this user ID!");
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    return new ResponseEntity<>(user, HttpStatus.OK);
+    return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.OK);
   }
+
 
   @GetMapping("/getUserByUsername/{username}")
   ResponseEntity<?> getByUsername(@PathVariable String username) {
@@ -94,12 +88,12 @@ public class UserController {
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody Users tempUser) {
 
-    return registrationService.register(tempUser);
+    return userService.register(tempUser);
   }
 
   @PutMapping("/confirm")
   public String confirmUser(@RequestParam("token") String token) {
-    return registrationService.confirmToken(token);
+    return userService.confirmToken(token);
   }
 
   @GetMapping("/getOtp/{phoneNumber}")
@@ -172,10 +166,9 @@ public class UserController {
 
   @PutMapping("/edit/{userId}")
   public ResponseEntity<?> editUser(@RequestBody Users tempUser, @PathVariable Long userId) {
-    Users user = userRepository.findByUserId(userId);
-    if (user == null) {
-      return new ResponseEntity<>("Cannot find user with this ID!", HttpStatus.BAD_REQUEST);
-    }
+    Users user = userRepository.findByUserId(userId).orElseThrow(
+            () -> new ResourceNotFoundException("There is no user with this Id")
+    );
     user.setUsername(tempUser.getUsername() != null ? tempUser.getUsername() : user.getUsername());
 
     user.setRoles(tempUser.getRoles() != null
@@ -238,13 +231,13 @@ public class UserController {
 
   @PostMapping("/forgotPassword/{username}")
   ResponseEntity<?> forgotPassword(@PathVariable String username) {
-    var result = registrationService.forgotPassword(username);
+    var result = userService.forgotPassword(username);
     return new ResponseEntity<>(result, HttpStatus.OK);
   }
 
   @PutMapping("/resetPassword")
   ResponseEntity<?> resetPassword(@RequestBody ResetPassword resetPassword) {
-    var result = registrationService.resetPassword(resetPassword);
+    var result = userService.resetPassword(resetPassword);
     return new ResponseEntity<>(result, HttpStatus.OK);
   }
 

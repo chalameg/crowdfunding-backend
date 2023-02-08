@@ -5,7 +5,6 @@ import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.InviteRequest;
 import com.dxvalley.crowdfunding.email.EmailSender;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.services.UserRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +26,6 @@ public class CollaboratorController {
   private final UserRepository userRepository;
   private final CampaignService campaignService;
   private final EmailSender emailSender;
-  private final UserRegistrationService registrationService;
 
 
   @GetMapping

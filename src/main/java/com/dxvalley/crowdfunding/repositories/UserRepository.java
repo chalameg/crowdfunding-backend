@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<Users,Long>{
     Optional <Users> findUser(String username);
 
     @Query("SELECT u FROM Users u WHERE u.userId = ?1 AND u.isEnabled = TRUE")
-     Users findByUserId (Long userId);
+    Optional<Users> findByUserId (Long userId);
 
     @Query("SELECT u FROM Users u WHERE u.isEnabled = TRUE")
     List<Users> findAll();

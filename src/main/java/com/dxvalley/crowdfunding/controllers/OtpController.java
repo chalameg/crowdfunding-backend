@@ -4,11 +4,7 @@ import java.util.Random;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.dxvalley.crowdfunding.models.Otp;
 import com.dxvalley.crowdfunding.repositories.OtpRepository;
@@ -27,6 +23,14 @@ public class OtpController {
     public OtpController(OtpService otpService, OtpRepository otpRepository) {
         this.otpService = otpService;
         this.otpRepository = otpRepository;
+    }
+
+
+    @GetMapping("/getOtpByCode")
+    public ResponseEntity<?>getOtpByCode(@RequestParam String optCode) {
+        return new ResponseEntity<>(
+                otpService.getOtpByCode(optCode),
+                HttpStatus.OK);
     }
 
     @PostMapping("/send")
