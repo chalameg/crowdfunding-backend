@@ -82,14 +82,12 @@ public class UserServiceImpl implements UserService {
          Users user = userRepository.findByUserId(userId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this Id")
         );
-        user.setPassword(null);
         return user;
     }
     public Users getUserByUsername(String username) {
         var user = userRepository.findUserByUsername(username, true).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this username")
         );
-        user.setPassword(null);
         return user;
     }
     public ResponseEntity<?> register(Users tempUser) {
@@ -108,7 +106,6 @@ public class UserServiceImpl implements UserService {
         tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
         tempUser.setIsEnabled(false);
         var user =  userRepository.save(tempUser);
-        user.setPassword(null);
 
         //send email if username is email
         if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
