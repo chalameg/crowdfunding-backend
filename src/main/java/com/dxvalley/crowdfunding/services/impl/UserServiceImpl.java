@@ -218,7 +218,7 @@ public class UserServiceImpl implements UserService {
 
         if (username.matches(".*[a-zA-Z]+.*")) {
             String token = UUID.randomUUID().toString();
-            String link = "http://localhost:3000/resetPassword?token=" + token;
+            String link = "http://localhost:3000/resetPassword/" + token;
 
             Boolean isSend  = emailSender.send(
                     user.getUsername(),
