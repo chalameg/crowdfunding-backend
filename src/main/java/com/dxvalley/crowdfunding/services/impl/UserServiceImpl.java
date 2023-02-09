@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -51,6 +52,7 @@ public class UserServiceImpl implements UserService {
     OtpService otpService;
     @Autowired
     FileUploadService fileUploadService;
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private boolean isSysAdmin() {
         AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -117,10 +119,13 @@ public class UserServiceImpl implements UserService {
                     emailSender.buildEmail(tempUser.getFullName(), link),
                     "Confirm your email");
             if(isSend){
+                LocalDateTime createdAt = LocalDateTime.now();
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
+
                 ConfirmationToken confirmationToken = new ConfirmationToken(
                         token,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusMinutes(30),
+                        createdAt.format(dateTimeFormatter),
+                        expiresAt.format(dateTimeFormatter),
                         user);
                 confirmationTokenService.saveConfirmationToken(confirmationToken);
                 return new ResponseEntity<>(user,HttpStatus.OK);
@@ -134,10 +139,13 @@ public class UserServiceImpl implements UserService {
             String code = getRandomNumberString();
             var result = otpService.sendOtp(tempUser.getUsername(),code);
             if(result.getStatus() =="success" ){
+                LocalDateTime createdAt = LocalDateTime.now();
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(5);
+
                 ConfirmationToken token = new ConfirmationToken(
                         code,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusMinutes(5),
+                        createdAt.format(dateTimeFormatter),
+                        expiresAt.format(dateTimeFormatter),
                         user
                 );
                 confirmationTokenService.saveConfirmationToken(token);
@@ -152,7 +160,7 @@ public class UserServiceImpl implements UserService {
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token);
 
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+        LocalDateTime expiredAt = LocalDateTime.parse(confirmationToken.getExpiresAt(), dateTimeFormatter);
         if (expiredAt.isBefore(LocalDateTime.now())){
             confirmationTokenRepository.delete(confirmationToken);
             return false;
@@ -217,10 +225,13 @@ public class UserServiceImpl implements UserService {
                     emailSender.emailBuilderForPasswordReset(user.getFullName(), link),
                     "Reset your password");
             if(isSend){
+                LocalDateTime createdAt = LocalDateTime.now();
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
+
                 ConfirmationToken confirmationToken = new ConfirmationToken(
                         token,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusMinutes(30),
+                        createdAt.format(dateTimeFormatter),
+                        expiresAt.format(dateTimeFormatter),
                         user);
                 confirmationTokenService.saveConfirmationToken(confirmationToken);
                 return new ApiResponse("success","please check your email");
@@ -234,10 +245,14 @@ public class UserServiceImpl implements UserService {
             var result = otpService.sendOtp(user.getUsername(),code);
 
             if(result.getStatus() =="success" ){
+
+                LocalDateTime createdAt = LocalDateTime.now();
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(5);
+
                 ConfirmationToken token = new ConfirmationToken(
                         code,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusMinutes(5),
+                        createdAt.format(dateTimeFormatter),
+                        expiresAt.format(dateTimeFormatter),
                         user
                 );
                 confirmationTokenService.saveConfirmationToken(token);
@@ -251,7 +266,7 @@ public class UserServiceImpl implements UserService {
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(resetPassword.getToken());
 
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+        LocalDateTime expiredAt = LocalDateTime.parse(confirmationToken.getExpiresAt(), dateTimeFormatter);
         if (expiredAt.isBefore(LocalDateTime.now())) {
             return new ApiResponse(
                     "bad request",
