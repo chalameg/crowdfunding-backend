@@ -26,11 +26,9 @@ public class ConfirmationToken {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
-    private LocalDateTime confirmedAt;
-
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "app_user_id")
+    @JoinColumn(name = "user_id")
     private Users user;
 
     public ConfirmationToken(String token,

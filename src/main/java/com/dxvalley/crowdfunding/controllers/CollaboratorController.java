@@ -3,7 +3,7 @@ import java.util.List;
 
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.InviteRequest;
-import com.dxvalley.crowdfunding.email.EmailSender;
+import com.dxvalley.crowdfunding.notification.EmailSender;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class CollaboratorController {
   public ResponseEntity<?> addCollaborator(@RequestBody @Valid InviteRequest inviteRequest)
           throws ResourceNotFoundException {
 
-      var user = userRepository.findByUsername(inviteRequest.getUsername()).orElseThrow(
+      var user = userRepository.findUserByUsername(inviteRequest.getUsername(), true).orElseThrow(
               () -> new ResourceNotFoundException("There is no user with this username.")
       );
       Campaign campaign = campaignService.getCampaignById(inviteRequest.getCampaignId());

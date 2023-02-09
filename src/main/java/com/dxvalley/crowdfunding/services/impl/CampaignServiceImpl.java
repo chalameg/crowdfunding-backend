@@ -11,11 +11,8 @@ import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
-import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.models.Campaign;
@@ -91,7 +88,7 @@ public class CampaignServiceImpl implements CampaignService {
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-        var user = userRepository.findByUsername(campaign.getOwner()).get();
+        var user = userRepository.findUserByUsername(campaign.getOwner(),true).get();
 
         campaign.setPayment(payment != null ? payment:null);
         campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);

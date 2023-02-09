@@ -9,7 +9,7 @@ import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +21,16 @@ import com.dxvalley.crowdfunding.models.Campaign;
 
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/campaigns")
 public class CampaignController {
-    private final CampaignService campaignService;
-    private final FileUploadService fileUploadService;
-    private final FundingTypeService fundingTypeService;
-    private final CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+    private CampaignService campaignService;
+    @Autowired
+    private FileUploadService fileUploadService;
+    @Autowired
+    private FundingTypeService fundingTypeService;
+    @Autowired
+    private CampaignSubCategoryService campaignSubCategoryService;
 
 
     @GetMapping("/getCampaigns")

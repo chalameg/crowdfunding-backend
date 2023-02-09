@@ -7,8 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-public class UsernamePassword {
-    private String newUsername;
+public class ChangePassword {
     private String newPassword;
     private String oldPassword;
 }

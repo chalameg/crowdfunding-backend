@@ -10,18 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users,Long>{
+    @Query("SELECT u FROM Users u WHERE u.username = :username AND u.isEnabled = :isEnabled")
+    Optional<Users> findUserByUsername(String username, Boolean isEnabled);
 
-    @Query("SELECT u FROM Users u WHERE u.username = ?1 AND u.isEnabled = TRUE")
     Optional<Users> findByUsername(String username);
-
-    @Query("SELECT u FROM Users u WHERE u.username = ?1")
-    Optional<Users> findUserByUsername(String username);
-
-
-    @Query("SELECT u FROM Users u WHERE u.username = ?1")
-    Optional <Users> findUser(String username);
-
-    @Query("SELECT u FROM Users u WHERE u.userId = ?1 AND u.isEnabled = TRUE")
+    @Query("SELECT u FROM Users u WHERE u.userId =:userId AND u.isEnabled = TRUE")
     Optional<Users> findByUserId (Long userId);
 
     @Query("SELECT u FROM Users u WHERE u.isEnabled = TRUE")
@@ -29,7 +22,6 @@ public interface UserRepository extends JpaRepository<Users,Long>{
 
     @Transactional
     @Modifying
-    @Query("UPDATE Users u " +
-            "SET u.isEnabled = TRUE WHERE u.username = ?1")
+    @Query("UPDATE Users u SET u.isEnabled = TRUE WHERE u.username = :username")
     int enableUser(String username);
 }
