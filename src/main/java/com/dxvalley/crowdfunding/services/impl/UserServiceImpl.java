@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
         //send email if username is email
         if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
             String token = UUID.randomUUID().toString();
-            String link = "http://localhost:8181/api/users/confirm?token=" + token;
+            String link = "http://localhost:3000/verify/" + token;
             Boolean isSend = emailSender.send(
                     tempUser.getUsername(),
                     emailSender.buildEmail(tempUser.getFullName(), link),

@@ -13,9 +13,9 @@ public class OtpController {
     ConfirmationTokenService confirmationTokenService;
 
     @GetMapping("/checkOtpExistance")
-    public ResponseEntity<?>getOtpByCode(@RequestParam String token) {
+    public ResponseEntity<?>getOtpByCode(@RequestParam String otpCode) {
         return new ResponseEntity<>(
-                confirmationTokenService.getToken(token),
+                confirmationTokenService.getToken(otpCode),
                 HttpStatus.OK);
     }
 }
