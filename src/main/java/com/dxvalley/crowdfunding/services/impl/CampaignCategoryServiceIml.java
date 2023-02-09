@@ -2,9 +2,8 @@ package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
 
-import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;;
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
-import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.dxvalley.crowdfunding.services.CampaignCategoryService;

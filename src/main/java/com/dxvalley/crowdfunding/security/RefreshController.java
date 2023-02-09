@@ -42,7 +42,7 @@ public class RefreshController {
         DecodedJWT decodedJWT = verifier.verify(refresh_token);
         String username = decodedJWT.getSubject();
         String access_token;
-        Users user = userRepository.findByUsername(username).orElseThrow(
+        Users user = userRepository.findUserByUsername(username,true).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this username")
         );
         

@@ -15,7 +15,7 @@ import lombok.Setter;
 @Entity
 @Table(uniqueConstraints = {
         @UniqueConstraint(
-                name = "Users_email_unique",
+                name = "Users_username_unique",
                 columnNames = "username"
         )
 })
@@ -33,7 +33,6 @@ public class Users {
     private String password;
     private String createdAt;
     private Boolean isEnabled;
-    private String otp;
     private String avatarUrl;
     private String address;
 
@@ -54,7 +53,6 @@ public class Users {
         this.biography= biography;
         this.createdAt=createdAt;
         this.isEnabled=isEnabled;
-        this.otp=otp;
         this.avatarUrl = avatarUrl;
         this.address=address;
     }
