@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
-import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,10 +19,10 @@ public class ConfirmationToken {
     private String token;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private String expiresAt;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -32,8 +30,8 @@ public class ConfirmationToken {
     private Users user;
 
     public ConfirmationToken(String token,
-                             LocalDateTime createdAt,
-                             LocalDateTime expiresAt,
+                             String createdAt,
+                             String expiresAt,
                              Users user) {
         this.token = token;
         this.createdAt = createdAt;
