@@ -24,10 +24,10 @@ public class PaymentController {
     public ResponseEntity<?> addPayment(@PathVariable Long campaignId, @RequestParam() String bankAccount) {
         Payment payment = new Payment();
 
-        var result = paymentRepository.findPaymentByBankAccount(bankAccount);
-        if (result != null){
-            return new  ResponseEntity<>( bankAccount + " already registered", HttpStatus.BAD_REQUEST);
-        }
+        // var result = paymentRepository.findPaymentByBankAccount(bankAccount);
+        // if (result != null){
+        //     return new  ResponseEntity<>( bankAccount + " already registered", HttpStatus.BAD_REQUEST);
+        // }
         var camp =  paymentRepository.findPaymentByCampaignId(campaignId);
         if(camp != null){
             return new  ResponseEntity<>( "This campaign already have bank account. try updating", HttpStatus.BAD_REQUEST);

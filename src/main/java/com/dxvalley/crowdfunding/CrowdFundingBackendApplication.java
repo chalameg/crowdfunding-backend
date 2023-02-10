@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.cloudinary.Cloudinary;
 
-@SpringBootApplication
+@SpringBootApplication()
 public class CrowdFundingBackendApplication {
 
 	public static void main(String[] args) {
