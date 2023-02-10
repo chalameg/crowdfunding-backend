@@ -9,8 +9,9 @@ import lombok.*;
 @Getter
 @Setter
 public class InviteRequest {
-    @NotBlank(message = "A username for the invitee must be provided.")
+    @NotEmpty(message = "A username for the invitee must be provided.")
     private String username;
-   @Positive(message = "Campaign must be provided")
+    @NotNull(message = "Campaign Id must be provided.")
+    @Positive(message = "Campaign must be positive integer")
     private Long campaignId;
 }
