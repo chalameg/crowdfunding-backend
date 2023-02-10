@@ -3,7 +3,7 @@ package com.dxvalley.crowdfunding.services.impl;
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.ResetPassword;
 import com.dxvalley.crowdfunding.dto.ChangePassword;
-import com.dxvalley.crowdfunding.notification.EmailSender;
+import com.dxvalley.crowdfunding.notification.EmailService;
 import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.Role;
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ConfirmationTokenService confirmationTokenService;
     @Autowired
-    private EmailSender emailSender;
+    private EmailService emailSender;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
             String link = "http://localhost:3000/verify/" + token;
             Boolean isSend = emailSender.send(
                     tempUser.getUsername(),
-                    emailSender.buildEmail(tempUser.getFullName(), link),
+                    emailSender.emailBuilderForUserConfirmation(tempUser.getFullName(), link),
                     "Confirm your email");
             if(isSend){
                 LocalDateTime createdAt = LocalDateTime.now();

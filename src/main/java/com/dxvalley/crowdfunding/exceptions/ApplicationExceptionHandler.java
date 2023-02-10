@@ -49,20 +49,6 @@ public class ApplicationExceptionHandler {
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
-
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<Object> handleNullPointerException(NullPointerException ex) {
-        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        ExceptionResponse apiException = new ExceptionResponse(
-                LocalDateTime.now().format(dateTimeFormatter),
-                httpStatus,
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(apiException, httpStatus);
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
@@ -73,6 +59,19 @@ public class ApplicationExceptionHandler {
         );
         return new ResponseEntity<>(apiException, httpStatus);
     }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAllOtherException(Exception ex) {
+        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+        ExceptionResponse apiException = new ExceptionResponse(
+                LocalDateTime.now().format(dateTimeFormatter),
+                httpStatus,
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiException, httpStatus);
+    }
+
 
 }
 
