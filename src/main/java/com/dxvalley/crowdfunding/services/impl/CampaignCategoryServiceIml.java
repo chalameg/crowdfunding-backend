@@ -20,6 +20,7 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
     @Override
     public CampaignCategory addCampaignCategory(CampaignCategory tempCampaignCategory) {
         var campaignCategory = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
+
         return campaignCategoryRepository.save(tempCampaignCategory);
 
     }
