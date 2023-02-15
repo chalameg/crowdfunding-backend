@@ -12,24 +12,35 @@ import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
+import com.dxvalley.crowdfunding.services.PaymentInfoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
 @Service
-@RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
-    private final CampaignRepository campaignRepository;
-    private final PaymentRepository paymentRepository;
-    private final CollaboratorRepository collaboratorRepository;
-    private final RewardRepository rewardRepository;
-    private final PromotionRepository promotionRepository;
-    private final UserRepository userRepository;
-    private final FundingTypeService fundingTypeService;
-    private final CampaignSubCategoryService campaignSubCategoryService;
-
+    @Autowired
+    private CampaignRepository campaignRepository;
+    @Autowired
+    private CampaignBankAccountRepository campaignBankAccountRepository;
+    @Autowired private CollaboratorRepository collaboratorRepository;
+    @Autowired
+    private RewardRepository rewardRepository;
+    @Autowired
+    private PromotionRepository promotionRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private FundingTypeService fundingTypeService;
+    @Autowired
+    private CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+    private PaymentInfoService paymentInfoService;
+    @Autowired
+    private PaymentInfoRepository paymentInfoRepository;
 
 
     @Override
@@ -84,19 +95,22 @@ public class CampaignServiceImpl implements CampaignService {
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
 
-        var payment =  paymentRepository.findPaymentByCampaignId(campaignId);
+        var campaignBankAccount =  campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
         var user = userRepository.findUserByUsername(campaign.getOwner(),true).get();
+        var totalAmountCollected = paymentInfoRepository.findTotalAmountOfPaymentForCampaign(campaignId);
+        var contributors = paymentInfoRepository.findPaymentInfoByCampaignId(campaignId);
 
-        campaign.setPayment(payment != null ? payment:null);
-        campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);
-        campaign.setRewards(rewards.size() > 0 ? rewards:null);
-        campaign.setPromotions(promotions.size() > 0 ? promotions : null);
-        campaign.setOwnerName(user !=null? user.getFullName():null);
-        campaign.setOwnerName(user.getFullName());
-
+        campaign.setCampaignBankAccount(campaignBankAccount);
+        campaign.setCollaborators(collaborators);
+        campaign.setRewards(rewards);
+        campaign.setPromotions(promotions);
+        campaign.setContributors(contributors);
+        campaign.setOwnerFullName(user.getFullName());
+        campaign.setTotalAmountCollected(totalAmountCollected + " is collected out of " + campaign.getGoalAmount());
+        campaign.setNumberOfBackers(contributors.size());
         return campaign;
     }
 

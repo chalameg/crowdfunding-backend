@@ -9,20 +9,19 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class Payment {
+public class CampaignBankAccount {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long paymentId;
+    private Long campaignBankAccountId;
     private String bankAccount;
-    
     @OneToOne(cascade = CascadeType.ALL)
     private Campaign campaign;
 
-    public Payment(Long paymentId, String bankAccount) {
-        this.paymentId = paymentId;
+    public CampaignBankAccount(Long campaignBankAccountId, String bankAccount) {
+        this.campaignBankAccountId = campaignBankAccountId;
         this.bankAccount = bankAccount;
     }
-    public Payment(String bankAccount) {
+    public CampaignBankAccount(String bankAccount) {
         this.bankAccount = bankAccount;
     }
 }
