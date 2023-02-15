@@ -2,9 +2,6 @@ package com.dxvalley.crowdfunding.models;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonFormat.Shape;
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +15,6 @@ public class Campaign {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long campaignId;
-    @OneToOne(cascade = CascadeType.ALL)
-    private FundingType fundingType;
-    @OneToOne(cascade = CascadeType.ALL)
-    private CampaignSubCategory campaignSubCategory;
-
     private String title;
     private String shortDescription;
     private String city;
@@ -44,18 +36,27 @@ public class Campaign {
     private String editedAt;
     private String expiredAt;
     private String dateDeleted;
-
+    @OneToOne(cascade = CascadeType.ALL)
+    private FundingType fundingType;
+    @OneToOne(cascade = CascadeType.ALL)
+    private CampaignSubCategory campaignSubCategory;
 
     @Transient
     private List<Collaborator> collaborators;
     @Transient
-    private Payment payment;
+    private List<PaymentInfo> contributors;
     @Transient
     private List<Reward> rewards;
     @Transient
     private List<Promotion> promotions;
     @Transient
-    private String ownerName;
+    private String ownerFullName;
+    @Transient
+    private CampaignBankAccount campaignBankAccount;
+    @Transient
+    private String totalAmountCollected;
+    @Transient
+    private int numberOfBackers;
     @Transient
     private Integer numberOfCampaigns;
 

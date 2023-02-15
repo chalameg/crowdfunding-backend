@@ -13,6 +13,6 @@ public enum CampaignStage {
     public static CampaignStage lookup(String campaignStage) {
         return Arrays.stream(CampaignStage.values())
                 .filter(e -> e.name().equalsIgnoreCase(campaignStage)).findAny()
-                .orElseThrow(()-> new IllegalArgumentException("Invalid enum value."));
+                .orElseThrow(()-> new IllegalArgumentException("Invalid Campaign Stage."));
     }
 }
