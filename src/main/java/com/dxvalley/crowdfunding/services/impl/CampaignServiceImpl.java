@@ -3,19 +3,20 @@ package com.dxvalley.crowdfunding.services.impl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
+import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
-import com.dxvalley.crowdfunding.services.FileUploadService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.models.Campaign;
@@ -24,14 +25,25 @@ import com.dxvalley.crowdfunding.services.CampaignService;
 @Service
 @RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
-    private final CampaignRepository campaignRepository;
-    private final PaymentRepository paymentRepository;
-    private final CollaboratorRepository collaboratorRepository;
-    private final RewardRepository rewardRepository;
-    private final PromotionRepository promotionRepository;
-    private final UserRepository userRepository;
-    private final FundingTypeService fundingTypeService;
-    private final CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+
+    private CampaignRepository campaignRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private CollaboratorRepository collaboratorRepository;
+    @Autowired
+    private RewardRepository rewardRepository;
+    @Autowired
+    private PromotionRepository promotionRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private FundingTypeService fundingTypeService;
+    @Autowired
+    private CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+    private CampaignDTOMapper campaignDTOMapper;
 
 
 
@@ -149,6 +161,21 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setExpiredAt(expiredAt.format(dateTimeFormatter));
 
         return campaignRepository.save(campaign);
+    }
+
+    @Override
+    public List<CampaignDTO> searchCampaigns(String tempSearchParam) {
+//        to change string input :tech health food " into sth like "tech|health|food"
+        var searchParamArray = tempSearchParam.trim().split("\\W+");;
+        var searchParam = searchParamArray[0];
+        for ( int i = 1; i < searchParamArray.length; i++){
+            searchParam = searchParam + "|"+ searchParamArray[i];
+        }
+        var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
+                .map(campaignDTOMapper).collect(Collectors.toList());
+        if(campaigns.size()==0)
+            throw  new ResourceNotFoundException("There is no campaign with this search parameter.");
+        return campaigns;
     }
 
     @Override

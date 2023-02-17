@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.services;
 import java.util.List;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.Campaign;
 
@@ -18,4 +19,5 @@ public interface CampaignService {
     String deleteCampaign( Long campaignId);
     List<Campaign> getCampaignsByOwner(String owner);
     Campaign enableCampaign(Long campaignId);
+    List<CampaignDTO> searchCampaigns(String searchParam);
 }

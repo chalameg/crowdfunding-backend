@@ -72,6 +72,13 @@ public class CampaignController {
                 HttpStatus.OK);
     }
 
+    @GetMapping("/searchCampaigns")
+    ResponseEntity<?> searchCampaigns(@RequestParam String searchParam) {
+        return new ResponseEntity<>(
+                campaignService.searchCampaigns(searchParam),
+                HttpStatus.OK);
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> addCampaign(@Valid @RequestBody CampaignAddRequestDto campaignAddRequestDto) {
         Campaign res = campaignService.addCampaign(campaignAddRequestDto);
