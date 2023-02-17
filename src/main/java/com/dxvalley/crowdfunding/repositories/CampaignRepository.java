@@ -27,6 +27,12 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long>{
             " from Campaign as c where" +
             " c.campaignSubCategory.campaignSubCategoryId = :subCategoryId")
     List<Campaign> findByCampaignBySubCategoryId(Long subCategoryId);
+
+    @Query(value = "select * " +
+            "from campaign where document @@ to_tsquery(:searchValue)" +
+            "ORDER BY ts_rank(document,plainto_tsquery(:searchValue)) desc;", nativeQuery = true)
+    List<Campaign> searchForCampaigns(String searchValue);
+
 }
 
 

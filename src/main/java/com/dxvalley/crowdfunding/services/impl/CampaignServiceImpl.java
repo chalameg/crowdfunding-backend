@@ -3,8 +3,11 @@ package com.dxvalley.crowdfunding.services.impl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
+import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
@@ -12,7 +15,6 @@ import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
-import com.dxvalley.crowdfunding.services.PaymentInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,15 @@ import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
 @Service
+@RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
     @Autowired
+
     private CampaignRepository campaignRepository;
     @Autowired
-    private CampaignBankAccountRepository campaignBankAccountRepository;
-    @Autowired private CollaboratorRepository collaboratorRepository;
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private CollaboratorRepository collaboratorRepository;
     @Autowired
     private RewardRepository rewardRepository;
     @Autowired
@@ -38,9 +43,8 @@ public class CampaignServiceImpl implements CampaignService {
     @Autowired
     private CampaignSubCategoryService campaignSubCategoryService;
     @Autowired
-    private PaymentInfoService paymentInfoService;
-    @Autowired
-    private PaymentInfoRepository paymentInfoRepository;
+    private CampaignDTOMapper campaignDTOMapper;
+
 
 
     @Override
@@ -95,22 +99,19 @@ public class CampaignServiceImpl implements CampaignService {
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
 
-        var campaignBankAccount =  campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
+        var payment =  paymentRepository.findPaymentByCampaignId(campaignId);
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-        var user = userRepository.findUserByUsername(campaign.getOwner(),true).get();
-        var totalAmountCollected = paymentInfoRepository.findTotalAmountOfPaymentForCampaign(campaignId);
-        var contributors = paymentInfoRepository.findPaymentInfoByCampaignId(campaignId);
+        var user = userRepository.findByUsername(campaign.getOwner()).get();
 
-        campaign.setCampaignBankAccount(campaignBankAccount);
-        campaign.setCollaborators(collaborators);
-        campaign.setRewards(rewards);
-        campaign.setPromotions(promotions);
-        campaign.setContributors(contributors);
-        campaign.setOwnerFullName(user.getFullName());
-        campaign.setTotalAmountCollected(totalAmountCollected + " is collected out of " + campaign.getGoalAmount());
-        campaign.setNumberOfBackers(contributors.size());
+        campaign.setPayment(payment != null ? payment:null);
+        campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);
+        campaign.setRewards(rewards.size() > 0 ? rewards:null);
+        campaign.setPromotions(promotions.size() > 0 ? promotions : null);
+        campaign.setOwnerName(user !=null? user.getFullName():null);
+        campaign.setOwnerName(user.getFullName());
+
         return campaign;
     }
 
@@ -160,6 +161,21 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setExpiredAt(expiredAt.format(dateTimeFormatter));
 
         return campaignRepository.save(campaign);
+    }
+
+    @Override
+    public List<CampaignDTO> searchCampaigns(String tempSearchParam) {
+//        to change string input :tech health food " into sth like "tech|health|food"
+        var searchParamArray = tempSearchParam.trim().split("\\W+");;
+        var searchParam = searchParamArray[0];
+        for ( int i = 1; i < searchParamArray.length; i++){
+            searchParam = searchParam + "|"+ searchParamArray[i];
+        }
+        var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
+                .map(campaignDTOMapper).collect(Collectors.toList());
+        if(campaigns.size()==0)
+            throw  new ResourceNotFoundException("There is no campaign with this search parameter.");
+        return campaigns;
     }
 
     @Override
