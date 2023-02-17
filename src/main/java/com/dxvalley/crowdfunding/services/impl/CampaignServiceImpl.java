@@ -5,6 +5,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
@@ -13,25 +17,17 @@ import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
-import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
 @Service
-@RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
     @Autowired
-
     private CampaignRepository campaignRepository;
     @Autowired
-    private PaymentRepository paymentRepository;
-    @Autowired
-    private CollaboratorRepository collaboratorRepository;
+    private CampaignBankAccountRepository campaignBankAccountRepository;
+    @Autowired private CollaboratorRepository collaboratorRepository;
     @Autowired
     private RewardRepository rewardRepository;
     @Autowired
@@ -41,18 +37,19 @@ public class CampaignServiceImpl implements CampaignService {
     @Autowired
     private FundingTypeService fundingTypeService;
     @Autowired
-    private CampaignSubCategoryService campaignSubCategoryService;
+    private PaymentInfoRepository paymentInfoRepository;
+    @Autowired
+    CampaignSubCategoryService campaignSubCategoryService;
     @Autowired
     private CampaignDTOMapper campaignDTOMapper;
-
 
 
     @Override
     public Campaign addCampaign(CampaignAddRequestDto campaignAddRequestDto) {
         Campaign campaign = new Campaign();
-            FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
-            CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
-                    .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
+        FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
+        CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
+                .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
 
         LocalDateTime createdAt = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -99,19 +96,22 @@ public class CampaignServiceImpl implements CampaignService {
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
 
-        var payment =  paymentRepository.findPaymentByCampaignId(campaignId);
+        var campaignBankAccount =  campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-        var user = userRepository.findByUsername(campaign.getOwner()).get();
+        var user = userRepository.findUserByUsername(campaign.getOwner(),true).get();
+        var totalAmountCollected = paymentInfoRepository.findTotalAmountOfPaymentForCampaign(campaignId);
+        var contributors = paymentInfoRepository.findPaymentInfoByCampaignId(campaignId);
 
-        campaign.setPayment(payment != null ? payment:null);
-        campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);
-        campaign.setRewards(rewards.size() > 0 ? rewards:null);
-        campaign.setPromotions(promotions.size() > 0 ? promotions : null);
-        campaign.setOwnerName(user !=null? user.getFullName():null);
-        campaign.setOwnerName(user.getFullName());
-
+        campaign.setCampaignBankAccount(campaignBankAccount);
+        campaign.setCollaborators(collaborators);
+        campaign.setRewards(rewards);
+        campaign.setPromotions(promotions);
+        campaign.setContributors(contributors);
+        campaign.setOwnerFullName(user.getFullName());
+        campaign.setTotalAmountCollected(totalAmountCollected + " is collected out of " + campaign.getGoalAmount());
+        campaign.setNumberOfBackers(contributors.size());
         return campaign;
     }
 
@@ -188,3 +188,23 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
