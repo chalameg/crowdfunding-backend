@@ -3,41 +3,53 @@ package com.dxvalley.crowdfunding.services.impl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
+import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
-import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
 @Service
-@RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
-    private final CampaignRepository campaignRepository;
-    private final PaymentRepository paymentRepository;
-    private final CollaboratorRepository collaboratorRepository;
-    private final RewardRepository rewardRepository;
-    private final PromotionRepository promotionRepository;
-    private final UserRepository userRepository;
-    private final FundingTypeService fundingTypeService;
-    private final CampaignSubCategoryService campaignSubCategoryService;
-
+    @Autowired
+    private CampaignRepository campaignRepository;
+    @Autowired
+    private CampaignBankAccountRepository campaignBankAccountRepository;
+    @Autowired private CollaboratorRepository collaboratorRepository;
+    @Autowired
+    private RewardRepository rewardRepository;
+    @Autowired
+    private PromotionRepository promotionRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private FundingTypeService fundingTypeService;
+    @Autowired
+    private PaymentInfoRepository paymentInfoRepository;
+    @Autowired
+    CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+    private CampaignDTOMapper campaignDTOMapper;
 
 
     @Override
     public Campaign addCampaign(CampaignAddRequestDto campaignAddRequestDto) {
         Campaign campaign = new Campaign();
-            FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
-            CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
-                    .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
+        FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
+        CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
+                .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
 
         LocalDateTime createdAt = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -84,19 +96,22 @@ public class CampaignServiceImpl implements CampaignService {
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
 
-        var payment =  paymentRepository.findPaymentByCampaignId(campaignId);
+        var campaignBankAccount =  campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
         var user = userRepository.findUserByUsername(campaign.getOwner(),true).get();
+        var totalAmountCollected = paymentInfoRepository.findTotalAmountOfPaymentForCampaign(campaignId);
+        var contributors = paymentInfoRepository.findPaymentInfoByCampaignId(campaignId);
 
-        campaign.setPayment(payment != null ? payment:null);
-        campaign.setCollaborators(collaborators.size() > 0 ? collaborators : null);
-        campaign.setRewards(rewards.size() > 0 ? rewards:null);
-        campaign.setPromotions(promotions.size() > 0 ? promotions : null);
-        campaign.setOwnerName(user !=null? user.getFullName():null);
-        campaign.setOwnerName(user.getFullName());
-
+        campaign.setCampaignBankAccount(campaignBankAccount);
+        campaign.setCollaborators(collaborators);
+        campaign.setRewards(rewards);
+        campaign.setPromotions(promotions);
+        campaign.setContributors(contributors);
+        campaign.setOwnerFullName(user.getFullName());
+        campaign.setTotalAmountCollected(totalAmountCollected + " is collected out of " + campaign.getGoalAmount());
+        campaign.setNumberOfBackers(contributors.size());
         return campaign;
     }
 
@@ -149,6 +164,21 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public List<CampaignDTO> searchCampaigns(String tempSearchParam) {
+//        to change string input :tech health food " into sth like "tech|health|food"
+        var searchParamArray = tempSearchParam.trim().split("\\W+");;
+        var searchParam = searchParamArray[0];
+        for ( int i = 1; i < searchParamArray.length; i++){
+            searchParam = searchParam + "|"+ searchParamArray[i];
+        }
+        var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
+                .map(campaignDTOMapper).collect(Collectors.toList());
+        if(campaigns.size()==0)
+            throw  new ResourceNotFoundException("There is no campaign with this search parameter.");
+        return campaigns;
+    }
+
+    @Override
     public String deleteCampaign(Long campaignId) {
         var campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
@@ -158,3 +188,23 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
