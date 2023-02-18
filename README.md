@@ -33,7 +33,6 @@ setweight(to_tsvector(coalesce(short_description, '')), 'B') ||
 setweight(to_tsvector(coalesce(city, '')), 'C');
 CREATE INDEX document ON campaign USING GIN (document);
 
-DROP FUNCTION campaign_tsvector_trigger() CASCADE;
 CREATE FUNCTION campaign_tsvector_trigger() RETURNS trigger As $$
 begin
 new.document =setweight(array_to_tsvector((select array_agg(distinct substring(lexeme for len))
