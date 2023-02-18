@@ -3,20 +3,21 @@ package com.dxvalley.crowdfunding.services.impl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
+import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
-import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
-import com.dxvalley.crowdfunding.services.PaymentInfoService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
@@ -36,19 +37,19 @@ public class CampaignServiceImpl implements CampaignService {
     @Autowired
     private FundingTypeService fundingTypeService;
     @Autowired
-    private CampaignSubCategoryService campaignSubCategoryService;
-    @Autowired
-    private PaymentInfoService paymentInfoService;
-    @Autowired
     private PaymentInfoRepository paymentInfoRepository;
+    @Autowired
+    CampaignSubCategoryService campaignSubCategoryService;
+    @Autowired
+    private CampaignDTOMapper campaignDTOMapper;
 
 
     @Override
     public Campaign addCampaign(CampaignAddRequestDto campaignAddRequestDto) {
         Campaign campaign = new Campaign();
-            FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
-            CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
-                    .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
+        FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
+        CampaignSubCategory campaignSubCategory =  campaignSubCategoryService
+                .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
 
         LocalDateTime createdAt = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -163,6 +164,21 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public List<CampaignDTO> searchCampaigns(String tempSearchParam) {
+//        to change string input :tech health food " into sth like "tech|health|food"
+        var searchParamArray = tempSearchParam.trim().split("\\W+");;
+        var searchParam = searchParamArray[0];
+        for ( int i = 1; i < searchParamArray.length; i++){
+            searchParam = searchParam + "|"+ searchParamArray[i];
+        }
+        var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
+                .map(campaignDTOMapper).collect(Collectors.toList());
+        if(campaigns.size()==0)
+            throw  new ResourceNotFoundException("There is no campaign with this search parameter.");
+        return campaigns;
+    }
+
+    @Override
     public String deleteCampaign(Long campaignId) {
         var campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
@@ -172,3 +188,23 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
