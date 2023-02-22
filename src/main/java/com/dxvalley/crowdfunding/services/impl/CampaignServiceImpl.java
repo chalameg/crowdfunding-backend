@@ -174,7 +174,24 @@ public class CampaignServiceImpl implements CampaignService {
         var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
                 .map(campaignDTOMapper).collect(Collectors.toList());
         if(campaigns.size()==0)
-            throw  new ResourceNotFoundException("There is no campaign with this search parameter.");
+            throw new ResourceNotFoundException("There is no campaign with this search parameter.");
+        return campaigns;
+    }
+
+    @Override
+    public List<Campaign> getCampaignsByFundingType(Long fundingTypeId) {
+        var campaigns = campaignRepository.findCampaignsByFundingType(fundingTypeId);
+        if(campaigns.size()==0)
+            throw new ResourceNotFoundException("There is no campaign for this Funding Type.");
+        return campaigns;
+    }
+
+    @Override
+    public List<Campaign> getCampaignsByStage(String campaignStage) {
+        CampaignStage result = CampaignStage.lookup(campaignStage);
+        var campaigns = campaignRepository.findCampaignsByCampaignStage(result);
+        if(campaigns.size()==0)
+            throw  new ResourceNotFoundException("There is no campaign at " + campaignStage + " stage.");
         return campaigns;
     }
 
