@@ -24,8 +24,7 @@ If you are using a different user, you will need to modify the commands accordin
 
 # Executing the query
 Before using the application, you must execute the following query in your PostgreSQL database:
-NOTE: The equal sign is not part of the query. It's just used to separate the query from other text for clarity purposes.
-==============================================================================================
+
 ALTER TABLE campaign ADD COLUMN document tsvector;
 UPDATE campaign set document = setweight(array_to_tsvector((select array_agg(distinct substring(lexeme for len))
 from unnest(to_tsvector(title)), generate_series(1,length(lexeme)) len)),'A') ||
@@ -33,7 +32,6 @@ setweight(to_tsvector(coalesce(short_description, '')), 'B') ||
 setweight(to_tsvector(coalesce(city, '')), 'C');
 CREATE INDEX document ON campaign USING GIN (document);
 
-DROP FUNCTION campaign_tsvector_trigger() CASCADE;
 CREATE FUNCTION campaign_tsvector_trigger() RETURNS trigger As $$
 begin
 new.document =setweight(array_to_tsvector((select array_agg(distinct substring(lexeme for len))
@@ -44,7 +42,6 @@ return new;
 end
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE ON campaign FOR EACH ROW EXECUTE PROCEDURE campaign_tsvector_trigger();
-=========================================================================================================
 
 # Troubleshooting
 If you encounter any issues while setting up or running the application,

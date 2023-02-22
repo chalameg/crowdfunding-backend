@@ -41,7 +41,7 @@ public class CampaignController {
     }
     @GetMapping("/getEnabledCampaigns")
     ResponseEntity<?> getEnabledCampaigns() {
-        return new  ResponseEntity<>(
+        return new ResponseEntity<>(
                 campaignService.getEnabledCampaigns(),
                 HttpStatus.OK);
     }
@@ -72,6 +72,20 @@ public class CampaignController {
     ResponseEntity<?>  getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
         return new ResponseEntity<>(
                 campaignService.getCampaignBySubCategory(subCategoryId),
+                HttpStatus.OK);
+    }
+
+    @GetMapping("/getCampaignsByStage/{campaignStage}")
+    ResponseEntity<?> getCampaignsByStage(@PathVariable String campaignStage) {
+        return new ResponseEntity<>(
+                campaignService.getCampaignsByStage(campaignStage),
+                HttpStatus.OK);
+    }
+
+    @GetMapping("/getCampaignsByFundingType/{fundingTypeId}")
+    ResponseEntity<?> getCampaignsByFundingType(@PathVariable Long fundingTypeId) {
+        return new ResponseEntity<>(
+                campaignService.getCampaignsByFundingType(fundingTypeId),
                 HttpStatus.OK);
     }
 

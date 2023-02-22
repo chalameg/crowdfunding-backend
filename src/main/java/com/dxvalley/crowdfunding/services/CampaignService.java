@@ -6,6 +6,7 @@ import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.Campaign;
+import com.dxvalley.crowdfunding.models.CampaignStage;
 
 
 public interface CampaignService {
@@ -20,4 +21,6 @@ public interface CampaignService {
     List<Campaign> getCampaignsByOwner(String owner);
     Campaign enableCampaign(Long campaignId);
     List<CampaignDTO> searchCampaigns(String searchParam);
+    List<Campaign> getCampaignsByStage(String campaignStage);
+    List<Campaign> getCampaignsByFundingType(Long fundingTypeId);
 }
