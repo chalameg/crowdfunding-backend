@@ -2,25 +2,36 @@ package com.dxvalley.crowdfunding.controllers;
 
 import com.dxvalley.crowdfunding.models.CampaignBankAccount;
 import com.dxvalley.crowdfunding.repositories.CampaignBankAccountRepository;
+import com.dxvalley.crowdfunding.services.CampaignBankAccountService;
 import com.dxvalley.crowdfunding.services.CampaignService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/campaignBankAccount")
 public class CampaignBankAccountController {
-    private final CampaignBankAccountRepository campaignBankAccountRepository;
-    private final CampaignService campaignService;
+    @Autowired
+    private CampaignBankAccountRepository campaignBankAccountRepository;
+    @Autowired
+    private CampaignService campaignService;
+    @Autowired
+    CampaignBankAccountService campaignBankAccountService;
     
     @GetMapping("/getCampaignBankAccountByCampaign/{campaignId}")
     CampaignBankAccount getCampaignBankAccountByCampaign(@PathVariable Long campaignId) {
+        campaignBankAccountService.getCampaignBankAccountByCampaignId(campaignId);
+
         return campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
     }
+
     @PostMapping("/add/{campaignId}")
-    public ResponseEntity<?> addCampaignBankAccount(@PathVariable Long campaignId, @RequestParam() String bankAccount) {
+    public ResponseEntity<?> addCampaignBankAccount(
+            @PathVariable Long campaignId,
+            @RequestParam String bankAccount) {
+
+        campaignBankAccountService.addBankAccount(campaignId, bankAccount);
+
         CampaignBankAccount campaignBankAccount = new CampaignBankAccount();
 
         // var result = campaignBankAccountRepository.findCampaignBankAccountByBankAccount(bankAccount);
@@ -36,5 +47,10 @@ public class CampaignBankAccountController {
         campaignBankAccount.setBankAccount(bankAccount);
         campaignBankAccount.setCampaign(campaign);
         return new ResponseEntity<>(campaignBankAccountRepository.save(campaignBankAccount),HttpStatus.OK);
+    }
+    @GetMapping("/checkBankAccountExistence/{bankAccount}")
+    ResponseEntity<?> checkBankAccountExistence(@PathVariable String bankAccount) throws Exception {
+       var response =  campaignBankAccountService.checkBankAccountExistence(bankAccount);
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 }
