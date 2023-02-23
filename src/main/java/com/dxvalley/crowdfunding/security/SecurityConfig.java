@@ -43,11 +43,14 @@ public class SecurityConfig{
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http
         .csrf(AbstractHttpConfigurer::disable)
-        .cors().and()
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+        .cors()
+            .and()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
         .authorizeHttpRequests(auth -> {
-          auth.requestMatchers("/**").permitAll();
-          // auth.requestMatchers("/api/**").hasAuthority("equbUser");
+            auth.requestMatchers("/**").permitAll();
+            auth.requestMatchers("/**").permitAll();
+            auth.requestMatchers("/api/**").hasAuthority("equbUser");
         })
         .addFilter(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration)))
         .addFilterBefore(new JwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)

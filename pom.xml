@@ -41,6 +41,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20210307</version>
+		</dependency>
+		<dependency>
     		<groupId>com.auth0</groupId>
     		<artifactId>java-jwt</artifactId>
     		<version>4.2.1</version>
@@ -60,7 +65,11 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional> <!-- Can prevent passing devtools dependencies into other modules -->
+		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>

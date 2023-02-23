@@ -59,20 +59,6 @@ public class ApplicationExceptionHandler {
         );
         return new ResponseEntity<>(apiException, httpStatus);
     }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllOtherException(Exception ex) {
-        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        ExceptionResponse apiException = new ExceptionResponse(
-                LocalDateTime.now().format(dateTimeFormatter),
-                httpStatus,
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(apiException, httpStatus);
-    }
-
-
 }
 
 
