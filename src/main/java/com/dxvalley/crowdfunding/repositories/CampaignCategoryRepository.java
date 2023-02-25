@@ -9,7 +9,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public interface CampaignCategoryRepository extends JpaRepository<CampaignCategory, Long> {
     Optional<CampaignCategory> findCampaignCategoryByCampaignCategoryId(Long campaignCategoryId);
-    Optional<CampaignCategory> findByName(String name);
+    CampaignCategory findByName(String name);
 }
 
 

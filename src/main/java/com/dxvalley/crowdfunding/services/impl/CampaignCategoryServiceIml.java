@@ -2,6 +2,7 @@ package com.dxvalley.crowdfunding.services.impl;
 
 import java.util.List;
 
+import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,11 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
 
     @Override
     public CampaignCategory addCampaignCategory(CampaignCategory tempCampaignCategory) {
-        var campaignCategory = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
-
+        var category = campaignCategoryRepository.findByName(tempCampaignCategory.getName());
+        if(category != null){
+            throw new ResourceAlreadyExistsException("There is already a category with this name!");
+        }
         return campaignCategoryRepository.save(tempCampaignCategory);
-
     }
 
     @Override
@@ -72,12 +74,11 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
     }
 
     @Override
-    public String deleteCampaignCategory(Long campaignCategoryId) {
+    public void deleteCampaignCategory(Long campaignCategoryId) {
         CampaignCategory campaignCategory = campaignCategoryRepository
                 .findCampaignCategoryByCampaignCategoryId(campaignCategoryId).orElseThrow(
                         () -> new ResourceNotFoundException("There is no campaign Category with this ID.")
                 );
-        campaignCategoryRepository.delete(campaignCategory);
-        return "CampaignCategory Deleted successfully!";
+        campaignCategoryRepository.deleteById(campaignCategoryId);
     }
 }
