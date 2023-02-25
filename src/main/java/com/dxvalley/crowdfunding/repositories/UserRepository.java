@@ -1,9 +1,7 @@
 package com.dxvalley.crowdfunding.repositories;
-import jakarta.transaction.Transactional;
-import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.dxvalley.crowdfunding.models.Users;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -20,8 +18,4 @@ public interface UserRepository extends JpaRepository<Users,Long>{
     @Query("SELECT u FROM Users u WHERE u.isEnabled = TRUE")
     List<Users> findAll();
 
-    @Transactional
-    @Modifying
-    @Query("UPDATE Users u SET u.isEnabled = TRUE WHERE u.username = :username")
-    int enableUser(String username);
 }

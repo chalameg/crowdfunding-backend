@@ -12,14 +12,11 @@ public class OtpController {
     @Autowired
     ConfirmationTokenService confirmationTokenService;
 
-    @GetMapping("/checkOtpExistance")
-    public ResponseEntity<?>getOtpByCode(@RequestParam String otpCode) {
-        return new ResponseEntity<>(
-                confirmationTokenService.getToken(otpCode),
-                HttpStatus.OK);
+    @GetMapping("/checkOtpExistence")
+    public ResponseEntity<?> getOtpByCode(@RequestParam String otpCode) {
+        return new ResponseEntity<>(confirmationTokenService.getToken(otpCode), HttpStatus.OK);
     }
 }
-
 
 
 

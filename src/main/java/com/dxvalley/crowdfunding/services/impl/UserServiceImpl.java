@@ -64,7 +64,8 @@ public class UserServiceImpl implements UserService {
         });
         return hasSysAdmin.get();
     }
-    public List<Users> getUsers(){
+
+    public List<Users> getUsers() {
         if (isSysAdmin()) {
             return userRepository.findAll();
         }
@@ -78,25 +79,27 @@ public class UserServiceImpl implements UserService {
         });
         return users;
     }
-    public Users getUserById(Long userId){
-         Users user = userRepository.findByUserId(userId).orElseThrow(
+
+    public Users getUserById(Long userId) {
+        Users user = userRepository.findByUserId(userId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this Id")
         );
         return user;
     }
+
     public Users getUserByUsername(String username) {
         var user = userRepository.findUserByUsername(username, true).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this username")
         );
         return user;
     }
-    public ResponseEntity<?> register(Users tempUser) {
 
-        userRepository.findUserByUsername(tempUser.getUsername(), true).ifPresent(
-                user -> {throw new ResourceAlreadyExistsException(
-                        "There is already a user with this username, known " + user.getFullName()); }
-        );
-        userRepository.findUserByUsername(tempUser.getUsername(),false).ifPresent(
+    public ResponseEntity<?> register(Users tempUser) {
+        var res = userRepository.findUserByUsername(tempUser.getUsername(), true);
+        if (res.isPresent()) {
+            throw new ResourceAlreadyExistsException("There is already a user with this username");
+        }
+        userRepository.findUserByUsername(tempUser.getUsername(), false).ifPresent(
                 user -> userRepository.delete(user)
         );
 
@@ -104,8 +107,10 @@ public class UserServiceImpl implements UserService {
         roles.add(this.roleRepo.findByRoleName("user"));
         tempUser.setRoles(roles);
         tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
+        tempUser.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
+        tempUser.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
         tempUser.setIsEnabled(false);
-        var user =  userRepository.save(tempUser);
+        var user = userRepository.save(tempUser);
 
         //send email if username is email
         if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
@@ -115,7 +120,7 @@ public class UserServiceImpl implements UserService {
                     tempUser.getUsername(),
                     emailSender.emailBuilderForUserConfirmation(tempUser.getFullName(), link),
                     "Confirm your email");
-            if(isSend){
+            if (isSend) {
                 LocalDateTime createdAt = LocalDateTime.now();
                 LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
 
@@ -125,61 +130,66 @@ public class UserServiceImpl implements UserService {
                         expiresAt.format(dateTimeFormatter),
                         user);
                 confirmationTokenService.saveConfirmationToken(confirmationToken);
-                return new ResponseEntity<>(user,HttpStatus.OK);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             }
             ApiResponse response = new ApiResponse(
                     "error",
                     "Cannot sent email due to Internal Server Error. try again later");
-            return new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         } else {
             // send message if username is phone number
             String code = getRandomNumberString();
-            var result = otpService.sendOtp(tempUser.getUsername(),code);
-            if(result.getStatus() =="success" ){
-                LocalDateTime createdAt = LocalDateTime.now();
-                LocalDateTime expiresAt = LocalDateTime.now().plusDays(5);
+            var result = otpService.sendOtp(tempUser.getUsername(), code);
+            if (result.getStatus() == "success") {
 
                 ConfirmationToken token = new ConfirmationToken(
                         code,
-                        createdAt.format(dateTimeFormatter),
-                        expiresAt.format(dateTimeFormatter),
+                        LocalDateTime.now().format(dateTimeFormatter),
+                        LocalDateTime.now().plusDays(3).format(dateTimeFormatter),
                         user
                 );
                 confirmationTokenService.saveConfirmationToken(token);
-                return new ResponseEntity<>(user,HttpStatus.OK);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             }
-            if(result.getStatus()=="error")
-                return new ResponseEntity<>(result,HttpStatus.INTERNAL_SERVER_ERROR);
-            return new ResponseEntity<>(result,HttpStatus.BAD_REQUEST);
+            if (result.getStatus() == "error")
+                return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
         }
     }
+
     public Boolean confirmToken(String token) {
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token);
 
         LocalDateTime expiredAt = LocalDateTime.parse(confirmationToken.getExpiresAt(), dateTimeFormatter);
-        if (expiredAt.isBefore(LocalDateTime.now())){
+        if (expiredAt.isBefore(LocalDateTime.now())) {
             confirmationTokenRepository.delete(confirmationToken);
             return false;
         }
 
         var username = confirmationToken.getUser().getUsername();
-        userRepository.enableUser(username);
+        var user = getUserByUsername(username);
+        user.setIsEnabled(true);
+        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+        userRepository.save(user);
         confirmationTokenRepository.delete(confirmationToken);
         return true;
     }
-    public Users editUser(Long userId,  Users tempUser){
+
+    public Users editUser(Long userId, Users tempUser) {
         Users user = getUserById(userId);
 
         user.setFullName(tempUser.getFullName() != null ? tempUser.getFullName() : user.getFullName());
         user.setBiography(tempUser.getBiography() != null ? tempUser.getBiography() : user.getBiography());
         user.setWebsite(tempUser.getWebsite() != null ? tempUser.getWebsite() : user.getWebsite());
         user.setAddress(tempUser.getAddress() != null ? tempUser.getAddress() : user.getAddress());
+        tempUser.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
 
         Users result = userRepository.save(user);
         result.setPassword(null);
         return result;
     }
+
     public ResponseEntity<?> uploadUserAvatar(String userName, MultipartFile userAvatar) {
         var user = getUserByUsername(userName);
         String avatarUrl;
@@ -193,23 +203,27 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setAvatarUrl(avatarUrl);
+        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
         var result = userRepository.save(user);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
     public ApiResponse changePassword(String username, ChangePassword temp) {
         var user = userRepository.findUserByUsername(username, true).orElseThrow(
                 () -> new ResourceNotFoundException("There is no user with this username")
         );
 
-        Boolean isMatch =  passwordEncoder.matches(temp.getOldPassword(), user.getPassword());
+        Boolean isMatch = passwordEncoder.matches(temp.getOldPassword(), user.getPassword());
         if (!isMatch) {
             return new ApiResponse("error", "Incorrect old Password!");
         }
 
         user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
+        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
         userRepository.save(user);
         return new ApiResponse("success", "Password Changed Successfully!");
     }
+
     public ApiResponse forgotPassword(String username) {
         Users user = getUserByUsername(username);
 
@@ -217,11 +231,11 @@ public class UserServiceImpl implements UserService {
             String token = UUID.randomUUID().toString();
             String link = "http://localhost:3000/resetPassword/" + token;
 
-            Boolean isSend  = emailSender.send(
+            Boolean isSend = emailSender.send(
                     user.getUsername(),
                     emailSender.emailBuilderForPasswordReset(user.getFullName(), link),
                     "Reset your password");
-            if(isSend){
+            if (isSend) {
                 LocalDateTime createdAt = LocalDateTime.now();
                 LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
 
@@ -231,25 +245,22 @@ public class UserServiceImpl implements UserService {
                         expiresAt.format(dateTimeFormatter),
                         user);
                 confirmationTokenService.saveConfirmationToken(confirmationToken);
-                return new ApiResponse("success","please check your email");
+                return new ApiResponse("success", "please check your email");
             }
             return new ApiResponse(
                     "error",
                     "Cannot sent email due to Internal Server Error. try again later");
 
-        }else {
+        } else {
             String code = getRandomNumberString();
-            var result = otpService.sendOtp(user.getUsername(),code);
+            var result = otpService.sendOtp(user.getUsername(), code);
 
-            if(result.getStatus() =="success" ){
-
-                LocalDateTime createdAt = LocalDateTime.now();
-                LocalDateTime expiresAt = LocalDateTime.now().plusDays(5);
+            if (result.getStatus() == "success") {
 
                 ConfirmationToken token = new ConfirmationToken(
                         code,
-                        createdAt.format(dateTimeFormatter),
-                        expiresAt.format(dateTimeFormatter),
+                        LocalDateTime.now().format(dateTimeFormatter),
+                        LocalDateTime.now().plusDays(3).format(dateTimeFormatter),
                         user
                 );
                 confirmationTokenService.saveConfirmationToken(token);
@@ -258,6 +269,7 @@ public class UserServiceImpl implements UserService {
             return result;
         }
     }
+
     public ApiResponse resetPassword(ResetPassword resetPassword) {
 
         ConfirmationToken confirmationToken = confirmationTokenService
@@ -274,6 +286,7 @@ public class UserServiceImpl implements UserService {
         var user = getUserByUsername(username);
 
         user.setPassword(passwordEncoder.encode(resetPassword.getPassword()));
+        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
         userRepository.save(user);
         confirmationTokenRepository.delete(confirmationToken);
         ApiResponse response = new ApiResponse(
@@ -281,12 +294,14 @@ public class UserServiceImpl implements UserService {
                 "Hooray! Your password has been successfully reset.");
         return response;
     }
+
     public void delete(String username) {
         Users user = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException("There is no User with this username.")
         );
         userRepository.delete(user);
     }
+
     public String getRandomNumberString() {
         Random rnd = new Random();
         int number = rnd.nextInt(999999);
