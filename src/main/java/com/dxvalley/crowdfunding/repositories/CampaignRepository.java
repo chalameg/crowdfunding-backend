@@ -1,17 +1,22 @@
 package com.dxvalley.crowdfunding.repositories;
+
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 import java.util.Optional;
 
 import com.dxvalley.crowdfunding.models.Campaign;
 import org.springframework.data.jpa.repository.Query;
 
-public interface CampaignRepository extends JpaRepository<Campaign, Long>{
+public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     Optional<Campaign> findCampaignByCampaignId(Long campaignId);
+
     List<Campaign> findCampaignsByOwner(String owner);
+
     List<Campaign> findCampaignsByCampaignStage(CampaignStage campaignStage);
+
     @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
             "c.campaignDuration,c.projectType, c.campaignStage)" +
             " from Campaign as c where" +
@@ -22,7 +27,8 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long>{
             "c.campaignDuration,c.projectType, c.campaignStage)" +
             " from Campaign as c where" +
             " c.isEnabled = TRUE")
-    List<Campaign> findAllCampaigns();
+    List<Campaign> findAllEnabledCampaigns();
+
     @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
             "c.campaignDuration,c.projectType, c.campaignStage)" +
             " from Campaign as c where" +
