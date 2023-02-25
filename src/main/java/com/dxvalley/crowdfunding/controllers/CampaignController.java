@@ -186,8 +186,9 @@ public class CampaignController {
 
     @DeleteMapping("delete/{campaignId}")
     ResponseEntity<?> deleteCampaign(@PathVariable Long campaignId) throws ResourceNotFoundException {
-        var result = campaignService.deleteCampaign(campaignId);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        campaignService.deleteCampaign(campaignId);
+        ApiResponse response =  new ApiResponse("success","Campaign successfully deleted!");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

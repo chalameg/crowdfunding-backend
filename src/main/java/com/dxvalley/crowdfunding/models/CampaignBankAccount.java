@@ -11,7 +11,7 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class CampaignBankAccount {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long campaignBankAccountId;
     private String bankAccount;
     @OneToOne(cascade = CascadeType.ALL)
@@ -19,9 +19,6 @@ public class CampaignBankAccount {
 
     public CampaignBankAccount(Long campaignBankAccountId, String bankAccount) {
         this.campaignBankAccountId = campaignBankAccountId;
-        this.bankAccount = bankAccount;
-    }
-    public CampaignBankAccount(String bankAccount) {
         this.bankAccount = bankAccount;
     }
 }

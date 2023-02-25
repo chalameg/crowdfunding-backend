@@ -32,6 +32,7 @@ public class Users {
     private String website;
     private String password;
     private String createdAt;
+    private String editedAt;
     private Boolean isEnabled;
     private String avatarUrl;
     private String address;

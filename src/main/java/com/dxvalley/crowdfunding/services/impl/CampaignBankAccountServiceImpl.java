@@ -1,8 +1,8 @@
 package com.dxvalley.crowdfunding.services.impl;
 
-import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.BankAccountExistenceDTO;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.CampaignBankAccount;
 import com.dxvalley.crowdfunding.repositories.CampaignBankAccountRepository;
 import com.dxvalley.crowdfunding.repositories.CampaignRepository;
@@ -11,11 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class CampaignBankAccountServiceImpl implements CampaignBankAccountService {
@@ -26,7 +22,10 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
 
     @Override
     public CampaignBankAccount getCampaignBankAccountByCampaignId(Long campaignId) {
-        return campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
+        var campaignBankAccount = campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId).orElseThrow(
+                () -> new ResourceNotFoundException("Bank Account is does not set for this Campaign.")
+        );
+        return campaignBankAccount;
     }
 
     @Override
@@ -46,14 +45,13 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
         }
 
         String result = response.getBody().toString();
-        System.out.println(result.length());
-        if(result.length() > 2){
+        if (result.length() > 2) {
             JSONObject jsonObject = new JSONObject(result);
-            var accountDetailsResponse =  jsonObject.getJSONObject("AccountDetailsResponse");
-            var esbStatus =  accountDetailsResponse.getJSONObject("EsbStatus");
-            if(esbStatus.getString("status").equals("Success")){
+            var accountDetailsResponse = jsonObject.getJSONObject("AccountDetailsResponse");
+            var esbStatus = accountDetailsResponse.getJSONObject("EsbStatus");
+            if (esbStatus.getString("status").equals("Success")) {
                 return new BankAccountExistenceDTO(accountDetailsResponse.getString("name"));
-            };
+            }
         }
         throw new ResourceNotFoundException("Account does not exist!");
     }
@@ -61,8 +59,14 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
     @Override
     public CampaignBankAccount addBankAccount(Long campaignId, String bankAccount) {
         CampaignBankAccount campaignBankAccount = new CampaignBankAccount();
+        campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId).ifPresent(
+                bankAccount1 -> campaignBankAccountRepository.delete(bankAccount1)
+        );
+        Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
+                () -> new ResourceNotFoundException("There is no campaign with this ID.")
+        );
         campaignBankAccount.setBankAccount(bankAccount);
-        campaignBankAccount.setCampaign(campaignRepository.findCampaignByCampaignId(campaignId).get());
+        campaignBankAccount.setCampaign(campaign);
         return campaignBankAccountRepository.save(campaignBankAccount);
     }
 

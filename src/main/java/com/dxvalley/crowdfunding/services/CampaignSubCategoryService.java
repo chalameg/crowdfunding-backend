@@ -9,6 +9,6 @@ public interface CampaignSubCategoryService {
     CampaignSubCategory editCampaignSubCategory (Long campaignSubCategoryId, CampaignSubCategory campaignSubCategory);
     List<CampaignSubCategory> getCampaignSubCategories ();
     CampaignSubCategory getCampaignSubCategoryById(Long campaignSubCategoryId);
-    String deleteCampaignSubCategory( Long campaignSubCategoryId);
+    void deleteCampaignSubCategory( Long campaignSubCategoryId);
     List<CampaignSubCategory> getCampaignSubCategoryByCategory(Long campaignCategoryId);
 }

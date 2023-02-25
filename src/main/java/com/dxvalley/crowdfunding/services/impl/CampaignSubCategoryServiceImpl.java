@@ -1,29 +1,31 @@
 package com.dxvalley.crowdfunding.services.impl;
 
-import java.util.List;
-
-import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.repositories.CampaignCategoryRepository;
-import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
+import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.services.CampaignCategoryService;
 import com.dxvalley.crowdfunding.models.CampaignSubCategory;
 import com.dxvalley.crowdfunding.repositories.CampaignSubCategoryRepository;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 
 @Service
-public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryService {
+public class CampaignSubCategoryServiceImpl implements CampaignSubCategoryService {
     @Autowired
-    private  CampaignSubCategoryRepository campaignSubCategoryRepository;
+    private CampaignSubCategoryRepository campaignSubCategoryRepository;
     @Autowired
     private CampaignCategoryService campaignCategoryService;
-    @Autowired
-    private CampaignCategoryRepository campaignCategoryRepository;
 
     @Override
     public CampaignSubCategory addCampaignSubCategory(CampaignSubCategory campaignSubCategories) {
-//      to check existence of category before adding subcategory
-        campaignCategoryService.getCampaignCategoryById(campaignSubCategories.getCampaignCategory().getCampaignCategoryId());
+        var subCategory = campaignSubCategoryRepository.findByName(campaignSubCategories.getName());
+        if (subCategory != null) {
+            throw new ResourceAlreadyExistsException("There is already a sub-category with this name!");
+        }
+        campaignCategoryService.getCampaignCategoryById(campaignSubCategories.getCampaignCategory().getCampaignCategoryId()); // To check existence of category for subcategory
         return this.campaignSubCategoryRepository.save(campaignSubCategories);
     }
 
@@ -33,13 +35,13 @@ public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryServic
         var campaignSubCategory =
                 campaignSubCategoryRepository.findById(campaignSubCategoryId).orElseThrow(
                         () -> new ResourceNotFoundException("There is no campaign subcategory with this ID."
-                ));
+                        ));
 
         var campaignCategory = campaignCategoryService.getCampaignCategoryById(
                 tempcampaignSubCategory.getCampaignCategory().getCampaignCategoryId());
 
         campaignSubCategory.setName(
-                tempcampaignSubCategory.getName() != null && tempcampaignSubCategory.getName().length() > 0?
+                tempcampaignSubCategory.getName() != null && tempcampaignSubCategory.getName().length() > 0 ?
                         tempcampaignSubCategory.getName() :
                         campaignSubCategory.getName());
 
@@ -55,7 +57,7 @@ public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryServic
     @Override
     public List<CampaignSubCategory> getCampaignSubCategories() {
         var campaignSubCategories = campaignSubCategoryRepository.findAll();
-        if(campaignSubCategories.size() == 0){
+        if (campaignSubCategories.size() == 0) {
             throw new ResourceNotFoundException("Currently, There is no Campaign SubCategory.");
         }
         return campaignSubCategories;
@@ -66,12 +68,12 @@ public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryServic
         return campaignSubCategoryRepository
                 .findCampaignSubCategoryByCampaignSubCategoryId(campaignSubCategoryId).orElseThrow(
                         () -> new ResourceNotFoundException("There is no campaign subcategory with this ID.")
-        );
+                );
     }
 
     @Override
     public List<CampaignSubCategory> getCampaignSubCategoryByCategory(Long campaignCategoryId) {
-        var campaignSubCategories =  campaignSubCategoryRepository.
+        var campaignSubCategories = campaignSubCategoryRepository.
                 findCampaignSubCategoryByCampaignCategoryId(campaignCategoryId).orElseThrow(
                         () -> new ResourceNotFoundException("There is no campaign subcategory with this ID.")
                 );
@@ -80,13 +82,10 @@ public class CampaignSubcategoryServiceImpl implements CampaignSubCategoryServic
     }
 
     @Override
-    public String deleteCampaignSubCategory(Long campaignSubCategoryId) {
-        var campaignSubCategory = campaignCategoryRepository.findById(campaignSubCategoryId).orElseThrow(
+    public void deleteCampaignSubCategory(Long campaignSubCategoryId) {
+        var campaignSubCategory = campaignSubCategoryRepository.findById(campaignSubCategoryId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign subcategory with this ID.")
-                );
-        campaignCategoryRepository.delete(campaignSubCategory);
-        return "Campaign subCategory Deleted successfully!";
+        );
+        campaignSubCategoryRepository.delete(campaignSubCategory);
     }
-
-
 }
