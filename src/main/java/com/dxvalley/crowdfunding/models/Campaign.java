@@ -36,15 +36,15 @@ public class Campaign {
     private String editedAt;
     private String expiredAt;
     private String dateDeleted;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private FundingType fundingType;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private CampaignSubCategory campaignSubCategory;
 
     @Transient
     private List<Collaborator> collaborators;
     @Transient
-    private List<PaymentInfo> contributors;
+    private List<Payment> contributors;
     @Transient
     private List<Reward> rewards;
     @Transient
