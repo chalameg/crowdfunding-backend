@@ -5,13 +5,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
-import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
@@ -66,6 +66,9 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
         campaign.setIsEnabled(false);
         campaign.setCampaignStage(CampaignStage.INITIAL);
+        campaign.setGoalAmount((double) 0);
+        campaign.setTotalAmountCollected((double) 0);
+        campaign.setNumberOfBackers(0);
 
         return campaignRepository.save(campaign);
     }
@@ -76,21 +79,21 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<Campaign> getCampaigns() {
+    public List<CampaignDTO> getCampaigns() {
         var campaigns = campaignRepository.findAll();
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("Currently, There is no campaign.");
         }
-        return campaigns;
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
-    public List<Campaign> getEnabledCampaigns() {
+    public List<CampaignDTO> getEnabledCampaigns() {
         var campaigns = campaignRepository.findAllEnabledCampaigns();
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("Currently, There is no Enabled campaign.");
         }
-        return campaigns;
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
@@ -105,46 +108,44 @@ public class CampaignServiceImpl implements CampaignService {
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
         var user = userRepository.findUserByUsername(campaign.getOwner(), true).get();
-        var totalAmountCollected = paymentRepository.findTotalAmountOfPaymentForCampaign(campaignId);
         var contributors = paymentRepository.findPaymentByCampaignId(campaignId);
 
-        campaign.setCampaignBankAccount(campaignBankAccount.get());
+        if (campaignBankAccount.isPresent())
+            campaign.setCampaignBankAccount(campaignBankAccount.get());
         campaign.setCollaborators(collaborators);
         campaign.setRewards(rewards);
         campaign.setPromotions(promotions);
         campaign.setContributors(contributors);
         campaign.setOwnerFullName(user.getFullName());
-        campaign.setTotalAmountCollected(totalAmountCollected + " is collected out of " + campaign.getGoalAmount());
         campaign.setNumberOfBackers(contributors.size());
         return campaign;
     }
 
     @Override
-    public List<Campaign> getCampaignByCategory(Long categoryId) {
+    public List<CampaignDTO> getCampaignByCategory(Long categoryId) {
         var campaigns = campaignRepository.findByCampaignByCategoryId(categoryId);
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("There is no campaign for this category.");
         }
-        return campaigns;
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
-    public List<Campaign> getCampaignBySubCategory(Long subCategoryId) {
+    public List<CampaignDTO> getCampaignBySubCategory(Long subCategoryId) {
         var campaigns = campaignRepository.findByCampaignBySubCategoryId(subCategoryId);
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("There is no campaign for this sub-category.");
         }
-        return campaigns;
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
-    public List<Campaign> getCampaignsByOwner(String owner) {
+    public List<CampaignDTO> getCampaignsByOwner(String owner) {
         var campaigns = campaignRepository.findCampaignsByOwner(owner);
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("There is no campaign for this User.");
         }
-
-        return campaigns;
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
@@ -152,11 +153,8 @@ public class CampaignServiceImpl implements CampaignService {
         Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
-
-        if (campaign.getIsEnabled()) {
-            return campaign;
-        }
-
+        if (campaign.getIsEnabled()) return campaign;
+        
         campaign.setIsEnabled(true);
         campaign.setCampaignStage(CampaignStage.FUNDING);
         campaign.setEnabledAt(LocalDateTime.now().format(dateTimeFormatter));
@@ -182,20 +180,22 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<Campaign> getCampaignsByFundingType(Long fundingTypeId) {
+    public List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId) {
         var campaigns = campaignRepository.findCampaignsByFundingType(fundingTypeId);
         if (campaigns.size() == 0)
             throw new ResourceNotFoundException("There is no campaign for this Funding Type.");
-        return campaigns;
+
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override
-    public List<Campaign> getCampaignsByStage(String campaignStage) {
+    public List<CampaignDTO> getCampaignsByStage(String campaignStage) {
         CampaignStage result = CampaignStage.lookup(campaignStage);
         var campaigns = campaignRepository.findCampaignsByCampaignStage(result);
         if (campaigns.size() == 0)
             throw new ResourceNotFoundException("There is no campaign at " + campaignStage + " stage.");
-        return campaigns;
+
+        return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
     }
 
     @Override

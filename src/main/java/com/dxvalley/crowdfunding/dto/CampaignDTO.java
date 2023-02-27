@@ -1,16 +1,39 @@
 package com.dxvalley.crowdfunding.dto;
 
 import com.dxvalley.crowdfunding.models.CampaignStage;
+import lombok.Getter;
+import lombok.Setter;
 
-public record CampaignDTO(
-        Long campaignId,
-        String title,
-        String shortDescription,
-        String city,
-        String imageUrl,
-        Double goalAmount,
-        Short campaignDuration,
-        String projectType,
-        CampaignStage campaignStage
-) {
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Getter
+@Setter
+public class CampaignDTO {
+    private Long campaignId;
+    private String title;
+    private String shortDescription;
+    private String city;
+    private String imageUrl;
+    private Double goalAmount;
+    private String projectType;
+    private CampaignStage campaignStage;
+    private Short campaignDuration;
+    private String campaignDurationLeft;
+    private String expired0At;
+    private String totalAmountCollected;
+    private Integer numberOfBackers;
+
+    static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public static String campaignDurationLeft(String expiredAt) {
+        Duration duration = Duration.between(LocalDateTime.now(), LocalDateTime.parse(expiredAt, dateTimeFormatter));
+        if (duration.toDays() == 1)
+            return duration.toDays() + " day left";
+        else if (duration.toDays() < 0) {
+            return "This Campaign is Already Expired";
+        }
+        return duration.toDays() + " days left";
+    }
 }

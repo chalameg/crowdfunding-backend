@@ -11,23 +11,28 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class Payment {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long paymentId;
+
     private String payerFullName;
     private String transactionOrderDate;
     private String orderId;
     private String paymentStatus;
     private Double amount;
     private Boolean isAnonymous;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "campaignId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id")
     private Campaign campaign;
-    @ManyToOne
+
+    //    @ManyToOne
+//    @JoinColumn(name = "userId")
+//    private Users user;
+    @OneToOne
     @JoinColumn(name = "userId")
-    private Users user;
+    Users user;
 
     public Payment(Long paymentId, String payerFullName, String transactionOrderDate, String orderId,
-                   String paymentStatus, Double amount,Boolean isAnonymous) {
+                   String paymentStatus, Double amount, Boolean isAnonymous) {
         this.paymentId = paymentId;
         this.payerFullName = payerFullName;
         this.transactionOrderDate = transactionOrderDate;

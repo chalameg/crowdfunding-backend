@@ -10,16 +10,25 @@ import java.util.function.Function;
 public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
     @Override
     public CampaignDTO apply(Campaign campaign) {
-        return new CampaignDTO(
-                campaign.getCampaignId(),
-                campaign.getTitle(),
-                campaign.getShortDescription(),
-                campaign.getCity(),
-                campaign.getImageUrl(),
-                campaign.getGoalAmount(),
-                campaign.getCampaignDuration(),
-                campaign.getProjectType(),
-                campaign.getCampaignStage()
-        );
+        var campaignDTO = new CampaignDTO();
+
+        campaignDTO.setCampaignId(campaign.getCampaignId());
+        campaignDTO.setTitle(campaign.getTitle());
+        campaignDTO.setShortDescription(campaign.getShortDescription());
+        campaignDTO.setCity(campaign.getCity());
+        campaignDTO.setImageUrl(campaign.getImageUrl());
+        campaignDTO.setGoalAmount(campaign.getGoalAmount());
+        campaignDTO.setCampaignStage(campaign.getCampaignStage());
+        campaignDTO.setCampaignDuration(campaign.getCampaignDuration());
+        campaignDTO.setProjectType(campaign.getProjectType());
+        campaignDTO.setNumberOfBackers(campaign.getNumberOfBackers());
+        campaignDTO.setTotalAmountCollected(campaign.getTotalAmountCollected() + " is collected out of " + campaign.getGoalAmount());
+        if (campaign.getExpiredAt() != null) {
+            campaignDTO.setExpired0At(campaign.getExpiredAt());
+            campaignDTO.setCampaignDurationLeft(CampaignDTO.campaignDurationLeft(campaign.getExpiredAt()));
+        }
+
+
+        return campaignDTO;
     }
 }

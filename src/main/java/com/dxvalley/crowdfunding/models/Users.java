@@ -24,7 +24,7 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class Users {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long userId;
     private String username;
     private String fullName;
@@ -44,18 +44,18 @@ public class Users {
     @OneToMany(targetEntity = Campaign.class, cascade = CascadeType.ALL)
     private List<Campaign> campaigns;
 
-    public Users( String username, String password, String fullName, String website,
-                  String biography, String createdAt, String otp,String avatarUrl,
-                  Boolean isEnabled, String address) {
+    public Users(String username, String password, String fullName, String website,
+                 String biography, String createdAt, String avatarUrl,
+                 Boolean isEnabled, String address) {
         this.password = new BCryptPasswordEncoder().encode(password);
         this.fullName = fullName;
-        this.username= username;
-        this.website= website;
-        this.biography= biography;
-        this.createdAt=createdAt;
-        this.isEnabled=isEnabled;
+        this.username = username;
+        this.website = website;
+        this.biography = biography;
+        this.createdAt = createdAt;
+        this.isEnabled = isEnabled;
         this.avatarUrl = avatarUrl;
-        this.address=address;
+        this.address = address;
     }
 
     public Users orElseThrow(Object object) {

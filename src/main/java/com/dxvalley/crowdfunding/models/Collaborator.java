@@ -11,15 +11,15 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class Collaborator {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long collaboratorId;
     private Boolean isAccepted;
     @OneToOne
-    @JoinColumn(name = "userId") 
+    @JoinColumn(name = "userId")
     Users users;
-    @ManyToOne 
-    @JoinColumn(name = "campaignId") 
-    Campaign campaign;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id")
+    private Campaign campaign;
     private String invitationSentAt;
     private String expiredAt;
     private String respondedAt;
