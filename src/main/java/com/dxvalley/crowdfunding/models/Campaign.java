@@ -13,7 +13,7 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class Campaign {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long campaignId;
     private String title;
     private String shortDescription;
@@ -25,11 +25,14 @@ public class Campaign {
     private String projectType;
     @Enumerated(EnumType.STRING)
     private CampaignStage campaignStage;
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String risks;
     private Short campaignDuration;
+    private Double commissionRate;
+    private Double totalAmountCollected;
+    private Integer numberOfBackers;
     private Boolean isEnabled;
     private String createdAt;
     private String enabledAt;
@@ -37,12 +40,11 @@ public class Campaign {
     private String expiredAt;
     private String dateDeleted;
     @OneToOne
+    @JoinColumn(name = "fundingType_id")
     private FundingType fundingType;
     @OneToOne
+    @JoinColumn(name = "campaignSubCategory_id")
     private CampaignSubCategory campaignSubCategory;
-
-    @Transient
-    private List<Collaborator> collaborators;
     @Transient
     private List<Payment> contributors;
     @Transient
@@ -50,26 +52,12 @@ public class Campaign {
     @Transient
     private List<Promotion> promotions;
     @Transient
+    private List<Collaborator> collaborators;
+    @Transient
     private String ownerFullName;
     @Transient
     private CampaignBankAccount campaignBankAccount;
     @Transient
-    private String totalAmountCollected;
-    @Transient
-    private int numberOfBackers;
-    @Transient
     private Integer numberOfCampaigns;
 
-    public Campaign(Long campaignId, String title, String shortDescription, String city, String imageUrl,
-                    Double goalAmount,Short campaignDuration, String projectType, CampaignStage campaignStage) {
-        this.campaignId = campaignId;
-        this.title = title;
-        this.shortDescription = shortDescription;
-        this.city = city;
-        this.imageUrl = imageUrl;
-        this.goalAmount = goalAmount;
-        this.campaignDuration = campaignDuration;
-        this.projectType = projectType;
-        this.campaignStage = campaignStage;
-    }
 }

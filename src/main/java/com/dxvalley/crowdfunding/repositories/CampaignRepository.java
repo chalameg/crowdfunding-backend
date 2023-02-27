@@ -1,6 +1,7 @@
 package com.dxvalley.crowdfunding.repositories;
 
 import com.dxvalley.crowdfunding.models.CampaignStage;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -17,28 +18,16 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     List<Campaign> findCampaignsByCampaignStage(CampaignStage campaignStage);
 
-    @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
-            "c.campaignDuration,c.projectType, c.campaignStage)" +
-            " from Campaign as c where" +
-            " c.fundingType.fundingTypeId = :fundingTypeId")
+    @Query("SELECT c from Campaign as c where c.fundingType.fundingTypeId = :fundingTypeId")
     List<Campaign> findCampaignsByFundingType(Long fundingTypeId);
 
-    @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
-            "c.campaignDuration,c.projectType, c.campaignStage)" +
-            " from Campaign as c where" +
-            " c.isEnabled = TRUE")
+    @Query("SELECT c from Campaign as c where c.isEnabled = TRUE")
     List<Campaign> findAllEnabledCampaigns();
 
-    @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
-            "c.campaignDuration,c.projectType, c.campaignStage)" +
-            " from Campaign as c where" +
-            " c.campaignSubCategory.campaignCategory.campaignCategoryId = :categoryId")
+    @Query("SELECT c from Campaign as c where c.campaignSubCategory.campaignCategory.campaignCategoryId = :categoryId")
     List<Campaign> findByCampaignByCategoryId(Long categoryId);
 
-    @Query("SELECT new Campaign(c.campaignId, c.title, c.shortDescription, c.city,c.imageUrl,c.goalAmount," +
-            "c.campaignDuration,c.projectType, c.campaignStage)" +
-            " from Campaign as c where" +
-            " c.campaignSubCategory.campaignSubCategoryId = :subCategoryId")
+    @Query("SELECT c from Campaign as c where c.campaignSubCategory.campaignSubCategoryId = :subCategoryId")
     List<Campaign> findByCampaignBySubCategoryId(Long subCategoryId);
 
     @Query(value = "select * " +

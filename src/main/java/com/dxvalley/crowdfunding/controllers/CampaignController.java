@@ -35,10 +35,11 @@ public class CampaignController {
 
     @GetMapping("/getCampaigns")
     ResponseEntity<?> getCampaigns() {
-       return new ResponseEntity<>(
+        return new ResponseEntity<>(
                 campaignService.getCampaigns(),
                 HttpStatus.OK);
     }
+
     @GetMapping("/getEnabledCampaigns")
     ResponseEntity<?> getEnabledCampaigns() {
         return new ResponseEntity<>(
@@ -62,14 +63,14 @@ public class CampaignController {
     }
 
     @GetMapping("/getCampaignsByCategory/{categoryId}")
-   ResponseEntity<?> getCampaignsByCategory(@PathVariable Long categoryId) {
+    ResponseEntity<?> getCampaignsByCategory(@PathVariable Long categoryId) {
         return new ResponseEntity<>(
                 campaignService.getCampaignByCategory(categoryId),
                 HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsBySubCategory/{subCategoryId}")
-    ResponseEntity<?>  getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
+    ResponseEntity<?> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
         return new ResponseEntity<>(
                 campaignService.getCampaignBySubCategory(subCategoryId),
                 HttpStatus.OK);
@@ -116,46 +117,47 @@ public class CampaignController {
             @RequestParam(required = false) String risks,
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String campaignStage,
+            @RequestParam(required = false) Double commissionRate,
 
             @RequestParam(required = false) MultipartFile campaignImage,
             @RequestParam(required = false) MultipartFile campaignVideo
     ) throws ResourceNotFoundException {
 
         Campaign campaign = this.campaignService.getCampaignById(campaignId);
-        if(campaign == null){
+        if (campaign == null) {
             throw new ResourceNotFoundException("There is no campaign with this ID.");
         }
         String imageUrl;
         String videoUrl;
-        if(campaignImage != null){
+        if (campaignImage != null) {
             try {
                 imageUrl = fileUploadService.uploadFile(campaignImage);
             } catch (Exception e) {
                 ApiResponse response = new ApiResponse("error", "Bad file size or format!");
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
-        }else{
+        } else {
             imageUrl = null;
         }
 
-        if(campaignVideo != null){
+        if (campaignVideo != null) {
             try {
                 videoUrl = fileUploadService.uploadFileVideo(campaignVideo);
             } catch (Exception e) {
                 ApiResponse response = new ApiResponse("error", "Bad file size or format!");
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
-        }else{
+        } else {
             videoUrl = null;
         }
 
         LocalDateTime editedAt = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        campaign.setFundingType(fundingTypeId != null?
+        campaign.setFundingType(fundingTypeId != null ?
                 fundingTypeService.getFundingTypeById(fundingTypeId) : campaign.getFundingType());
 
-        campaign.setCampaignSubCategory(campaignSubCategoryId != null?
+        campaign.setCampaignSubCategory(campaignSubCategoryId != null ?
                 campaignSubCategoryService.getCampaignSubCategoryById(campaignSubCategoryId) :
                 campaign.getCampaignSubCategory());
 
@@ -163,12 +165,13 @@ public class CampaignController {
         campaign.setTitle(title != null ? title : campaign.getTitle());
         campaign.setShortDescription(shortDescription != null ? shortDescription : campaign.getShortDescription());
         campaign.setCity(city != null ? city : campaign.getCity());
-        campaign.setProjectType(projectType != null? projectType : campaign.getProjectType());
-        campaign.setCampaignStage(campaignStage != null? CampaignStage.lookup(campaignStage): campaign.getCampaignStage());
+        campaign.setProjectType(projectType != null ? projectType : campaign.getProjectType());
+        campaign.setCampaignStage(campaignStage != null ? CampaignStage.lookup(campaignStage) : campaign.getCampaignStage());
         campaign.setGoalAmount(goalAmount != null ? goalAmount : campaign.getGoalAmount());
         campaign.setCampaignDuration(campaignDuration != null ? campaignDuration : campaign.getCampaignDuration());
         campaign.setRisks(risks != null ? risks : campaign.getRisks());
         campaign.setDescription(description != null ? description : campaign.getDescription());
+        campaign.setCommissionRate(commissionRate != null ? commissionRate : campaign.getCommissionRate());
         campaign.setImageUrl(imageUrl != null ? imageUrl : campaign.getImageUrl());
         campaign.setVideoLink(videoUrl != null ? videoUrl : campaign.getVideoLink());
 
@@ -180,14 +183,14 @@ public class CampaignController {
     ResponseEntity<?> enableCampaign(
             @PathVariable Long campaignId
     ) throws ResourceNotFoundException {
-        var result =  campaignService.enableCampaign(campaignId);
+        var result = campaignService.enableCampaign(campaignId);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @DeleteMapping("delete/{campaignId}")
     ResponseEntity<?> deleteCampaign(@PathVariable Long campaignId) throws ResourceNotFoundException {
         campaignService.deleteCampaign(campaignId);
-        ApiResponse response =  new ApiResponse("success","Campaign successfully deleted!");
+        ApiResponse response = new ApiResponse("success", "Campaign successfully deleted!");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

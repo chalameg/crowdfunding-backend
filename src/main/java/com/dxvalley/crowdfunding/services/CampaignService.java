@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
-import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.Campaign;
 
 
@@ -13,25 +12,25 @@ public interface CampaignService {
 
     Campaign editCampaign(Campaign campaign);
 
-    List<Campaign> getCampaigns();
+    List<CampaignDTO> getCampaigns();
 
-    List<Campaign> getEnabledCampaigns();
+    List<CampaignDTO> getEnabledCampaigns();
 
     Campaign getCampaignById(Long campaignId);
 
-    List<Campaign> getCampaignByCategory(Long categoryId);
+    List<CampaignDTO> getCampaignByCategory(Long categoryId);
 
-    List<Campaign> getCampaignBySubCategory(Long subCategoryId);
+    List<CampaignDTO> getCampaignBySubCategory(Long subCategoryId);
 
     void deleteCampaign(Long campaignId);
 
-    List<Campaign> getCampaignsByOwner(String owner);
+    List<CampaignDTO> getCampaignsByOwner(String owner);
 
     Campaign enableCampaign(Long campaignId);
 
     List<CampaignDTO> searchCampaigns(String searchParam);
 
-    List<Campaign> getCampaignsByStage(String campaignStage);
+    List<CampaignDTO> getCampaignsByStage(String campaignStage);
 
-    List<Campaign> getCampaignsByFundingType(Long fundingTypeId);
+    List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId);
 }
