@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface NewsLetterSubscriberService {
     List<NewsLetterSubscriber> getAllSubscribers();
-    NewsLetterSubscriber subscribe(Long userId, String email);
+
+    NewsLetterSubscriber subscribe(String email);
+
+    NewsLetterSubscriber getSubscriberByEmail(String email);
 }

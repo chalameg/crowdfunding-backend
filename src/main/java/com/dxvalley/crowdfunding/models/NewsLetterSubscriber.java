@@ -11,10 +11,8 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class NewsLetterSubscriber {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long newsLetterSubscriberId;
     private String email;
-    @OneToOne
-    @JoinColumn(name = "userId")
-    Users user;
+    private String subscribedAt;
 }
