@@ -9,5 +9,6 @@ import lombok.Setter;
 public class CampaignLikeDTO {
     @NotNull
     private Long campaignId;
+    @NotNull
     private Long userId;
 }

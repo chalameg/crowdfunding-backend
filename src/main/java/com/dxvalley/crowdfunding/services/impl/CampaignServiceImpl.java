@@ -75,30 +75,21 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public String likeCampaign(CampaignLikeDTO campaignLikeDTO) {
         var campaignLike = new CampaignLike();
+        var result = campaignLikeRepository.findByCampaignCampaignIdAndUserUserId(
+                campaignLikeDTO.getCampaignId(), campaignLikeDTO.getUserId());
         var campaign = this.getCampaignById(campaignLikeDTO.getCampaignId());
-        if (campaignLikeDTO.getUserId() != null) {
-            var result = campaignLikeRepository.findByCampaignCampaignIdAndUserUserId(
-                    campaignLikeDTO.getCampaignId(), campaignLikeDTO.getUserId());
-            if (result != null) {
-                campaignLikeRepository.delete(result);
-                campaign.setNumberOfLikes(campaign.getNumberOfLikes() - 1);
-                campaignRepository.save(campaign);
-                return "Disliked Successfully";
-            }
-            campaignLike.setUser(userService.getUserById(campaignLikeDTO.getUserId()));
-            campaignLike.setCampaign(campaign);
-            campaignLikeRepository.save(campaignLike);
-            campaign.setNumberOfLikes(campaign.getNumberOfLikes() + 1);
+        if (result != null) {
+            campaignLikeRepository.delete(result);
+            campaign.setNumberOfLikes(campaign.getNumberOfLikes() - 1);
             campaignRepository.save(campaign);
-            return "Liked Successfully";
-
+            return "Disliked Successfully";
         }
+        campaignLike.setUser(userService.getUserById(campaignLikeDTO.getUserId()));
         campaignLike.setCampaign(campaign);
         campaignLikeRepository.save(campaignLike);
         campaign.setNumberOfLikes(campaign.getNumberOfLikes() + 1);
         campaignRepository.save(campaign);
         return "Liked Successfully";
-
     }
 
     @Override

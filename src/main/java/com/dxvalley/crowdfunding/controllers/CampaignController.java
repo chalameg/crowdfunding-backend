@@ -85,7 +85,7 @@ public class CampaignController {
     }
 
     @PostMapping("/like")
-    public ResponseEntity<?> likeCampaign(@RequestBody CampaignLikeDTO campaignLikeDTO) {
+    public ResponseEntity<?> likeCampaign(@RequestBody @Valid CampaignLikeDTO campaignLikeDTO) {
         var result = campaignService.likeCampaign(campaignLikeDTO);
         ApiResponse response = new ApiResponse("success", result);
         return new ResponseEntity<>(response, HttpStatus.OK);
