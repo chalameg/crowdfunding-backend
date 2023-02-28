@@ -22,12 +22,12 @@ public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
         campaignDTO.setCampaignDuration(campaign.getCampaignDuration());
         campaignDTO.setProjectType(campaign.getProjectType());
         campaignDTO.setNumberOfBackers(campaign.getNumberOfBackers());
+        campaignDTO.setNumberOfLikes(campaign.getNumberOfLikes());
         campaignDTO.setTotalAmountCollected(campaign.getTotalAmountCollected() + " is collected out of " + campaign.getGoalAmount());
         if (campaign.getExpiredAt() != null) {
-            campaignDTO.setExpired0At(campaign.getExpiredAt());
+            campaignDTO.setExpiredAt(campaign.getExpiredAt());
             campaignDTO.setCampaignDurationLeft(CampaignDTO.campaignDurationLeft(campaign.getExpiredAt()));
         }
-
 
         return campaignDTO;
     }

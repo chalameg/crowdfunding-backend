@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
+import com.dxvalley.crowdfunding.dto.CampaignLikeDTO;
+import com.dxvalley.crowdfunding.models.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +16,8 @@ import org.springframework.stereotype.Service;
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
 import com.dxvalley.crowdfunding.dtoMapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.models.CampaignStage;
-import com.dxvalley.crowdfunding.models.CampaignSubCategory;
-import com.dxvalley.crowdfunding.models.FundingType;
 import com.dxvalley.crowdfunding.repositories.*;
 import com.dxvalley.crowdfunding.services.FundingTypeService;
-import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.services.CampaignService;
 
 @Service
@@ -35,8 +33,6 @@ public class CampaignServiceImpl implements CampaignService {
     @Autowired
     private PromotionRepository promotionRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private FundingTypeService fundingTypeService;
     @Autowired
     private PaymentRepository paymentRepository;
@@ -46,6 +42,8 @@ public class CampaignServiceImpl implements CampaignService {
     UserService userService;
     @Autowired
     private CampaignDTOMapper campaignDTOMapper;
+    @Autowired
+    private CampaignLikeRepository campaignLikeRepository;
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
@@ -69,8 +67,29 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setGoalAmount((double) 0);
         campaign.setTotalAmountCollected((double) 0);
         campaign.setNumberOfBackers(0);
+        campaign.setNumberOfLikes(0);
 
         return campaignRepository.save(campaign);
+    }
+
+    @Override
+    public String likeCampaign(CampaignLikeDTO campaignLikeDTO) {
+        var campaignLike = new CampaignLike();
+        var result = campaignLikeRepository.findByCampaignCampaignIdAndUserUserId(
+                campaignLikeDTO.getCampaignId(), campaignLikeDTO.getUserId());
+        var campaign = this.getCampaignById(campaignLikeDTO.getCampaignId());
+        if (result != null) {
+            campaignLikeRepository.delete(result);
+            campaign.setNumberOfLikes(campaign.getNumberOfLikes() - 1);
+            campaignRepository.save(campaign);
+            return "Disliked Successfully";
+        }
+        campaignLike.setUser(userService.getUserById(campaignLikeDTO.getUserId()));
+        campaignLike.setCampaign(campaign);
+        campaignLikeRepository.save(campaignLike);
+        campaign.setNumberOfLikes(campaign.getNumberOfLikes() + 1);
+        campaignRepository.save(campaign);
+        return "Liked Successfully";
     }
 
     @Override
@@ -107,7 +126,7 @@ public class CampaignServiceImpl implements CampaignService {
         var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-        var user = userRepository.findUserByUsername(campaign.getOwner(), true).get();
+        var user = userService.getUserByUsername(campaign.getOwner());
         var contributors = paymentRepository.findPaymentByCampaignId(campaignId);
 
         if (campaignBankAccount.isPresent())
@@ -154,7 +173,7 @@ public class CampaignServiceImpl implements CampaignService {
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
         if (campaign.getIsEnabled()) return campaign;
-        
+
         campaign.setIsEnabled(true);
         campaign.setCampaignStage(CampaignStage.FUNDING);
         campaign.setEnabledAt(LocalDateTime.now().format(dateTimeFormatter));
