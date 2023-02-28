@@ -33,6 +33,7 @@ public class Campaign {
     private Double commissionRate;
     private Double totalAmountCollected;
     private Integer numberOfBackers;
+    private Integer numberOfLikes;
     private Boolean isEnabled;
     private String createdAt;
     private String enabledAt;

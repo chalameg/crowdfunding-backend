@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
+import com.dxvalley.crowdfunding.dto.CampaignLikeDTO;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.CampaignStage;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
@@ -35,72 +36,59 @@ public class CampaignController {
 
     @GetMapping("/getCampaigns")
     ResponseEntity<?> getCampaigns() {
-        return new ResponseEntity<>(
-                campaignService.getCampaigns(),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaigns(), HttpStatus.OK);
     }
 
     @GetMapping("/getEnabledCampaigns")
     ResponseEntity<?> getEnabledCampaigns() {
-        return new ResponseEntity<>(
-                campaignService.getEnabledCampaigns(),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getEnabledCampaigns(), HttpStatus.OK);
     }
 
     @GetMapping("getCampaignById/{campaignId}")
-    ResponseEntity<?> getCampaign(@PathVariable Long campaignId)
-            throws ResourceNotFoundException {
-        return new ResponseEntity<>(
-                campaignService.getCampaignById(campaignId),
-                HttpStatus.OK);
+    ResponseEntity<?> getCampaign(@PathVariable Long campaignId) {
+        return new ResponseEntity<>(campaignService.getCampaignById(campaignId), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignByOwner/{owner}")
     ResponseEntity<?> getCampaignByOwner(@PathVariable String owner) {
-        return new ResponseEntity<>(
-                campaignService.getCampaignsByOwner(owner),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaignsByOwner(owner), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsByCategory/{categoryId}")
     ResponseEntity<?> getCampaignsByCategory(@PathVariable Long categoryId) {
-        return new ResponseEntity<>(
-                campaignService.getCampaignByCategory(categoryId),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaignByCategory(categoryId), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsBySubCategory/{subCategoryId}")
     ResponseEntity<?> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
-        return new ResponseEntity<>(
-                campaignService.getCampaignBySubCategory(subCategoryId),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaignBySubCategory(subCategoryId), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsByStage/{campaignStage}")
     ResponseEntity<?> getCampaignsByStage(@PathVariable String campaignStage) {
-        return new ResponseEntity<>(
-                campaignService.getCampaignsByStage(campaignStage),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaignsByStage(campaignStage), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsByFundingType/{fundingTypeId}")
     ResponseEntity<?> getCampaignsByFundingType(@PathVariable Long fundingTypeId) {
-        return new ResponseEntity<>(
-                campaignService.getCampaignsByFundingType(fundingTypeId),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.getCampaignsByFundingType(fundingTypeId), HttpStatus.OK);
     }
 
     @GetMapping("/searchCampaigns")
     ResponseEntity<?> searchCampaigns(@RequestParam String searchParam) {
-        return new ResponseEntity<>(
-                campaignService.searchCampaigns(searchParam),
-                HttpStatus.OK);
+        return new ResponseEntity<>(campaignService.searchCampaigns(searchParam), HttpStatus.OK);
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> addCampaign(@Valid @RequestBody CampaignAddRequestDto campaignAddRequestDto) {
-        Campaign res = campaignService.addCampaign(campaignAddRequestDto);
-        return new ResponseEntity<>(res, HttpStatus.CREATED);
+        return new ResponseEntity<>(campaignService.addCampaign(campaignAddRequestDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/like")
+    public ResponseEntity<?> likeCampaign(@RequestBody CampaignLikeDTO campaignLikeDTO) {
+        var result = campaignService.likeCampaign(campaignLikeDTO);
+        ApiResponse response = new ApiResponse("success", result);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("edit/{campaignId}")
@@ -180,11 +168,8 @@ public class CampaignController {
     }
 
     @PutMapping("enableCampaign/{campaignId}")
-    ResponseEntity<?> enableCampaign(
-            @PathVariable Long campaignId
-    ) throws ResourceNotFoundException {
-        var result = campaignService.enableCampaign(campaignId);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+    ResponseEntity<?> enableCampaign(@PathVariable Long campaignId) {
+        return new ResponseEntity<>(campaignService.enableCampaign(campaignId), HttpStatus.OK);
     }
 
     @DeleteMapping("delete/{campaignId}")
