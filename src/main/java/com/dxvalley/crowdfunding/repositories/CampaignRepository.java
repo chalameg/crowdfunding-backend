@@ -1,7 +1,6 @@
 package com.dxvalley.crowdfunding.repositories;
 
 import com.dxvalley.crowdfunding.models.CampaignStage;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -18,23 +17,19 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     List<Campaign> findCampaignsByCampaignStage(CampaignStage campaignStage);
 
-    @Query("SELECT c from Campaign as c where c.fundingType.fundingTypeId = :fundingTypeId")
-    List<Campaign> findCampaignsByFundingType(Long fundingTypeId);
+    List<Campaign> findCampaignsByCampaignStageIn(List<CampaignStage> campaignStages);
 
-    @Query("SELECT c from Campaign as c where c.isEnabled = TRUE")
-    List<Campaign> findAllEnabledCampaigns();
+    List<Campaign> findCampaignsByFundingTypeFundingTypeIdAndCampaignStageIn(Long fundingTypeId, List<CampaignStage> campaignStages);
 
-    @Query("SELECT c from Campaign as c where c.campaignSubCategory.campaignCategory.campaignCategoryId = :categoryId")
-    List<Campaign> findByCampaignByCategoryId(Long categoryId);
+    List<Campaign> findCampaignsByIsEnabled(Boolean isEnabled);
 
-    @Query("SELECT c from Campaign as c where c.campaignSubCategory.campaignSubCategoryId = :subCategoryId")
-    List<Campaign> findByCampaignBySubCategoryId(Long subCategoryId);
+    List<Campaign> findCampaignsByCampaignSubCategoryCampaignCategoryCampaignCategoryIdAndCampaignStageIn(Long categoryId, List<CampaignStage> campaignStages);
 
-    @Query(value = "select * " +
-            "from campaign where document @@ to_tsquery(:searchValue)" +
-            "ORDER BY ts_rank(document,plainto_tsquery(:searchValue)) desc;", nativeQuery = true)
+    List<Campaign> findCampaignsByCampaignSubCategoryCampaignSubCategoryIdAndCampaignStageIn(Long subCategoryId, List<CampaignStage> campaignStages);
+
+    @Query(value = "SELECT * " +
+            "FROM campaign WHERE document @@ to_tsquery(:searchValue) AND campaign_stage IN('FUNDING','COMPLETED')" +
+            "ORDER BY ts_rank(document,plainto_tsquery(:searchValue)) DESC;", nativeQuery = true)
     List<Campaign> searchForCampaigns(String searchValue);
 
 }
-
-
