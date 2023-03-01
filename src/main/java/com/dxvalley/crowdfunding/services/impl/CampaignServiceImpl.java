@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.dto.CampaignLikeDTO;
+import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.models.*;
 import com.dxvalley.crowdfunding.services.CampaignSubCategoryService;
 import com.dxvalley.crowdfunding.services.UserService;
@@ -68,6 +69,7 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setTotalAmountCollected((double) 0);
         campaign.setNumberOfBackers(0);
         campaign.setNumberOfLikes(0);
+        campaign.setCampaignDuration((short) 0);
 
         return campaignRepository.save(campaign);
     }
@@ -99,7 +101,7 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<CampaignDTO> getCampaigns() {
-        var campaigns = campaignRepository.findAll();
+        var campaigns = campaignRepository.findCampaignsByCampaignStageIn(List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("Currently, There is no campaign.");
         }
@@ -108,7 +110,7 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<CampaignDTO> getEnabledCampaigns() {
-        var campaigns = campaignRepository.findAllEnabledCampaigns();
+        var campaigns = campaignRepository.findCampaignsByIsEnabled(true);
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("Currently, There is no Enabled campaign.");
         }
@@ -142,7 +144,9 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<CampaignDTO> getCampaignByCategory(Long categoryId) {
-        var campaigns = campaignRepository.findByCampaignByCategoryId(categoryId);
+        var campaigns = campaignRepository.
+                findCampaignsByCampaignSubCategoryCampaignCategoryCampaignCategoryIdAndCampaignStageIn(
+                        categoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("There is no campaign for this category.");
         }
@@ -151,7 +155,9 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<CampaignDTO> getCampaignBySubCategory(Long subCategoryId) {
-        var campaigns = campaignRepository.findByCampaignBySubCategoryId(subCategoryId);
+        var campaigns = campaignRepository.
+                findCampaignsByCampaignSubCategoryCampaignSubCategoryIdAndCampaignStageIn(
+                        subCategoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
         if (campaigns.size() == 0) {
             throw new ResourceNotFoundException("There is no campaign for this sub-category.");
         }
@@ -172,13 +178,11 @@ public class CampaignServiceImpl implements CampaignService {
         Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
-        if (campaign.getIsEnabled()) return campaign;
-
+        if (campaign.getIsEnabled()) throw new ResourceAlreadyExistsException("This campaign is already enabled.");
         campaign.setIsEnabled(true);
         campaign.setCampaignStage(CampaignStage.FUNDING);
         campaign.setEnabledAt(LocalDateTime.now().format(dateTimeFormatter));
         campaign.setExpiredAt(LocalDateTime.now().plusDays(campaign.getCampaignDuration()).format(dateTimeFormatter));
-
         return campaignRepository.save(campaign);
     }
 
@@ -200,7 +204,8 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId) {
-        var campaigns = campaignRepository.findCampaignsByFundingType(fundingTypeId);
+        var campaigns = campaignRepository.findCampaignsByFundingTypeFundingTypeIdAndCampaignStageIn(
+                fundingTypeId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
         if (campaigns.size() == 0)
             throw new ResourceNotFoundException("There is no campaign for this Funding Type.");
 
