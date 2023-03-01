@@ -48,9 +48,10 @@ public class SecurityConfig{
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
         .authorizeHttpRequests(auth -> {
-            auth.requestMatchers("/**").permitAll();
-            auth.requestMatchers("/**").permitAll();
-            auth.requestMatchers("/api/**").hasAuthority("equbUser");
+            auth.requestMatchers("/api/users/register").permitAll();
+            auth.requestMatchers("/api/users/forgotPassword").permitAll();
+            auth.requestMatchers("/api/users/resetPassword").permitAll();
+            auth.requestMatchers("/api/**").hasAuthority("user");
         })
         .addFilter(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration)))
         .addFilterBefore(new JwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)

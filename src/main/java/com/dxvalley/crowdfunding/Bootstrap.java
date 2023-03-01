@@ -40,6 +40,7 @@ public class Bootstrap {
 
     void setUp() {
         roles.add(admin);
+        roles.add(user);
         roles.add(sysAdmin);
         users.setRoles(roles);
     }
