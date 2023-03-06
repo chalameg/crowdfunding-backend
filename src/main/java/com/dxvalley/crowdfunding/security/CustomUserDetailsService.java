@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.security;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,15 +13,14 @@ import org.springframework.stereotype.Service;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
 
-import lombok.RequiredArgsConstructor;
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+    @Autowired
+    private UserRepository userRepository;
 
-
-@Service @RequiredArgsConstructor
-public class CustomUserDeatailsService implements UserDetailsService {
-    private final UserRepository userRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = userRepository.findUserByUsername(username, true).get();
+        Users user = userRepository.findUsersByUsernameAndIsEnabled(username, true);
         if (user != null) {
             Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
             user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getRoleName())));
@@ -28,6 +28,6 @@ public class CustomUserDeatailsService implements UserDetailsService {
                     user.getUsername(), user.getPassword(), authorities
             );
         }
-        throw new UsernameNotFoundException("User '" + username + "' not found");
-        }
+        throw new UsernameNotFoundException("There is no user with this username");
+    }
 }
