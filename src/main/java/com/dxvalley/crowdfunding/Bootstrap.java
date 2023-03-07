@@ -40,7 +40,9 @@ public class Bootstrap {
 
     void setUp() {
         roles.add(admin);
+        roles.add(user);
         roles.add(sysAdmin);
+        roles.add(vetter);
         users.setRoles(roles);
     }
 
@@ -50,9 +52,9 @@ public class Bootstrap {
         return args -> {
             log.info("Preloading " + roleRepository.save(admin));
             log.info("Preloading " + roleRepository.save(sysAdmin));
-            log.info("Preloading " + userRepository.save(users));
             log.info("Preloading " + roleRepository.save(vetter));
             log.info("Preloading " + roleRepository.save(user));
+            log.info("Preloading " + userRepository.save(users));
         };
     }
 }
