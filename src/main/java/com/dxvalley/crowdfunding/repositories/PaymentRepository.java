@@ -5,20 +5,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-    @Query("SELECT new Payment(p.paymentId, p.payerFullName, " +
-            "p.transactionOrderDate, p.orderId,p.paymentStatus, p.amount,p.isAnonymous)" +
-            "FROM Payment as p WHERE p.campaign.campaignId = :campaignId")
-    List<Payment> findPaymentByCampaignId(Long campaignId);
-    @Query("SELECT new Payment(p.paymentId, p.payerFullName, " +
-            "p.transactionOrderDate, p.orderId,p.paymentStatus, p.amount,p.isAnonymous)"+
-            " FROM Payment as p WHERE p.user.userId = :userId")
-    List<Payment> findPaymentByUserId(Long userId);
+    Optional<Payment> findPaymentByOrderId(String orderId);
+
+    List<Payment> findPaymentsByCampaignCampaignId(Long campaignId);
+
+    List<Payment> findPaymentsByUserUserId(Long userId);
 
     @Query("SELECT SUM(p.amount) FROM Payment as p WHERE p.campaign.campaignId = :campaignId")
     Double findTotalAmountOfPaymentForCampaign(Long campaignId);
 
     @Query("SELECT SUM(p.amount) FROM Payment as p")
     Double findTotalAmountRaisedOnPlatform();
+
 }

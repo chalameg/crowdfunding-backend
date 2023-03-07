@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/login", "/api/token/refresh", "/api/users/register", "/api/users/confirm",
                             "/api/users/forgotPassword/**", "/api/users/resetPassword").permitAll();
+                    auth.requestMatchers("/api/payment/**").permitAll();
                     auth.requestMatchers(HttpMethod.POST, "/api/otp/checkOtpExistence", "/api/newsLetter/**").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/campaigns/**", "/api/campaignCategories/**", "/api/campaignSubCategory/**",
                             "/api/fundingTypes/**", "/api/rewards/**").permitAll();

@@ -1,6 +1,8 @@
 package com.dxvalley.crowdfunding.controllers;
 
-import com.dxvalley.crowdfunding.dto.PaymentDto;
+import com.dxvalley.crowdfunding.dto.ApiResponse;
+import com.dxvalley.crowdfunding.dto.PaymentAddDTO;
+import com.dxvalley.crowdfunding.dto.PaymentUpdateDTO;
 import com.dxvalley.crowdfunding.models.Payment;
 import com.dxvalley.crowdfunding.services.PaymentService;
 import jakarta.validation.Valid;
@@ -30,9 +32,15 @@ public class PaymentController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addCampaign(@RequestBody @Valid PaymentDto paymentDto) {
-        Payment payment = paymentService.addPayment(paymentDto);
+    public ResponseEntity<?> addCampaign(@RequestBody @Valid PaymentAddDTO paymentAddDTO) {
+        Payment payment = paymentService.addPayment(paymentAddDTO);
         return new ResponseEntity<>(payment, HttpStatus.CREATED);
     }
 
+    @PutMapping("/update/{orderId}")
+    public ResponseEntity<?> updateCampaign(@PathVariable String orderId, @RequestBody @Valid PaymentUpdateDTO paymentUpdateDTO) {
+        paymentService.updatePayment(orderId, paymentUpdateDTO);
+        ApiResponse response = new ApiResponse("success", "Payment Updated Successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

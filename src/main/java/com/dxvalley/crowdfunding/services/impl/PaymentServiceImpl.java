@@ -1,9 +1,11 @@
 package com.dxvalley.crowdfunding.services.impl;
 
-import com.dxvalley.crowdfunding.dto.PaymentDto;
+import com.dxvalley.crowdfunding.dto.PaymentAddDTO;
+import com.dxvalley.crowdfunding.dto.PaymentUpdateDTO;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.models.Campaign;
 import com.dxvalley.crowdfunding.models.Payment;
+import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.repositories.CampaignRepository;
 import com.dxvalley.crowdfunding.repositories.PaymentRepository;
 import com.dxvalley.crowdfunding.services.PaymentService;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.security.SecureRandom;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -21,35 +24,56 @@ public class PaymentServiceImpl implements PaymentService {
     PaymentRepository paymentRepository;
     @Autowired
     CampaignRepository campaignRepository;
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     @Autowired
     UserService userService;
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public Payment addPayment(PaymentDto paymentDto) {
+    public Payment addPayment(PaymentAddDTO paymentAddDTO) {
+        Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentAddDTO.getCampaignId())
+                .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
+        Users user = null;
+        if (paymentAddDTO.getUserId() != null) {
+            user = userService.getUserById(paymentAddDTO.getUserId());
+        }
+
         Payment payment = new Payment();
-        Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentDto.getCampaignId()).get();
 
-        if (paymentDto.getUserId() != null)
-            payment.setUser(userService.getUserById(paymentDto.getUserId()));
+        payment.setOrderId(generateUniqueOrderId(campaign.getFundingType().getName()));
+        payment.setUser(user);
         payment.setCampaign(campaign);
-        payment.setPayerFullName(paymentDto.getPayerFullName());
-        payment.setIsAnonymous(paymentDto.getIsAnonymous());
-        payment.setAmount(paymentDto.getAmount());
-        payment.setPaymentStatus(paymentDto.getPaymentStatus());
-        payment.setOrderId(paymentDto.getOrderId());
-        payment.setTransactionOrderDate(LocalDateTime.now().format(dateTimeFormatter));
-
-        campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
-        campaign.setTotalAmountCollected(campaign.getTotalAmountCollected() + paymentDto.getAmount());
-        campaignRepository.save(campaign);
-
-        return paymentRepository.save(payment);
+        payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
+        payment.setPaymentStatus("PENDING");
+        payment.setIsAnonymous(paymentAddDTO.getIsAnonymous());
+        payment.setAmount(paymentAddDTO.getAmount());
+        payment.setCurrency(paymentAddDTO.getCurrency());
+        payment.setCampaign(campaign);
+        paymentRepository.save(payment);
+        return new Payment(payment.getOrderId(), payment.getTransactionOrderedDate());
     }
 
     @Override
+    public void updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO) {
+        Payment payment = paymentRepository.findPaymentByOrderId(orderId).
+                orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        payment.setPayerFullName(paymentUpdateDTO.getPayerFullName());
+        payment.setTransactionId(paymentUpdateDTO.getTransactionId());
+        payment.setPaymentStatus(paymentUpdateDTO.getPaymentStatus());
+
+        payment.setTransactionCompletedDate(LocalDateTime.now().format(dateTimeFormatter));
+
+        var campaign = payment.getCampaign();
+        campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
+        campaign.setTotalAmountCollected(campaign.getTotalAmountCollected() + payment.getAmount());
+        campaignRepository.save(campaign);
+
+    }
+
+
+    @Override
     public List<Payment> getPaymentByCampaignId(Long campaignId) {
-        var payments = paymentRepository.findPaymentByCampaignId(campaignId);
+        var payments = paymentRepository.findPaymentsByCampaignCampaignId(campaignId);
         if (payments.size() == 0) {
             throw new ResourceNotFoundException("Currently, there is no Payment for this Campaign.");
         }
@@ -62,11 +86,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getPaymentByUserId(Long userId) {
         userService.getUserById(userId); // to check existence of user
-        var payment = paymentRepository.findPaymentByUserId(userId);
-        if (payment.size() == 0) {
+        var payments = paymentRepository.findPaymentsByUserUserId(userId);
+        if (payments.size() == 0) {
             throw new ResourceNotFoundException("You have not contributed yet.");
         }
-        return payment;
+        return payments;
     }
 
     @Override
@@ -78,4 +102,31 @@ public class PaymentServiceImpl implements PaymentService {
     public Double totalAmountCollectedForCampaign(Long campaignId) {
         return paymentRepository.findTotalAmountOfPaymentForCampaign(campaignId);
     }
+
+    private String generateUniqueOrderId(String fundingType) {
+        final String ALL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+        final int LENGTH = 13;
+        SecureRandom random = new SecureRandom();
+
+        String orderId;
+        do {
+            StringBuilder stringBuilder = new StringBuilder(LENGTH);
+            for (int i = 0; i < LENGTH; i++) {
+                int randomIndex = random.nextInt(ALL_CHARS.length());
+                stringBuilder.append(ALL_CHARS.charAt(randomIndex));
+            }
+            String randomString = stringBuilder.toString();
+
+            orderId = switch (fundingType.toUpperCase()) {
+                case "DONATION" -> "DN_" + randomString;
+                case "EQUITY" -> "EQ_" + randomString;
+                case "REWARD" -> "RW_" + randomString;
+                default -> randomString;
+            };
+
+        } while (paymentRepository.findPaymentByOrderId(orderId).isPresent());
+
+        return orderId;
+    }
+
 }
