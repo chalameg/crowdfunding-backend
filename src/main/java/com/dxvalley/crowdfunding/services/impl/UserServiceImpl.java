@@ -88,20 +88,21 @@ public class UserServiceImpl implements UserService {
     }
 
     public Users getUserByUsername(String username) {
-        var user = userRepository.findUserByUsername(username, true).orElseThrow(
-                () -> new ResourceNotFoundException("There is no user with this username")
-        );
+        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true);
+        if (user == null)
+            throw new ResourceNotFoundException("There is no user with this username");
         return user;
     }
 
     public ResponseEntity<?> register(Users tempUser) {
-        var res = userRepository.findUserByUsername(tempUser.getUsername(), true);
-        if (res.isPresent()) {
+        var existingUser = userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), true);
+        if (existingUser != null)
             throw new ResourceAlreadyExistsException("There is already a user with this username");
-        }
-        userRepository.findUserByUsername(tempUser.getUsername(), false).ifPresent(
-                user -> userRepository.delete(user)
-        );
+
+        var disabledUser = userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), false);
+        if (disabledUser != null)
+            userRepository.delete(disabledUser);
+
 
         List<Role> roles = new ArrayList<Role>(1);
         roles.add(this.roleRepo.findByRoleName("user"));
@@ -209,9 +210,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public ApiResponse changePassword(String username, ChangePassword temp) {
-        var user = userRepository.findUserByUsername(username, true).orElseThrow(
-                () -> new ResourceNotFoundException("There is no user with this username")
-        );
+        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true);
+        if (user == null)
+            throw new ResourceNotFoundException("There is no user with this username");
 
         Boolean isMatch = passwordEncoder.matches(temp.getOldPassword(), user.getPassword());
         if (!isMatch) {

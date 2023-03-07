@@ -129,7 +129,7 @@ public class CampaignServiceImpl implements CampaignService {
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
         var promotions = promotionRepository.findPromotionByCampaignId(campaignId);
         var user = userService.getUserByUsername(campaign.getOwner());
-        var contributors = paymentRepository.findPaymentByCampaignId(campaignId);
+        var contributors = paymentRepository.findPaymentsByCampaignCampaignId(campaignId);
 
         if (campaignBankAccount.isPresent())
             campaign.setCampaignBankAccount(campaignBankAccount.get());
