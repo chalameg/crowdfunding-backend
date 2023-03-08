@@ -61,4 +61,6 @@ public class Campaign {
     @Transient
     private Integer numberOfCampaigns;
 
+    @Transient
+    private Integer daysLeft;
 }

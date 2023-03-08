@@ -25,6 +25,7 @@ public class CampaignDTO {
     private String totalAmountCollected;
     private Integer numberOfLikes;
     private Integer numberOfBackers;
+    private Integer daysLeft;
 
     static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
