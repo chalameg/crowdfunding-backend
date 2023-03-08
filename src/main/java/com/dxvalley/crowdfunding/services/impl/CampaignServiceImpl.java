@@ -187,20 +187,26 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<CampaignDTO> searchCampaigns(String tempSearchParam) {
-//        to change string input :tech health food " into sth like "tech|health|food"
-        var searchParamArray = tempSearchParam.trim().split("\\W+");
-        ;
-        var searchParam = searchParamArray[0];
-        for (int i = 1; i < searchParamArray.length; i++) {
-            searchParam = searchParam + "|" + searchParamArray[i];
+    public List<CampaignDTO> searchCampaigns(String searchParam) {
+        // Clean up the search parameter string by trimming whitespace and splitting by non-word characters
+        String[] searchParamArray = searchParam.trim().split("\\W+");
+
+        // Join the cleaned-up search parameters with "|" to create a regex search pattern
+        String searchPattern = String.join("|", searchParamArray);
+
+        // Use the search pattern to query the repository and map the results to CampaignDTO objects
+        List<CampaignDTO> campaigns = campaignRepository.searchForCampaigns(searchPattern)
+                .stream()
+                .map(campaignDTOMapper)
+                .collect(Collectors.toList());
+
+        if (campaigns.isEmpty()) {
+            throw new ResourceNotFoundException("No campaigns found with this search parameter.");
         }
-        var campaigns = campaignRepository.searchForCampaigns(searchParam).stream()
-                .map(campaignDTOMapper).collect(Collectors.toList());
-        if (campaigns.size() == 0)
-            throw new ResourceNotFoundException("There is no campaign with this search parameter.");
+
         return campaigns;
     }
+
 
     @Override
     public List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId) {
