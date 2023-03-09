@@ -1,6 +1,8 @@
 package com.dxvalley.crowdfunding.notification;
 
+import io.micrometer.common.lang.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -8,27 +10,70 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class EmailServiceImpl implements EmailService {
+
     @Autowired
     private JavaMailSender mailSender;
+    private final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
+    private final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    private final Pattern PATTERN = Pattern.compile(EMAIL_REGEX);
+
+    @Override
+    public boolean isValidEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        Matcher matcher = PATTERN.matcher(email);
+        return matcher.matches();
+    }
+
+
     @Override
     @Async
-    public Boolean send(String to, String email, String subject) {
+    public boolean send(@NonNull String recipientEmail, @NonNull String emailBody,
+                        @NonNull String emailSubject) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(mimeMessage, "utf-8");
-            helper.setText(email, true);
-            helper.setTo(to);
-            helper.setSubject(subject);
-//            helper.setFrom("abdi@.com");
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            helper.setText(emailBody, true);
+            helper.setTo(recipientEmail);
+            helper.setSubject(emailSubject);
             mailSender.send(mimeMessage);
             return true;
-        } catch (MessagingException e) {
-            throw new IllegalStateException("Failed to send email");
+        } catch (MessagingException | MailException e) {
+            LOGGER.error("Failed to send email", e);
+            return false;
         }
     }
+
+
+//    @Override
+//    @Async
+//    public boolean send(@NonNull String recipientEmail, @NonNull String emailBody,
+//                        @NonNull String emailSubject, String from) {
+//        try {
+//            MimeMessage mimeMessage = mailSender.createMimeMessage();
+//            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+//            helper.setText(emailBody, true);
+//            helper.setTo(recipientEmail);
+//            helper.setSubject(emailSubject);
+//            helper.setFrom(from == null ? SENDER_EMAIL : from);
+//            mailSender.send(mimeMessage);
+//            return true;
+//        } catch (MessagingException e) {
+//            log.error("Failed to send email", e);
+//            return false;
+//        }
+//    }
+
+
     public String emailBuilderForUserConfirmation(String name, String link) {
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                 +
@@ -112,6 +157,7 @@ public class EmailServiceImpl implements EmailService {
                 "\n" +
                 "</div></div>";
     }
+
     @Override
     public String emailBuilderForPasswordReset(String name, String link) {
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
@@ -202,6 +248,7 @@ public class EmailServiceImpl implements EmailService {
                 "\n" +
                 "</div></div>";
     }
+
     public String emailBuilderForCollaborationInvitation(String Invitee, String senderName, String campaignTitle, String link) {
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                 +

@@ -6,8 +6,20 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.web.client.RestTemplate;
 
+import java.util.regex.Pattern;
+
 @Service
-public class OtpServiceImpl implements OtpService{
+public class SmsServiceImpl implements SmsService {
+
+    private final Pattern PHONE_NUMBER_PATTERN = Pattern.compile("^(\\+251|0)[97]\\d{8}$");
+
+    public boolean isValidPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null)
+            return false;
+        phoneNumber = phoneNumber.trim();
+        return PHONE_NUMBER_PATTERN.matcher(phoneNumber).matches();
+    }
+
     @Override
     public ApiResponse sendOtp(String phoneNumber, String randomNumber) {
 
@@ -37,6 +49,7 @@ public class OtpServiceImpl implements OtpService{
                         "Please inter valid Mobile number!");
             }
         } catch (Exception e) {
+
             return new ApiResponse(
                     "error",
                     "Sorry, SMS service is down for a moment. Please try again later.");
@@ -45,5 +58,5 @@ public class OtpServiceImpl implements OtpService{
     }
 
 
-    }
+}
 
