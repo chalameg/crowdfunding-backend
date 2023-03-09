@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users, Long> {
-    Users findUsersByUsernameAndIsEnabled(String username, Boolean isEnabled);
+    Optional<Users> findUsersByUsernameAndIsEnabled(String username, Boolean isEnabled);
 
     Optional<Users> findByUsername(String username);
 

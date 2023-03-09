@@ -6,10 +6,9 @@ import com.dxvalley.crowdfunding.dto.ChangePassword;
 import com.dxvalley.crowdfunding.notification.EmailService;
 import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.models.Role;
 import com.dxvalley.crowdfunding.models.Users;
 import com.dxvalley.crowdfunding.models.ConfirmationToken;
-import com.dxvalley.crowdfunding.notification.OtpService;
+import com.dxvalley.crowdfunding.notification.SmsService;
 import com.dxvalley.crowdfunding.repositories.ConfirmationTokenRepository;
 import com.dxvalley.crowdfunding.repositories.RoleRepository;
 import com.dxvalley.crowdfunding.repositories.UserRepository;
@@ -28,10 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -39,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ConfirmationTokenService confirmationTokenService;
     @Autowired
-    private EmailService emailSender;
+    private EmailService emailService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -49,10 +45,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;
     @Autowired
-    OtpService otpService;
+    private SmsService smsService;
     @Autowired
-    FileUploadService fileUploadService;
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private FileUploadService fileUploadService;
+    @Autowired
+    private DateTimeFormatter dateTimeFormatter;
 
     private boolean isSysAdmin() {
         AtomicBoolean hasSysAdmin = new AtomicBoolean(false);
@@ -88,80 +85,66 @@ public class UserServiceImpl implements UserService {
     }
 
     public Users getUserByUsername(String username) {
-        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true);
-        if (user == null)
-            throw new ResourceNotFoundException("There is no user with this username");
+        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true).orElseThrow(
+                () -> new ResourceNotFoundException("There is no user with this username")
+        );
         return user;
     }
 
     public ResponseEntity<?> register(Users tempUser) {
         var existingUser = userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), true);
-        if (existingUser != null)
+        if (existingUser.isPresent())
             throw new ResourceAlreadyExistsException("There is already a user with this username");
 
-        var disabledUser = userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), false);
-        if (disabledUser != null)
-            userRepository.delete(disabledUser);
+        // Check if there is a disabled user with the same username and delete it
+        userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), false).ifPresent(
+                disabledUser -> userRepository.delete(disabledUser)
+        );
 
-
-        List<Role> roles = new ArrayList<Role>(1);
-        roles.add(this.roleRepo.findByRoleName("user"));
-        tempUser.setRoles(roles);
+        LocalDateTime now = LocalDateTime.now();
+        tempUser.setRoles(Collections.singletonList(roleRepo.findByRoleName("user")));
         tempUser.setPassword(passwordEncoder.encode(tempUser.getPassword()));
-        tempUser.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
-        tempUser.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+        tempUser.setCreatedAt(now.format(dateTimeFormatter));
+        tempUser.setEditedAt(now.format(dateTimeFormatter));
         tempUser.setIsEnabled(false);
-        var user = userRepository.save(tempUser);
 
-        //send email if username is email
-        if (tempUser.getUsername().matches(".*[a-zA-Z]+.*")) {
+        if (emailService.isValidEmail(tempUser.getUsername())) {
             String token = UUID.randomUUID().toString();
             String link = "http://localhost:3000/verify/" + token;
-            Boolean isSend = emailSender.send(
+            boolean isSend = emailService.send(
                     tempUser.getUsername(),
-                    emailSender.emailBuilderForUserConfirmation(tempUser.getFullName(), link),
+                    emailService.emailBuilderForUserConfirmation(tempUser.getFullName(), link),
                     "Confirm your email");
             if (isSend) {
-                LocalDateTime createdAt = LocalDateTime.now();
-                LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
-
-                ConfirmationToken confirmationToken = new ConfirmationToken(
-                        token,
-                        createdAt.format(dateTimeFormatter),
-                        expiresAt.format(dateTimeFormatter),
-                        user);
-                confirmationTokenService.saveConfirmationToken(confirmationToken);
-                return new ResponseEntity<>(user, HttpStatus.OK);
+                Users user = userRepository.save(tempUser);
+                confirmationTokenService.saveConfirmationToken(user, token, 30);
+                return new ResponseEntity<>(user, HttpStatus.CREATED);
             }
             ApiResponse response = new ApiResponse(
                     "error",
                     "Cannot sent email due to Internal Server Error. try again later");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        } else {
-            // send message if username is phone number
+        } else if (smsService.isValidPhoneNumber(tempUser.getUsername())) {
             String code = getRandomNumberString();
-            var result = otpService.sendOtp(tempUser.getUsername(), code);
-            if (result.getStatus() == "success") {
-
-                ConfirmationToken token = new ConfirmationToken(
-                        code,
-                        LocalDateTime.now().format(dateTimeFormatter),
-                        LocalDateTime.now().plusDays(3).format(dateTimeFormatter),
-                        user
-                );
-                confirmationTokenService.saveConfirmationToken(token);
-                return new ResponseEntity<>(user, HttpStatus.OK);
+            var result = smsService.sendOtp(tempUser.getUsername(), code);
+            if (result.getStatus().equals("success")) {
+                Users user = userRepository.save(tempUser);
+                confirmationTokenService.saveConfirmationToken(user, code, 3);
+                return new ResponseEntity<>(user, HttpStatus.CREATED);
             }
-            if (result.getStatus() == "error")
-                return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
-            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+            ApiResponse response = new ApiResponse(
+                    "error",
+                    "Cannot sent sms due to Internal Server Error. try again later");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        ApiResponse response = new ApiResponse(
+                "error",
+                "username is neither a valid email nor a valid phone number.");
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    public Boolean confirmToken(String token) {
-        ConfirmationToken confirmationToken = confirmationTokenService
-                .getToken(token);
-
+    public boolean confirmToken(String token) {
+        ConfirmationToken confirmationToken = confirmationTokenService.getToken(token);
         LocalDateTime expiredAt = LocalDateTime.parse(confirmationToken.getExpiresAt(), dateTimeFormatter);
         if (expiredAt.isBefore(LocalDateTime.now())) {
             confirmationTokenRepository.delete(confirmationToken);
@@ -210,10 +193,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public ApiResponse changePassword(String username, ChangePassword temp) {
-        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true);
-        if (user == null)
-            throw new ResourceNotFoundException("There is no user with this username");
-
+        var user = userRepository.findUsersByUsernameAndIsEnabled(username, true).orElseThrow(
+                () -> new ResourceNotFoundException("There is no user with this username")
+        );
         Boolean isMatch = passwordEncoder.matches(temp.getOldPassword(), user.getPassword());
         if (!isMatch) {
             return new ApiResponse("error", "Incorrect old Password!");
@@ -232,20 +214,17 @@ public class UserServiceImpl implements UserService {
             String token = UUID.randomUUID().toString();
             String link = "http://localhost:3000/resetPassword/" + token;
 
-            Boolean isSend = emailSender.send(
-                    user.getUsername(),
-                    emailSender.emailBuilderForPasswordReset(user.getFullName(), link),
-                    "Reset your password");
+            Boolean isSend = null;
+            try {
+                isSend = emailService.send(
+                        user.getUsername(),
+                        emailService.emailBuilderForPasswordReset(user.getFullName(), link),
+                        "Reset your password");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             if (isSend) {
-                LocalDateTime createdAt = LocalDateTime.now();
-                LocalDateTime expiresAt = LocalDateTime.now().plusDays(30);
-
-                ConfirmationToken confirmationToken = new ConfirmationToken(
-                        token,
-                        createdAt.format(dateTimeFormatter),
-                        expiresAt.format(dateTimeFormatter),
-                        user);
-                confirmationTokenService.saveConfirmationToken(confirmationToken);
+                confirmationTokenService.saveConfirmationToken(user, token, 30);
                 return new ApiResponse("success", "please check your email");
             }
             return new ApiResponse(
@@ -254,17 +233,9 @@ public class UserServiceImpl implements UserService {
 
         } else {
             String code = getRandomNumberString();
-            var result = otpService.sendOtp(user.getUsername(), code);
-
-            if (result.getStatus() == "success") {
-
-                ConfirmationToken token = new ConfirmationToken(
-                        code,
-                        LocalDateTime.now().format(dateTimeFormatter),
-                        LocalDateTime.now().plusDays(3).format(dateTimeFormatter),
-                        user
-                );
-                confirmationTokenService.saveConfirmationToken(token);
+            var result = smsService.sendOtp(user.getUsername(), code);
+            if (result.getStatus().equals("success")) {
+                confirmationTokenService.saveConfirmationToken(user, code, 3);
                 return result;
             }
             return result;

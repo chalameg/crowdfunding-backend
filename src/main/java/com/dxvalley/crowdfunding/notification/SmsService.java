@@ -1,9 +1,9 @@
 package com.dxvalley.crowdfunding.notification;
 
 import com.dxvalley.crowdfunding.dto.ApiResponse;
-import org.springframework.stereotype.Service;
 
-@Service
-public interface OtpService {
+public interface SmsService {
     ApiResponse sendOtp(String phoneNumber, String randomNumber);
+
+    boolean isValidPhoneNumber(String phoneNumber);
 }
