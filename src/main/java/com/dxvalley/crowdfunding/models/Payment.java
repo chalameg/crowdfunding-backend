@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private Long paymentId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "campaign_id")
