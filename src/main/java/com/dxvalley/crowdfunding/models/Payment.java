@@ -34,4 +34,14 @@ public class Payment {
         this.orderId = orderId;
         this.transactionOrderedDate = transactionOrderedDate;
     }
+
+    public Payment(Long paymentId, Double amount, String payerFullName, String transactionCompletedDate, Boolean isAnonymous, String currency, String paymentStatus) {
+        this.paymentId = paymentId;
+        this.amount = amount;
+        this.currency = currency;
+        this.payerFullName = payerFullName;
+        this.transactionCompletedDate = transactionCompletedDate;
+        this.isAnonymous = isAnonymous;
+        this.paymentStatus = paymentStatus;
+    }
 }

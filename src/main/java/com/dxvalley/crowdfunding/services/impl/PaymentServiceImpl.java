@@ -10,7 +10,10 @@ import com.dxvalley.crowdfunding.repositories.CampaignRepository;
 import com.dxvalley.crowdfunding.repositories.PaymentRepository;
 import com.dxvalley.crowdfunding.services.PaymentService;
 import com.dxvalley.crowdfunding.services.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,71 +29,90 @@ public class PaymentServiceImpl implements PaymentService {
     CampaignRepository campaignRepository;
     @Autowired
     UserService userService;
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Autowired
+    private DateTimeFormatter dateTimeFormatter;
+    private final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @Override
     public Payment addPayment(PaymentAddDTO paymentAddDTO) {
-        Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentAddDTO.getCampaignId())
-                .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
-        Users user = null;
-        if (paymentAddDTO.getUserId() != null) {
-            user = userService.getUserById(paymentAddDTO.getUserId());
+        try {
+            Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentAddDTO.getCampaignId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
+            Users user = paymentAddDTO.getUserId() != null ? userService.getUserById(paymentAddDTO.getUserId()) : null;
+
+            Payment payment = new Payment();
+            payment.setOrderId(generateUniqueOrderId(campaign.getFundingType().getName()));
+            payment.setUser(user);
+            payment.setCampaign(campaign);
+            payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
+            payment.setPaymentStatus("PENDING");
+            payment.setIsAnonymous(paymentAddDTO.getIsAnonymous());
+            payment.setAmount(paymentAddDTO.getAmount());
+            payment.setCurrency(paymentAddDTO.getCurrency());
+            payment.setCampaign(campaign);
+            paymentRepository.save(payment);
+
+            logger.info("Adding payment");
+            return new Payment(payment.getOrderId(), payment.getTransactionOrderedDate());
+        } catch (DataAccessException ex) {
+            logger.error("Error Adding payment: {}", ex.getMessage());
+            throw new RuntimeException("Error Adding payment ", ex);
         }
-
-        Payment payment = new Payment();
-
-        payment.setOrderId(generateUniqueOrderId(campaign.getFundingType().getName()));
-        payment.setUser(user);
-        payment.setCampaign(campaign);
-        payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
-        payment.setPaymentStatus("PENDING");
-        payment.setIsAnonymous(paymentAddDTO.getIsAnonymous());
-        payment.setAmount(paymentAddDTO.getAmount());
-        payment.setCurrency(paymentAddDTO.getCurrency());
-        payment.setCampaign(campaign);
-        paymentRepository.save(payment);
-        return new Payment(payment.getOrderId(), payment.getTransactionOrderedDate());
     }
 
     @Override
     public void updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO) {
-        Payment payment = paymentRepository.findPaymentByOrderId(orderId).
-                orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        try {
+            Payment payment = paymentRepository.findPaymentByOrderId(orderId).
+                    orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
-        payment.setPayerFullName(paymentUpdateDTO.getPayerFullName());
-        payment.setTransactionId(paymentUpdateDTO.getTransactionId());
-        payment.setPaymentStatus(paymentUpdateDTO.getPaymentStatus());
+            payment.setPayerFullName(paymentUpdateDTO.getPayerFullName());
+            payment.setTransactionId(paymentUpdateDTO.getTransactionId());
+            payment.setPaymentStatus(paymentUpdateDTO.getPaymentStatus());
+            payment.setTransactionCompletedDate(LocalDateTime.now().format(dateTimeFormatter));
 
-        payment.setTransactionCompletedDate(LocalDateTime.now().format(dateTimeFormatter));
+            var campaign = payment.getCampaign();
+            campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
+            campaign.setTotalAmountCollected(campaign.getTotalAmountCollected() + payment.getAmount());
 
-        var campaign = payment.getCampaign();
-        campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
-        campaign.setTotalAmountCollected(campaign.getTotalAmountCollected() + payment.getAmount());
-        campaignRepository.save(campaign);
-
+            logger.info("payment updated");
+            campaignRepository.save(campaign);
+        } catch (DataAccessException ex) {
+            logger.error("Error Updating payment: {}", ex.getMessage());
+            throw new RuntimeException("Error Updating payment ", ex);
+        }
     }
-
 
     @Override
     public List<Payment> getPaymentByCampaignId(Long campaignId) {
-        var payments = paymentRepository.findPaymentsByCampaignCampaignId(campaignId);
-        if (payments.size() == 0) {
-            throw new ResourceNotFoundException("Currently, there is no Payment for this Campaign.");
+        try {
+
+            List<Payment> payments = paymentRepository.findPaymentsByCampaignCampaignIdAndPaymentStatus(campaignId, "COMPLETED");
+            payments.stream().filter(payment -> payment.getIsAnonymous())
+                    .forEach(payment -> payment.setPayerFullName("Anonymous"));
+
+            logger.info("Retrieved {} Payment by Campaign", payments.size());
+            return payments;
+        } catch (DataAccessException ex) {
+            logger.error("Error Getting Payment By Campaign: {}", ex.getMessage());
+            throw new RuntimeException("Error Getting Payment By Campaign ", ex);
         }
-        for (var payment : payments) {
-            if (payment.getIsAnonymous() == true) payment.setPayerFullName("Anonymous");
-        }
-        return payments;
     }
 
     @Override
     public List<Payment> getPaymentByUserId(Long userId) {
-        userService.getUserById(userId); // to check existence of user
-        var payments = paymentRepository.findPaymentsByUserUserId(userId);
-        if (payments.size() == 0) {
-            throw new ResourceNotFoundException("You have not contributed yet.");
+        try {
+            userService.getUserById(userId); // to check existence of user
+            List<Payment> payments = paymentRepository.findPaymentsByUserUserId(userId);
+            if (payments.isEmpty()) {
+                throw new ResourceNotFoundException("You have not contributed yet.");
+            }
+            logger.info("Retrieved {} Payment by User", payments.size());
+            return payments;
+        } catch (DataAccessException ex) {
+            logger.error("Error Getting Payment By User: {}", ex.getMessage());
+            throw new RuntimeException("Error Getting Payment By User ", ex);
         }
-        return payments;
     }
 
     @Override
@@ -128,5 +150,4 @@ public class PaymentServiceImpl implements PaymentService {
 
         return orderId;
     }
-
 }
