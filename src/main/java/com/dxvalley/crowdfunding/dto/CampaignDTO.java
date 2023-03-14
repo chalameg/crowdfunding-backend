@@ -22,7 +22,7 @@ public class CampaignDTO {
     private Short campaignDuration;
     private String campaignDurationLeft;
     private String expiredAt;
-    private String totalAmountCollected;
+    private Double totalAmountCollected;
     private Integer numberOfLikes;
     private Integer numberOfBackers;
     private Integer daysLeft;
