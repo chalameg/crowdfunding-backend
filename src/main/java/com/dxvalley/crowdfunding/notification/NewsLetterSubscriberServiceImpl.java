@@ -1,10 +1,9 @@
 package com.dxvalley.crowdfunding.notification;
 
-import com.dxvalley.crowdfunding.exceptions.ResourceAlreadyExistsException;
-import com.dxvalley.crowdfunding.exceptions.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.models.NewsLetterSubscriber;
-import com.dxvalley.crowdfunding.repositories.NewsLetterSubscriberRepository;
-import com.dxvalley.crowdfunding.services.UserService;
+import com.dxvalley.crowdfunding.exception.ResourceAlreadyExistsException;
+import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.model.NewsLetterSubscriber;
+import com.dxvalley.crowdfunding.repository.NewsLetterSubscriberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

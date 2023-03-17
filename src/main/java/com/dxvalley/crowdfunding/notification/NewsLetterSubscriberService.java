@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.notification;
 
-import com.dxvalley.crowdfunding.models.NewsLetterSubscriber;
+import com.dxvalley.crowdfunding.model.NewsLetterSubscriber;
 
 import java.util.List;
 

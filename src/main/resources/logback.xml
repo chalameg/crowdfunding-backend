@@ -195,22 +195,22 @@
         </root>
 
         <!-- Logger for specific package -->
-        <logger name="com.dxvalley.crowdfunding.controllers" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.controller" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_CONTROLLERS_LOG"/>
         </logger>
 
-        <logger name="com.dxvalley.crowdfunding.models" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.model" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_MODELS_LOG"/>
         </logger>
 
-        <logger name="com.dxvalley.crowdfunding.repositories" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.repository" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_REPOSITORIES_LOG"/>
         </logger>
 
-        <logger name="com.dxvalley.crowdfunding.services.impl" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.service.impl" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_SERVICES_LOG"/>
         </logger>

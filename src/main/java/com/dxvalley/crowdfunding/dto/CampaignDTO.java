@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.dto;
 
-import com.dxvalley.crowdfunding.models.CampaignStage;
+import com.dxvalley.crowdfunding.model.CampaignStage;
 import lombok.Getter;
 import lombok.Setter;
 
