@@ -3,8 +3,8 @@ package com.dxvalley.crowdfunding.service;
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.ChangePassword;
 import com.dxvalley.crowdfunding.dto.ResetPassword;
+import com.dxvalley.crowdfunding.dto.UserDTO;
 import com.dxvalley.crowdfunding.model.Users;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,19 +12,23 @@ import java.util.List;
 
 @Service
 public interface UserService {
-    List<Users> getUsers();
+    List<UserDTO> getUsers();
 
-    Users getUserById(Long userId);
+    UserDTO getUserById(Long userId);
 
-    Users getUserByUsername(String username);
+    UserDTO getUserByUsername(String username);
 
-    ResponseEntity<?> register(Users tempUser);
+    Users getUserByUsernameAsObject(String username);
+
+    Users getUserByUserIdAsObject(Long userId);
+
+    UserDTO register(Users tempUser);
 
     boolean confirmToken(String token);
 
-    Users editUser(Long userId, Users tempUser);
+    UserDTO editUser(Long userId, UserDTO userDTO);
 
-    ResponseEntity<?> uploadUserAvatar(String userName, MultipartFile userAvatar);
+    UserDTO uploadUserAvatar(String userName, MultipartFile userAvatar);
 
     ApiResponse changePassword(String username, ChangePassword temp);
 

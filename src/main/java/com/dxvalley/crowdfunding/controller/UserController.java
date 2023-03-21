@@ -3,6 +3,7 @@ package com.dxvalley.crowdfunding.controller;
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.dto.ChangePassword;
 import com.dxvalley.crowdfunding.dto.ResetPassword;
+import com.dxvalley.crowdfunding.dto.UserDTO;
 import com.dxvalley.crowdfunding.model.Users;
 import com.dxvalley.crowdfunding.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,24 +34,26 @@ public class UserController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody Users tempUser) {
-    return userService.register(tempUser);
+  public ResponseEntity<?> register(@RequestBody Users user) {
+    return new ResponseEntity<>(userService.register(user), HttpStatus.CREATED);
   }
 
-  @GetMapping("/confirm")
+  @PutMapping("/confirm")
   public ResponseEntity<?> confirmUser(@RequestParam String token) {
     var isConfirmed = userService.confirmToken(token);
     if(isConfirmed){
       return new ResponseEntity<>(
-              "Confirmed Successfully", HttpStatus.OK );
+              new ApiResponse("success", "Confirmed Successfully"),
+              HttpStatus.OK);
     }
     return new ResponseEntity<>(
-            "This token has already expired",HttpStatus.BAD_REQUEST);
+            new ApiResponse("bad request", "This token has already expired"),
+            HttpStatus.BAD_REQUEST);
   }
 
   @PutMapping("/edit/{userId}")
-  public ResponseEntity<?> editUser(@PathVariable Long userId, @RequestBody Users tempUser) {
-    return new ResponseEntity<>(userService.editUser(userId,tempUser), HttpStatus.OK);
+  public ResponseEntity<?> editUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
+    return new ResponseEntity<>(userService.editUser(userId, userDTO), HttpStatus.OK);
   }
 
   @PutMapping("/uploadUserAvatar/{userName}")
@@ -83,7 +86,9 @@ public class UserController {
   @PutMapping("/resetPassword")
   ResponseEntity<?> resetPassword(@RequestBody ResetPassword resetPassword) {
     var result = userService.resetPassword(resetPassword);
-    return new ResponseEntity<>(result, HttpStatus.OK);
+    if (result.getStatus().equals("success"))
+      return new ResponseEntity<>(result, HttpStatus.OK);
+    return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
   }
 
   @DeleteMapping("/delete/{username}")
