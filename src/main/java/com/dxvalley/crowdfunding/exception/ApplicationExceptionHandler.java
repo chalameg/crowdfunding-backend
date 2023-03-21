@@ -26,6 +26,7 @@ public class ApplicationExceptionHandler {
         return errorMap;
     }
 
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex) {
@@ -52,6 +53,17 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        ExceptionResponse apiException = new ExceptionResponse(
+                LocalDateTime.now().format(dateTimeFormatter),
+                httpStatus,
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiException, httpStatus);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
+        HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
                 httpStatus,
