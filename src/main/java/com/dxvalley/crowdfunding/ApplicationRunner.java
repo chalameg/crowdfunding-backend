@@ -34,12 +34,12 @@ public class ApplicationRunner {
         return args -> {
             try {
                 Role admin = new Role("Admin", "System Administrator");
-                Role sysAdmin = new Role("Super-Admin", "Highest Level System Administrator");
+                Role sysAdmin = new Role("SuperAdmin", "Highest Level System Administrator");
                 Role user = new Role("User", "Application user");
                 Role vetter = new Role("Vetter", "Campaigns vetter");
 
                 Users johnDoe = new Users(
-                        "johnDoe@gmail.cocmb",
+                        "johnDoe@gmail.com",
                         "12345678",
                         "john Doe",
                         "john.com",
@@ -49,9 +49,11 @@ public class ApplicationRunner {
                         true,
                         "Finfinne");
 
-                roleRepository.saveAll(List.of(admin, sysAdmin, user, vetter));
+                List<Role> roles = roleRepository.saveAll(List.of(admin, sysAdmin, user, vetter));
+
+                johnDoe.setRoles(roles);
                 userRepository.save(johnDoe);
-                
+
                 LOGGER.info("Preloaded roles and user");
             } catch (Exception ex) {
                 LOGGER.error("Preloading Error: {}", ex.getMessage());
