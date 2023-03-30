@@ -8,6 +8,7 @@ import com.dxvalley.crowdfunding.model.Payment;
 import com.dxvalley.crowdfunding.model.Users;
 import com.dxvalley.crowdfunding.repository.CampaignRepository;
 import com.dxvalley.crowdfunding.repository.PaymentRepository;
+import com.dxvalley.crowdfunding.repository.UserRepository;
 import com.dxvalley.crowdfunding.service.PaymentService;
 import com.dxvalley.crowdfunding.service.UserService;
 import org.slf4j.Logger;
@@ -30,6 +31,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     UserService userService;
     @Autowired
+    UserRepository userRepository;
+    @Autowired
     private DateTimeFormatter dateTimeFormatter;
     private final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
@@ -38,7 +41,8 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentAddDTO.getCampaignId())
                     .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
-            Users user = paymentAddDTO.getUserId() != null ? userService.getUserById(paymentAddDTO.getUserId()) : null;
+            Users user = paymentAddDTO.getUserId() != null ?
+                    userRepository.findById(paymentAddDTO.getUserId()).get() : null;
 
             Payment payment = new Payment();
             payment.setOrderId(generateUniqueOrderId(campaign.getFundingType().getName()));
@@ -119,12 +123,26 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Double totalAmountCollectedOnPlatform() {
-        return paymentRepository.findTotalAmountRaisedOnPlatform();
+        try {
+            var amount = paymentRepository.findTotalAmountRaisedOnPlatform();
+            logger.info("getting total Amount collected on platform = {} ", amount);
+            return amount;
+        } catch (DataAccessException ex) {
+            logger.error("Error Getting totalAmountCollectedOnPlatform: {}", ex.getMessage());
+            throw new RuntimeException("Error Getting totalAmountCollectedOnPlatform", ex);
+        }
     }
 
     @Override
     public Double totalAmountCollectedForCampaign(Long campaignId) {
-        return paymentRepository.findTotalAmountOfPaymentForCampaign(campaignId);
+        try {
+            var amount = paymentRepository.findTotalAmountOfPaymentForCampaign(campaignId);
+            logger.info("getting total Amount collected for campaign = {} ", amount);
+            return amount;
+        } catch (DataAccessException ex) {
+            logger.error("Error Getting total amount collected for campaign: {}", ex.getMessage());
+            throw new RuntimeException("Error Getting total amount collected for campaign", ex);
+        }
     }
 
     private String generateUniqueOrderId(String fundingType) {
