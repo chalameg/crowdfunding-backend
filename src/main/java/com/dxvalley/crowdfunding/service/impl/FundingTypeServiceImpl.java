@@ -7,7 +7,7 @@ import com.dxvalley.crowdfunding.service.FundingTypeService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//TODO: update current impl
 @Service
 public class FundingTypeServiceImpl implements FundingTypeService{
 

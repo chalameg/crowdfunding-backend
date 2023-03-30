@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//TODO: update current impl
 @Service
 public class CampaignSubCategoryServiceImpl implements CampaignSubCategoryService {
     @Autowired
@@ -56,7 +56,7 @@ public class CampaignSubCategoryServiceImpl implements CampaignSubCategoryServic
     @Override
     public List<CampaignSubCategory> getCampaignSubCategories() {
         var campaignSubCategories = campaignSubCategoryRepository.findAll();
-        if (campaignSubCategories.size() == 0) {
+        if (campaignSubCategories.isEmpty()) {
             throw new ResourceNotFoundException("Currently, There is no Campaign SubCategory.");
         }
         return campaignSubCategories;

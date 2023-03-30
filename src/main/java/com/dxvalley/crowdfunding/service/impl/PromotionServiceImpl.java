@@ -6,7 +6,7 @@ import com.dxvalley.crowdfunding.service.PromotionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//TODO: update current impl
 @Service
 public class PromotionServiceImpl implements PromotionService {
 

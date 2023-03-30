@@ -17,7 +17,7 @@ public class PromotionController {
     @GetMapping
     ResponseEntity<?> getPromotion() {
         var result = promotionService.getPromotions();
-        if(result.size() == 0) return new ResponseEntity<>("Currently, there is no promotion.", HttpStatus.NOT_FOUND);
+        if (result.isEmpty()) return new ResponseEntity<>("Currently, there is no promotion.", HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -31,7 +31,8 @@ public class PromotionController {
     @GetMapping("getPromotionByCampaign/{promotionId}")
     ResponseEntity<?> getPromotionByCampaign(@PathVariable Long promotionId) {
         var result = promotionService.getPromotionByCampaign(promotionId);
-        if(result.size() == 0) return new ResponseEntity<>("Currently, there is no promotion for this campaign.", HttpStatus.NOT_FOUND);
+        if (result.isEmpty())
+            return new ResponseEntity<>("Currently, there is no promotion for this campaign.", HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
