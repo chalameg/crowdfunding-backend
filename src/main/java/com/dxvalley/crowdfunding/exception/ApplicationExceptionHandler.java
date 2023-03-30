@@ -1,5 +1,9 @@
 package com.dxvalley.crowdfunding.exception;
 
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,18 +18,26 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApplicationExceptionHandler {
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @RequiredArgsConstructor
+    private class ExceptionResponse {
+        private final String timeStamp;
+        private final HttpStatus error;
+        private final String message;
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
+    @Autowired
+    private DateTimeFormatter dateTimeFormatter;
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleInvalidArgument(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Object> handleInvalidArgument(MethodArgumentNotValidException ex) {
         Map<String, String> errorMap = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> {
             errorMap.put(error.getField(), error.getDefaultMessage());
         });
-        return errorMap;
+        return ResponseEntity.badRequest().body(errorMap);
     }
-
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -36,8 +48,10 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 ex.getMessage()
         );
+        logger.error(ex.getMessage(), ex);
         return new ResponseEntity<>(apiException, httpStatus);
     }
+
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<Object> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
@@ -47,29 +61,35 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 ex.getMessage()
         );
+        logger.error(ex.getMessage(), ex);
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
-        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(UserNotEnabledException.class)
+    public ResponseEntity<Object> handleUserNotEnabledException(UserNotEnabledException ex) {
+        HttpStatus httpStatus = HttpStatus.FORBIDDEN;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
                 httpStatus,
                 ex.getMessage()
         );
+        logger.error(ex.getMessage(), ex);
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleException(Exception ex) {
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
                 httpStatus,
-                ex.getMessage()
+                "Internal Server Error"
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        logger.error(ex.getMessage(), ex);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 }
 
