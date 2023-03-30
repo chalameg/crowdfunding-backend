@@ -9,4 +9,6 @@ public interface ConfirmationTokenService {
     ConfirmationToken saveConfirmationToken(Users user, String token, int expirationTimeInMinutes);
 
     ConfirmationToken getToken(String token);
+
+    void sendConfirmationToken(String username);
 }
