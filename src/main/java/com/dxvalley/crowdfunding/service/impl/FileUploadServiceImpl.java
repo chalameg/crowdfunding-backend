@@ -3,7 +3,8 @@ package com.dxvalley.crowdfunding.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.dxvalley.crowdfunding.service.FileUploadService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,26 +15,29 @@ import java.util.Map;
 
 @Service
 public class FileUploadServiceImpl implements FileUploadService {
-    @Autowired
-    private Cloudinary cloudinaryConfig;
+    private final Cloudinary cloudinaryConfig;
+    private final Logger logger = LoggerFactory.getLogger(FileUploadServiceImpl.class);
+
+    public FileUploadServiceImpl(Cloudinary cloudinaryConfig) {
+        this.cloudinaryConfig = cloudinaryConfig;
+    }
 
     @Override
     public String uploadFile(MultipartFile img) {
         try {
             File uploadedFile = convertMultiPartToFile(img);
             Map uploadResult = cloudinaryConfig.uploader().upload(uploadedFile, ObjectUtils.emptyMap());
-            boolean isDeleted = uploadedFile.delete();
-
-            if (isDeleted) {
-                System.out.println("File successfully deleted");
-            } else
-                System.out.println("File doesn't exist");
+            if (uploadedFile.delete() == true) {
+                logger.info("cloudinaryImage -> File successfully deleted");
+            } else {
+                logger.warn("cloudinaryImage -> File doesn't exist");
+            }
             return uploadResult.get("url").toString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (IOException ex) {
+            logger.error("cloudinaryImage -> Error uploading file: {}", ex.getMessage());
+            throw new IllegalArgumentException("cloudinaryImage -> Bad file size or format!");
         }
     }
-
 
     @Override
     public String uploadFileVideo(MultipartFile video) {
@@ -41,24 +45,24 @@ public class FileUploadServiceImpl implements FileUploadService {
             File uploadedFile = convertMultiPartToFile(video);
             Map uploadResult = cloudinaryConfig.uploader().uploadLarge(uploadedFile, ObjectUtils.emptyMap());
 
-            boolean isDeleted = uploadedFile.delete();
+            if (uploadedFile.delete()) {
+                logger.info("cloudinaryVideo-> File successfully deleted");
+            } else {
+                logger.warn("cloudinaryVideo-> File doesn't exist");
+            }
 
-            if (isDeleted){
-                System.out.println("File successfully deleted");
-            }else
-                System.out.println("File doesn't exist");
-            return  uploadResult.get("url").toString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return uploadResult.get("url").toString();
+        } catch (IOException ex) {
+            logger.error("cloudinaryVideo-> Error uploading video: {}", ex.getMessage());
+            throw new IllegalArgumentException("cloudinaryVideo-> Bad video size or format!");
         }
     }
 
     private File convertMultiPartToFile(MultipartFile file) throws IOException {
         File convFile = new File(file.getOriginalFilename());
-        FileOutputStream fos = new FileOutputStream(convFile);
-        fos.write(file.getBytes());
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(convFile)) {
+            fos.write(file.getBytes());
+        }
         return convFile;
     }
-
 }

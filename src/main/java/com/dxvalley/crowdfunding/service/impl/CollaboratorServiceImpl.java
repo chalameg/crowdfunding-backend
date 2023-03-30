@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+
+//TODO: update current impl
 @Service
 public class CollaboratorServiceImpl implements CollaboratorService {
     @Autowired
@@ -43,9 +45,9 @@ public class CollaboratorServiceImpl implements CollaboratorService {
 
     @Override
     public ApiResponse sendInvitation(InviteRequest inviteRequest) {
-        var invitee = userService.getUserByUsername(inviteRequest.getUsername());
-        var campaign = campaignService.getCampaignById(inviteRequest.getCampaignId());
-        var inviteSender =userService.getUserByUsername(campaign.getOwner());
+        var invitee = userService.utilGetUserByUsername(inviteRequest.getUsername());
+        var campaign = campaignRepository.findCampaignByCampaignId(inviteRequest.getCampaignId()).get();
+        var inviteSender = userService.getUserByUsername(campaign.getOwner());
 
         LocalDateTime invitationSentAt = LocalDateTime.now();
         LocalDateTime expiredAt = invitationSentAt.plusDays(1);
@@ -61,7 +63,7 @@ public class CollaboratorServiceImpl implements CollaboratorService {
 
         String link = "http://localhost:3000/invitationDetail/" + result.getCollaboratorId();
 
-        var isSend = emailService.send(
+        emailService.send(
                 inviteRequest.getUsername(),
                 emailService.emailBuilderForCollaborationInvitation(
                         invitee.getFullName(),
@@ -69,11 +71,6 @@ public class CollaboratorServiceImpl implements CollaboratorService {
                         campaign.getTitle(),
                         link),
                 "Asking for Collaboration");
-
-        if(!isSend){
-            collaboratorRepository.delete(result);
-            return new ApiResponse("error", "can't send an invitation at this time. Please try again later!");
-        }
         return new ApiResponse("success", "The invitation sent successfully!");
     }
 
@@ -82,8 +79,8 @@ public class CollaboratorServiceImpl implements CollaboratorService {
         campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no campaign with this ID.")
         );
-        var  collaborator = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
-        if(collaborator.size() == 0){
+        var collaborator = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
+        if (collaborator.isEmpty()) {
             throw new ResourceNotFoundException("There is no collaborators for this campaign");
         }
         return collaborator;

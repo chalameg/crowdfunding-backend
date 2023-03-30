@@ -20,7 +20,7 @@ public class NewsLetterSubscriberServiceImpl implements NewsLetterSubscriberServ
     @Override
     public List<NewsLetterSubscriber> getAllSubscribers() {
         var subscribes = newsLetterSubscriberRepository.findAll();
-        if (subscribes.size() == 0) throw new ResourceNotFoundException("Currently, There is no Subscribes");
+        if (subscribes.isEmpty()) throw new ResourceNotFoundException("Currently, There is no Subscribes");
         return subscribes;
     }
 

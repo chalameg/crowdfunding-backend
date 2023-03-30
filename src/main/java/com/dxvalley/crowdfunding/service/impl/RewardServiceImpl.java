@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//TODO: update current impl
 @Service
 public class RewardServiceImpl implements RewardService {
     @Autowired
@@ -42,7 +42,7 @@ public class RewardServiceImpl implements RewardService {
     @Override
     public List<Reward> findRewardsByCampaignId(Long campaignId) {
         var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
-        if (rewards.size() == 0)
+        if (rewards.isEmpty())
             throw new ResourceNotFoundException("Currently, There is no reward for this Campaign");
         return rewards;
     }

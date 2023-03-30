@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//TODO: update current impl
 @Service
 public class CampaignCategoryServiceIml implements CampaignCategoryService {
     @Autowired
@@ -50,7 +50,7 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
     @Override
     public List<CampaignCategory> getCampaignCategories() {
         var campaignCategories = campaignCategoryRepository.findAll();
-        if(campaignCategories.size() == 0){
+        if (campaignCategories.isEmpty()) {
             throw new ResourceNotFoundException("Currently, There is no Campaign Category.");
         }
         for (CampaignCategory campaignCategory : campaignCategories) {

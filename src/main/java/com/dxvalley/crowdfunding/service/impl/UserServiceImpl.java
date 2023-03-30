@@ -63,13 +63,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> getUsers() {
         try {
-            List<Users> users = this.userRepository.findAll();
+            List<Users> users = userRepository.findAll();
             if (hasSysAdminRole()) {
                 List<UserDTO> result = users.stream().map(userDTOMapper).collect(Collectors.toList());
                 if (result.isEmpty())
-                    throw new ResourceNotFoundException("Currently, There is no Users");
+                    throw new ResourceNotFoundException("Currently, There is no User");
 
-                logger.info("Retrieved {} users by SuperAdmin", result.size());
+                logger.info("SuperAdmin Retrieved {} users", result.size());
                 return result;
             } else {
                 List<UserDTO> result = users.stream()
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
                         .collect(Collectors.toList());
 
                 if (result.isEmpty())
-                    throw new ResourceNotFoundException("Currently, There is no Users");
+                    throw new ResourceNotFoundException("Currently, There is no User");
 
                 logger.info("Retrieved {} users", result.size());
                 return result;
@@ -92,27 +92,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUserById(Long userId) {
-        return new UserDTOMapper().apply(getUserByUserIdAsObject(userId));
+        return new UserDTOMapper().apply(utilGetUserByUserId(userId));
     }
 
     @Override
     public UserDTO getUserByUsername(String username) {
-        return new UserDTOMapper().apply(getUserByUsernameAsObject(username));
+        return new UserDTOMapper().apply(utilGetUserByUsername(username));
     }
 
     @Override
     public UserDTO register(Users tempUser) {
         try {
-            var existingUser = userRepository.
-                    findUsersByUsernameAndIsEnabled(tempUser.getUsername(), true);
-            if (existingUser.isPresent())
-                throw new ResourceAlreadyExistsException("There is already a user with this username");
-
-            // Check if there is a disabled user with the same username and delete it
-            userRepository.findUsersByUsernameAndIsEnabled(tempUser.getUsername(), false)
-                    .ifPresent(disabledUser -> {
-                        userRepository.deleteById(disabledUser.getUserId());
-                    });
+            if (userRepository.findByUsername(tempUser.getUsername()).isPresent())
+                throw new ResourceAlreadyExistsException("There is already a user with this username.");
 
             LocalDateTime now = LocalDateTime.now();
             tempUser.setRoles(Collections.singletonList(roleRepo.findByRoleName("User")));
@@ -132,20 +124,18 @@ public class UserServiceImpl implements UserService {
                 Users user = userRepository.save(tempUser);
                 confirmationTokenService.saveConfirmationToken(user, token, 30);
 
-                logger.info("New User is registered with email");
+                logger.info("New User is registered with email.");
                 return new UserDTOMapper().apply(user);
 
             } else if (smsService.isValidPhoneNumber(tempUser.getUsername())) {
                 String code = getRandomNumberString();
                 smsService.sendOtp(tempUser.getUsername(), code);
-
                 Users user = userRepository.save(tempUser);
                 confirmationTokenService.saveConfirmationToken(user, code, 3);
 
-                logger.info("New User is registered with phone number");
+                logger.info("New User is registered with phone number.");
                 return new UserDTOMapper().apply(user);
             }
-
             throw new IllegalArgumentException("Username is neither a valid email nor a valid phone number.");
         } catch (DataAccessException ex) {
             logger.error("Error Registering new User: {}", ex.getMessage());
@@ -166,12 +156,10 @@ public class UserServiceImpl implements UserService {
                 return false;
             }
 
-            userRepository.findByUsername(confirmationToken.getUser().getUsername())
-                    .ifPresent(user -> {
-                        user.setIsEnabled(true);
-                        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
-                        userRepository.save(user);
-                    });
+            Users user = utilGetUserByUsername(confirmationToken.getUser().getUsername());
+            user.setIsEnabled(true);
+            user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+            userRepository.save(user);
 
             confirmationTokenRepository.delete(confirmationToken);
             logger.info("Token confirmed");
@@ -185,7 +173,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO editUser(Long userId, UserDTO userDTO) {
         try {
-            Users user = getUserByUserIdAsObject(userId);
+            Users user = userRepository.findById(userId).
+                    orElseThrow(() -> new ResourceNotFoundException("There is no user with this ID."));
             user.setFullName(userDTO.getFullName() != null ? userDTO.getFullName() : user.getFullName());
             user.setBiography(userDTO.getBiography() != null ? userDTO.getBiography() : user.getBiography());
             user.setWebsite(userDTO.getWebsite() != null ? userDTO.getWebsite() : user.getWebsite());
@@ -204,10 +193,10 @@ public class UserServiceImpl implements UserService {
     public UserDTO uploadUserAvatar(String userName, MultipartFile userAvatar) {
         try {
             String avatarUrl = fileUploadService.uploadFile(userAvatar);
-            var user = getUserByUsernameAsObject(userName);
+            Users user = utilGetUserByUsername(userName);
             user.setAvatarUrl(avatarUrl);
             user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
-            var result = userRepository.save(user);
+            Users result = userRepository.save(user);
 
             logger.info("User uploaded Avatar");
             return new UserDTOMapper().apply(result);
@@ -221,7 +210,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     public ApiResponse changePassword(String username, ChangePassword temp) {
         try {
-            Users user = getUserByUsernameAsObject(username);
+            Users user = utilGetUserByUsername(username);
             Boolean isPasswordMatch = passwordEncoder.matches(temp.getOldPassword(), user.getPassword());
             if (!isPasswordMatch)
                 return new ApiResponse("error", "Incorrect old Password!");
@@ -230,7 +219,7 @@ public class UserServiceImpl implements UserService {
             user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
             userRepository.save(user);
 
-            logger.info("user changed password");
+            logger.info("User changed password");
             return new ApiResponse("success", "Password Changed Successfully!");
         } catch (DataAccessException ex) {
             logger.error("Error changing Password: {}", ex.getMessage());
@@ -238,11 +227,10 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
     @Override
     public ApiResponse forgotPassword(String username) {
         try {
-            Users user = getUserByUsernameAsObject(username);
+            Users user = utilGetUserByUsername(username);
             if (emailService.isValidEmail(username)) {
                 String token = UUID.randomUUID().toString();
                 String link = "http://localhost:3000/resetPassword/" + token;
@@ -254,15 +242,15 @@ public class UserServiceImpl implements UserService {
 
                 confirmationTokenService.saveConfirmationToken(user, token, 30);
 
-                logger.info("user asked of password reset with email");
-                return new ApiResponse("success", "please check your email");
+                logger.info("User asked of password reset with email");
+                return new ApiResponse("success", "Please check your email");
             } else {
                 String code = getRandomNumberString();
                 smsService.sendOtp(username, code);
                 confirmationTokenService.saveConfirmationToken(user, code, 3);
 
-                logger.info("user asked for password reset with phone number");
-                return new ApiResponse("success", "please check your phone");
+                logger.info("User asked for password reset with phone number");
+                return new ApiResponse("success", "Please check your phone");
             }
         } catch (DataAccessException ex) {
             logger.error("Error in forgotPassword method: {}", ex.getMessage());
@@ -282,7 +270,7 @@ public class UserServiceImpl implements UserService {
             }
 
             var username = confirmationToken.getUser().getUsername();
-            var user = getUserByUsernameAsObject(username);
+            var user = utilGetUserByUsername(username);
 
             user.setPassword(passwordEncoder.encode(resetPassword.getPassword()));
             user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
@@ -301,7 +289,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(String username) {
         try {
-            Users user = getUserByUsernameAsObject(username);
+            Users user = utilGetUserByUsername(username);
             userRepository.delete(user);
             logger.info("User with username {} Deleted", username);
         } catch (DataAccessException ex) {
@@ -323,9 +311,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Users getUserByUserIdAsObject(Long userId) {
+    public Users utilGetUserByUserId(Long userId) {
         try {
-            Users user = userRepository.findByUserId(userId)
+            Users user = userRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("There is no user with this Id"));
 
             logger.info("Retrieving User by ID");
@@ -337,10 +325,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Users getUserByUsernameAsObject(String username) {
+    public Users utilGetUserByUsername(String username) {
         try {
-            Users user = userRepository.findUsersByUsernameAndIsEnabled(username, true)
-                    .orElseThrow(() -> new ResourceNotFoundException("There is no user with this username"));
+            Users user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("There is no user with this username."));
             logger.info("Retrieving User by username");
             return user;
         } catch (DataAccessException ex) {
