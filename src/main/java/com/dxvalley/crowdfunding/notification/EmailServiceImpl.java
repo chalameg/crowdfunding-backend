@@ -1,20 +1,19 @@
 package com.dxvalley.crowdfunding.notification;
 
 import io.micrometer.common.lang.NonNull;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -37,8 +36,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
-    public boolean send(@NonNull String recipientEmail, @NonNull String emailBody,
-                        @NonNull String emailSubject) {
+    public void send(@NonNull String recipientEmail, @NonNull String emailBody, @NonNull String emailSubject) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
@@ -46,10 +44,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(recipientEmail);
             helper.setSubject(emailSubject);
             mailSender.send(mimeMessage);
-            return true;
         } catch (MessagingException | MailException e) {
             LOGGER.error("Failed to send email", e);
-            return false;
+            throw new RuntimeException("Cannot sent email due to Internal Server Error. Please try again later");
         }
     }
 
@@ -74,6 +71,7 @@ public class EmailServiceImpl implements EmailService {
 //    }
 
 
+    @Override
     public String emailBuilderForUserConfirmation(String name, String link) {
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                 +
@@ -249,6 +247,7 @@ public class EmailServiceImpl implements EmailService {
                 "</div></div>";
     }
 
+    @Override
     public String emailBuilderForCollaborationInvitation(String Invitee, String senderName, String campaignTitle, String link) {
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n"
                 +

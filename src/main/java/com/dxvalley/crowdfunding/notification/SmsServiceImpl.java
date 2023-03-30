@@ -1,9 +1,9 @@
 package com.dxvalley.crowdfunding.notification;
 
-import com.dxvalley.crowdfunding.dto.ApiResponse;
+import lombok.Getter;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import org.springframework.web.client.RestTemplate;
 
 import java.util.regex.Pattern;
@@ -13,6 +13,7 @@ public class SmsServiceImpl implements SmsService {
 
     private final Pattern PHONE_NUMBER_PATTERN = Pattern.compile("^(\\+251|0)[97]\\d{8}$");
 
+    @Override
     public boolean isValidPhoneNumber(String phoneNumber) {
         if (phoneNumber == null)
             return false;
@@ -21,10 +22,11 @@ public class SmsServiceImpl implements SmsService {
     }
 
     @Override
-    public ApiResponse sendOtp(String phoneNumber, String randomNumber) {
+    @Async
+    public void sendOtp(String phoneNumber, String randomNumber) {
 
-        ResponseEntity<String> res;
         try {
+            ResponseEntity<String> res;
             String uri = "http://10.1.245.150:7080/v1/otp/";
             RestTemplate restTemplate = new RestTemplate();
 
@@ -38,25 +40,19 @@ public class SmsServiceImpl implements SmsService {
             HttpEntity<String> request = new HttpEntity<String>(requestBody, headers);
             res = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
 
-            if (res.getStatusCode().toString().trim().equals("200 OK")) {
-                return new ApiResponse(
-                        "success",
-                        "Message sent to your phone number.");
-
-            } else {
-                return new ApiResponse(
-                        "bad request",
-                        "Please inter valid Mobile number!");
-            }
+//            if (!(res.getBody().getStatus().equals("Success"))) {
+//                throw new RuntimeException("Cannot sent sms due to Internal Server Error. try again later");
+//            }
         } catch (Exception e) {
-
-            return new ApiResponse(
-                    "error",
-                    "Sorry, SMS service is down for a moment. Please try again later.");
-
+            throw new RuntimeException("Cannot sent sms due to Internal Server Error. try again later");
         }
+
     }
 
+    @Getter
+    private class OtpResponse {
+        private String status;
+    }
 
 }
 
