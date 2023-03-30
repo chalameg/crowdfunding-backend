@@ -18,9 +18,9 @@ public interface UserService {
 
     UserDTO getUserByUsername(String username);
 
-    Users getUserByUsernameAsObject(String username);
+    Users utilGetUserByUsername(String username);
 
-    Users getUserByUserIdAsObject(Long userId);
+    Users utilGetUserByUserId(Long userId);
 
     UserDTO register(Users tempUser);
 
