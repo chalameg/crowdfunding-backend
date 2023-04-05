@@ -1,12 +1,10 @@
 package com.dxvalley.crowdfunding.dto;
 
-import com.dxvalley.crowdfunding.model.CampaignStage;
+import com.dxvalley.crowdfunding.model.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,26 +14,28 @@ public class CampaignDTO {
     private String shortDescription;
     private String city;
     private String imageUrl;
-    private Double goalAmount;
+    private String videoUrl;
     private String projectType;
     private CampaignStage campaignStage;
-    private Short campaignDuration;
-    private String campaignDurationLeft;
-    private String expiredAt;
+    private Double goalAmount;
+    private Double commissionRate;
     private Double totalAmountCollected;
+    private Double percentageCollected;
     private Integer numberOfLikes;
     private Integer numberOfBackers;
-    private Integer daysLeft;
+    private Short campaignDurationLeft;
+    private String ownerFullName;
+    private CampaignBankAccount campaignBankAccount;
+    private Integer numberOfCampaigns;
+    private String owner;
+    private String description;
+    private String risks;
+    private Short campaignDuration;
+    private FundingType fundingType;
+    private CampaignSubCategory campaignSubCategory;
+    private List<Payment> contributors;
+    private List<Reward> rewards;
+    private List<Promotion> promotions;
+    private List<Collaborator> collaborators;
 
-    static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    public static String campaignDurationLeft(String expiredAt) {
-        Duration duration = Duration.between(LocalDateTime.now(), LocalDateTime.parse(expiredAt, dateTimeFormatter));
-        if (duration.toDays() == 1)
-            return duration.toDays() + " day left";
-        else if (duration.toDays() < 0) {
-            return "This Campaign is Already Expired";
-        }
-        return duration.toDays() + " days left";
-    }
 }
