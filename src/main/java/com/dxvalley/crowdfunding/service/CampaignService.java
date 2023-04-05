@@ -4,6 +4,7 @@ import com.dxvalley.crowdfunding.dto.CampaignAddRequestDto;
 import com.dxvalley.crowdfunding.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.dto.CampaignLikeDTO;
 import com.dxvalley.crowdfunding.model.Campaign;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,13 +14,13 @@ public interface CampaignService {
 
     String likeCampaign(CampaignLikeDTO campaignLikeDTO);
 
-    Campaign editCampaign(Campaign campaign);
+    CampaignDTO editCampaign(Long campaignId, CampaignDTO campaignDTO);
 
     List<CampaignDTO> getCampaigns();
 
     List<CampaignDTO> getEnabledCampaigns();
 
-    Campaign getCampaignById(Long campaignId);
+    CampaignDTO getCampaignById(Long campaignId);
 
     List<CampaignDTO> getCampaignByCategory(Long categoryId);
 
@@ -37,5 +38,9 @@ public interface CampaignService {
 
     List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId);
 
-    void update(Campaign campaign);
+    CampaignDTO pauseOrResumeCampaign(Long campaignID);
+
+    Campaign utilGetCampaignById(Long campaignId);
+
+    CampaignDTO uploadMedias(Long campaignId, MultipartFile campaignImage, String campaignVideo);
 }

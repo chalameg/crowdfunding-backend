@@ -78,8 +78,9 @@ public class PaymentServiceImpl implements PaymentService {
 
             var campaign = payment.getCampaign();
             campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
-            campaign.setTotalAmountCollected(campaign.getTotalAmountCollected() + payment.getAmount());
-
+            var amount_collected = campaign.getTotalAmountCollected() + (payment.getCurrency().equals("USD")
+                    ? payment.getAmount() * 53.90 : payment.getAmount());
+            campaign.setTotalAmountCollected(amount_collected);
             paymentRepository.save(payment);
             campaignRepository.save(campaign);
             logger.info("payment updated");
