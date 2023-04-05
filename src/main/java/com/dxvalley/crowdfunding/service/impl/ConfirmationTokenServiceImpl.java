@@ -60,7 +60,7 @@ public class ConfirmationTokenServiceImpl implements ConfirmationTokenService {
 
         if (emailService.isValidEmail(username)) {
             String token = UUID.randomUUID().toString();
-            String link = "http://localhost:3000/verify/" + token;
+            String link = "http://10.1.177.121/verify/" + token;
 
             emailService.send(
                     username,

@@ -6,6 +6,7 @@ import com.dxvalley.crowdfunding.dto.CampaignLikeDTO;
 import com.dxvalley.crowdfunding.dto.mapper.CampaignDTOMapper;
 import com.dxvalley.crowdfunding.exception.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.exception.UserNotEnabledException;
 import com.dxvalley.crowdfunding.model.*;
 import com.dxvalley.crowdfunding.repository.*;
 import com.dxvalley.crowdfunding.service.*;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class CampaignServiceImpl implements CampaignService {
+
     @Autowired
     private CampaignRepository campaignRepository;
     @Autowired
@@ -42,11 +45,13 @@ public class CampaignServiceImpl implements CampaignService {
     @Autowired
     CampaignSubCategoryService campaignSubCategoryService;
     @Autowired
-    UserService userService;
+    private UserService userService;
     @Autowired
     private CampaignDTOMapper campaignDTOMapper;
     @Autowired
     private CampaignLikeRepository campaignLikeRepository;
+    @Autowired
+    private FileUploadService fileUploadService;
     @Autowired
     private DateTimeFormatter dateTimeFormatter;
     private final Logger logger = LoggerFactory.getLogger(CampaignServiceImpl.class);
@@ -55,12 +60,13 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public Campaign addCampaign(CampaignAddRequestDto campaignAddRequestDto) {
         try {
-            Campaign campaign = new Campaign();
-            FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
-            CampaignSubCategory campaignSubCategory = campaignSubCategoryService
-                    .getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
-            var user = userService.getUserByUsername(campaignAddRequestDto.getOwner());
 
+            FundingType fundingType = fundingTypeService.getFundingTypeById(campaignAddRequestDto.getFundingTypeId());
+            CampaignSubCategory campaignSubCategory = campaignSubCategoryService.getCampaignSubCategoryById(campaignAddRequestDto.getCampaignSubCategoryId());
+            var user = userService.getUserByUsername(campaignAddRequestDto.getOwner());
+            if (!user.getIsEnabled()) throw new UserNotEnabledException("User is not enabled to add campaigns");
+
+            Campaign campaign = new Campaign();
             campaign.setTitle(campaignAddRequestDto.getTitle());
             campaign.setCity(campaignAddRequestDto.getCity());
             campaign.setOwner(user.getUsername());
@@ -76,7 +82,7 @@ public class CampaignServiceImpl implements CampaignService {
             campaign.setNumberOfLikes(0);
             campaign.setCampaignDuration((short) 0);
 
-            logger.info("new campaign Added");
+            logger.info("New campaign Added");
             return campaignRepository.save(campaign);
         } catch (DataAccessException ex) {
             logger.error("Error Adding campaigns: {}", ex.getMessage());
@@ -85,12 +91,56 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public CampaignDTO editCampaign(Long campaignId, CampaignDTO campaignDTO) {
+        try {
+            Campaign campaign = utilGetCampaignById(campaignId);
+
+            campaign.setTitle(Optional.ofNullable(campaignDTO.getTitle()).orElse(campaign.getTitle()));
+            campaign.setShortDescription(Optional.ofNullable(campaignDTO.getShortDescription()).orElse(campaign.getShortDescription()));
+            campaign.setCity(Optional.ofNullable(campaignDTO.getCity()).orElse(campaign.getCity()));
+            campaign.setProjectType(Optional.ofNullable(campaignDTO.getProjectType()).orElse(campaign.getProjectType()));
+            campaign.setGoalAmount(Optional.ofNullable(campaignDTO.getGoalAmount()).orElse(campaign.getGoalAmount()));
+            campaign.setCampaignDuration(Optional.ofNullable(campaignDTO.getCampaignDuration()).orElse(campaign.getCampaignDuration()));
+            campaign.setRisks(Optional.ofNullable(campaignDTO.getRisks()).orElse(campaign.getRisks()));
+            campaign.setDescription(Optional.ofNullable(campaignDTO.getDescription()).orElse(campaign.getDescription()));
+            campaign.setCommissionRate(Optional.ofNullable(campaignDTO.getCommissionRate()).orElse(campaign.getCommissionRate()));
+            campaign.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+
+            var result = campaignRepository.save(campaign);
+            logger.info("Campaign edited successfully for campaign ID: {}", campaignId);
+            return campaignDTOMapper.applyById(result);
+        } catch (DataAccessException ex) {
+            logger.error("Error editing campaign with ID: {}", campaignId, ex);
+            throw new RuntimeException("Error editing campaign with ID", ex);
+        }
+    }
+
+    @Override
+    public CampaignDTO uploadMedias(Long campaignId, MultipartFile campaignImage, String campaignVideo) {
+        try {
+            Campaign campaign = utilGetCampaignById(campaignId);
+            String imageUrl = null;
+            if (campaignImage != null)
+                imageUrl = fileUploadService.uploadFile(campaignImage);
+
+            campaign.setImageUrl(Optional.ofNullable(imageUrl).orElse(campaign.getImageUrl()));
+            campaign.setVideoLink(Optional.ofNullable(campaignVideo).orElse(campaign.getVideoLink()));
+            campaign.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+            Campaign result = campaignRepository.save(campaign);
+            logger.info("Campaign media updated successfully for campaign ID: {}", campaignId);
+            return campaignDTOMapper.apply(result);
+        } catch (DataAccessException ex) {
+            logger.error("Error uploading campaign media for campaign ID: {}", campaignId, ex);
+            throw new RuntimeException("Error uploading campaign media", ex);
+        }
+    }
+
+    @Override
     public String likeCampaign(CampaignLikeDTO campaignLikeDTO) {
         try {
             var campaignLike = new CampaignLike();
-            var result = campaignLikeRepository.findByCampaignCampaignIdAndUserUserId(
-                    campaignLikeDTO.getCampaignId(), campaignLikeDTO.getUserId());
-            var campaign = this.getCampaignById(campaignLikeDTO.getCampaignId());
+            var result = campaignLikeRepository.findByCampaignCampaignIdAndUserUserId(campaignLikeDTO.getCampaignId(), campaignLikeDTO.getUserId());
+            var campaign = utilGetCampaignById(campaignLikeDTO.getCampaignId());
             if (result != null) {
                 campaignLikeRepository.delete(result);
                 campaign.setNumberOfLikes(campaign.getNumberOfLikes() - 1);
@@ -98,7 +148,7 @@ public class CampaignServiceImpl implements CampaignService {
                 logger.info("campaign with id {} Disliked", campaignLikeDTO.getCampaignId());
                 return "Disliked Successfully";
             }
-            campaignLike.setUser(userService.getUserById(campaignLikeDTO.getUserId()));
+            campaignLike.setUser(userService.utilGetUserByUserId(campaignLikeDTO.getUserId()));
             campaignLike.setCampaign(campaign);
             campaignLikeRepository.save(campaignLike);
             campaign.setNumberOfLikes(campaign.getNumberOfLikes() + 1);
@@ -113,22 +163,48 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public Campaign editCampaign(Campaign campaign) {
-        return campaignRepository.save(campaign);
+    public CampaignDTO pauseOrResumeCampaign(Long campaignID) {
+        Campaign campaign = utilGetCampaignById(campaignID);
+        if (campaign.getCampaignStage().equals(CampaignStage.PAUSED))
+            campaign.setCampaignStage(CampaignStage.FUNDING);
+        else
+            campaign.setCampaignStage(CampaignStage.PAUSED);
+        var result = campaignRepository.save(campaign);
+        return campaignDTOMapper.apply(result);
     }
 
     @Override
     public List<CampaignDTO> getCampaigns() {
         try {
-            var campaigns = campaignRepository.findCampaignsByCampaignStageIn(List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
-            if (campaigns.isEmpty()) {
+            List<Campaign> campaigns = campaignRepository.findCampaignsByCampaignStageIn(List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
+            if (campaigns.isEmpty())
                 throw new ResourceNotFoundException("Currently, There is no campaign.");
-            }
+
             logger.info("Retrieved {} campaigns", campaigns.size());
             return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
         } catch (DataAccessException ex) {
             logger.error("Error retrieving campaigns: {}", ex.getMessage());
             throw new RuntimeException("Error retrieving campaigns", ex);
+        }
+    }
+
+    @Override
+    public Campaign enableCampaign(Long campaignId) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            Campaign campaign = utilGetCampaignById(campaignId);
+            if (campaign.getIsEnabled()) {
+                throw new ResourceAlreadyExistsException("This campaign is already enabled.");
+            }
+            campaign.setIsEnabled(true);
+            campaign.setCampaignStage(CampaignStage.FUNDING);
+            campaign.setEnabledAt(now.format(dateTimeFormatter));
+            campaign.setExpiredAt(now.plusDays(campaign.getCampaignDuration()).format(dateTimeFormatter));
+            logger.info("Campaign with id {} enabled", campaignId);
+            return campaignRepository.save(campaign);
+        } catch (DataAccessException ex) {
+            logger.error("Error retrieving Enabling campaigns : {}", ex.getMessage());
+            throw new RuntimeException("Error retrieving Enabling campaigns ", ex);
         }
     }
 
@@ -148,12 +224,11 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public Campaign getCampaignById(Long campaignId) {
+    public CampaignDTO getCampaignById(Long campaignId) {
         try {
-            Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
-                    () -> new ResourceNotFoundException("There is no campaign with this ID.")
-            );
+            Campaign campaign = utilGetCampaignById(campaignId);
 
+            CampaignDTO campaignDTO = campaignDTOMapper.applyById(campaign);
             var campaignBankAccount = campaignBankAccountRepository.findCampaignBankAccountByCampaignId(campaignId);
             var collaborators = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
             var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
@@ -161,16 +236,15 @@ public class CampaignServiceImpl implements CampaignService {
             var user = userService.getUserByUsername(campaign.getOwner());
             var contributors = paymentService.getPaymentByCampaignId(campaignId);
 
-            if (campaignBankAccount.isPresent())
-                campaign.setCampaignBankAccount(campaignBankAccount.get());
-            campaign.setCollaborators(collaborators);
-            campaign.setRewards(rewards);
-            campaign.setPromotions(promotions);
-            campaign.setContributors(contributors);
-            campaign.setOwnerFullName(user.getFullName());
-            campaign.setNumberOfBackers(contributors.size());
+            if (campaignBankAccount.isPresent()) campaignDTO.setCampaignBankAccount(campaignBankAccount.get());
+            campaignDTO.setCollaborators(collaborators);
+            campaignDTO.setRewards(rewards);
+            campaignDTO.setPromotions(promotions);
+            campaignDTO.setContributors(contributors);
+            campaignDTO.setOwnerFullName(user.getFullName());
+            campaignDTO.setNumberOfBackers(contributors.size());
             logger.info("get Campaign with id {}", campaignId);
-            return campaign;
+            return campaignDTO;
         } catch (DataAccessException ex) {
             logger.error("Error retrieving campaigns by Id: {}", ex.getMessage());
             throw new RuntimeException("Error retrieving campaigns by Id", ex);
@@ -180,9 +254,7 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public List<CampaignDTO> getCampaignByCategory(Long categoryId) {
         try {
-            var campaigns = campaignRepository.
-                    findCampaignsByCampaignSubCategoryCampaignCategoryCampaignCategoryIdAndCampaignStageIn(
-                            categoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
+            var campaigns = campaignRepository.findCampaignsByCampaignSubCategoryCampaignCategoryCampaignCategoryIdAndCampaignStageIn(categoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
             if (campaigns.isEmpty()) {
                 throw new ResourceNotFoundException("There is no campaign for this category.");
             }
@@ -197,9 +269,7 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public List<CampaignDTO> getCampaignBySubCategory(Long subCategoryId) {
         try {
-            var campaigns = campaignRepository.
-                    findCampaignsByCampaignSubCategoryCampaignSubCategoryIdAndCampaignStageIn(
-                            subCategoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
+            var campaigns = campaignRepository.findCampaignsByCampaignSubCategoryCampaignSubCategoryIdAndCampaignStageIn(subCategoryId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
             if (campaigns.isEmpty()) {
                 throw new ResourceNotFoundException("There is no campaign for this sub-category.");
             }
@@ -214,37 +284,13 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public List<CampaignDTO> getCampaignsByOwner(String owner) {
         try {
-            var campaigns = campaignRepository.findCampaignsByOwner(owner);
-            if (campaigns.isEmpty()) {
-                throw new ResourceNotFoundException("There is no campaign for this User.");
-            }
+            List<Campaign> campaigns = campaignRepository.findCampaignsByOwner(owner);
+            if (campaigns.isEmpty()) throw new ResourceNotFoundException("There is no campaign for this User.");
             logger.info("Retrieved {} campaigns by owner", campaigns.size());
             return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
         } catch (DataAccessException ex) {
             logger.error("Error retrieving campaigns by owner: {}", ex.getMessage());
             throw new RuntimeException("Error retrieving campaigns by owner ", ex);
-        }
-    }
-
-    @Override
-    public Campaign enableCampaign(Long campaignId) {
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
-                    () -> new ResourceNotFoundException("There is no campaign with this ID.")
-            );
-            if (campaign.getIsEnabled()) {
-                throw new ResourceAlreadyExistsException("This campaign is already enabled.");
-            }
-            campaign.setIsEnabled(true);
-            campaign.setCampaignStage(CampaignStage.FUNDING);
-            campaign.setEnabledAt(now.format(dateTimeFormatter));
-            campaign.setExpiredAt(now.plusDays(campaign.getCampaignDuration()).format(dateTimeFormatter));
-            logger.info("Campaign with id {} enabled", campaignId);
-            return campaignRepository.save(campaign);
-        } catch (DataAccessException ex) {
-            logger.error("Error retrieving Enabling campaigns : {}", ex.getMessage());
-            throw new RuntimeException("Error retrieving Enabling campaigns ", ex);
         }
     }
 
@@ -271,26 +317,13 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     public List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId) {
         try {
-            var campaigns = campaignRepository.findCampaignsByFundingTypeFundingTypeIdAndCampaignStageIn(
-                    fundingTypeId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
-            if (campaigns.size() == 0)
-                throw new ResourceNotFoundException("There is no campaign for this Funding Type.");
+            var campaigns = campaignRepository.findCampaignsByFundingTypeFundingTypeIdAndCampaignStageIn(fundingTypeId, List.of(CampaignStage.FUNDING, CampaignStage.COMPLETED));
+            if (campaigns.isEmpty()) throw new ResourceNotFoundException("There is no campaign for this Funding Type.");
             logger.info("Retrieved {} campaigns Funding Type", campaigns.size());
             return campaigns.stream().map(campaignDTOMapper).collect(Collectors.toList());
         } catch (DataAccessException ex) {
             logger.error("Error retrieving campaigns by Funding Type: {}", ex.getMessage());
             throw new RuntimeException("Error retrieving campaigns by Funding Type ", ex);
-        }
-    }
-
-    @Override
-    public void update(Campaign campaign) {
-        try {
-            campaignRepository.save(campaign);
-            logger.info("Campaign updated");
-        } catch (DataAccessException ex) {
-            logger.error("Error retrieving campaigns by stage: {}", ex.getMessage());
-            throw new RuntimeException("Error retrieving campaigns by stage ", ex);
         }
     }
 
@@ -310,33 +343,10 @@ public class CampaignServiceImpl implements CampaignService {
         }
     }
 
-
-//    public void deleteCampaign(Long campaignId) {
-//        try {
-//            var campaign = getCampaignById(campaignId);
-//            if (campaign.getCampaignBankAccount() != null)
-//                campaignBankAccountRepository.delete(campaign.getCampaignBankAccount());
-//            if (campaign.getRewards() != null && campaign.getRewards().size() != 0)
-//                rewardRepository.deleteAll(campaign.getRewards());
-//            if (campaign.getCollaborators() != null && campaign.getCollaborators().size() != 0)
-//                collaboratorRepository.deleteAll(campaign.getCollaborators());
-//            if (campaign.getPromotions() != null && campaign.getPromotions().size() != 0)
-//                promotionRepository.deleteAll(campaign.getPromotions());
-//            if (campaign.getContributors() != null && campaign.getContributors().size() != 0)
-//                paymentRepository.deleteAll(campaign.getContributors());
-//
-//            logger.info("Campaign Deleted");
-//            campaignRepository.deleteById(campaignId);
-//        } catch (DataAccessException ex) {
-//            logger.error("Error Deleting campaigns: {}", ex.getMessage());
-//            throw new RuntimeException("Error Deleting campaigns ", ex);
-//        }
-//    }
-
     @Override
     public void deleteCampaign(Long campaignId) {
         try {
-            Campaign campaign = getCampaignById(campaignId);
+            var campaign = getCampaignById(campaignId);
             Optional<CampaignBankAccount> campaignBankAccount = Optional.ofNullable(campaign.getCampaignBankAccount());
             Optional<List<Reward>> rewards = Optional.ofNullable(campaign.getRewards());
             Optional<List<Collaborator>> collaborators = Optional.ofNullable(campaign.getCollaborators());
@@ -357,5 +367,18 @@ public class CampaignServiceImpl implements CampaignService {
         }
     }
 
+    //    utils methods for this class
+    @Override
+    public Campaign utilGetCampaignById(Long campaignId) {
+        try {
+            Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId)
+                    .orElseThrow(() -> new ResourceNotFoundException("There is no campaign with this ID."));
+            return campaign;
+        } catch (DataAccessException ex) {
+            logger.error("Error retrieving campaigns by Id: {}", ex.getMessage());
+            throw new RuntimeException("Error retrieving campaigns by Id", ex);
+        }
+
+    }
 
 }

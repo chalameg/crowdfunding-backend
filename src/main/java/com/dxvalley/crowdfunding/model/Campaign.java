@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Entity
 @Getter
 @Setter
@@ -46,21 +44,4 @@ public class Campaign {
     @OneToOne
     @JoinColumn(name = "campaignSubCategory_id")
     private CampaignSubCategory campaignSubCategory;
-    @Transient
-    private List<Payment> contributors;
-    @Transient
-    private List<Reward> rewards;
-    @Transient
-    private List<Promotion> promotions;
-    @Transient
-    private List<Collaborator> collaborators;
-    @Transient
-    private String ownerFullName;
-    @Transient
-    private CampaignBankAccount campaignBankAccount;
-    @Transient
-    private Integer numberOfCampaigns;
-
-    @Transient
-    private Integer daysLeft;
 }

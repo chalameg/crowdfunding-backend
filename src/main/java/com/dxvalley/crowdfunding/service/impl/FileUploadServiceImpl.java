@@ -39,25 +39,6 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
     }
 
-    @Override
-    public String uploadFileVideo(MultipartFile video) {
-        try {
-            File uploadedFile = convertMultiPartToFile(video);
-            Map uploadResult = cloudinaryConfig.uploader().uploadLarge(uploadedFile, ObjectUtils.emptyMap());
-
-            if (uploadedFile.delete()) {
-                logger.info("cloudinaryVideo-> File successfully deleted");
-            } else {
-                logger.warn("cloudinaryVideo-> File doesn't exist");
-            }
-
-            return uploadResult.get("url").toString();
-        } catch (IOException ex) {
-            logger.error("cloudinaryVideo-> Error uploading video: {}", ex.getMessage());
-            throw new IllegalArgumentException("cloudinaryVideo-> Bad video size or format!");
-        }
-    }
-
     private File convertMultiPartToFile(MultipartFile file) throws IOException {
         File convFile = new File(file.getOriginalFilename());
         try (FileOutputStream fos = new FileOutputStream(convFile)) {

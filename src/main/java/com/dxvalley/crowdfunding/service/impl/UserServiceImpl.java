@@ -115,7 +115,7 @@ public class UserServiceImpl implements UserService {
 
             if (emailService.isValidEmail(tempUser.getUsername())) {
                 String token = UUID.randomUUID().toString();
-                String link = "http://localhost:3000/verify/" + token;
+                String link = "http://10.1.177.121/verify/" + token;
                 emailService.send(
                         tempUser.getUsername(),
                         emailService.emailBuilderForUserConfirmation(tempUser.getFullName(), link),
@@ -233,7 +233,7 @@ public class UserServiceImpl implements UserService {
             Users user = utilGetUserByUsername(username);
             if (emailService.isValidEmail(username)) {
                 String token = UUID.randomUUID().toString();
-                String link = "http://localhost:3000/resetPassword/" + token;
+                String link = "http://10.1.177.121/resetPassword/" + token;
 
                 emailService.send(
                         user.getUsername(),
