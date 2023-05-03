@@ -1,18 +1,16 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Setter
-@Getter
+import lombok.Data;
+
+@Data
 public class ChapaVerifyResponse {
     private String message;
     private String status;
-    private Data data;
+    private PaymentData data;
 }
 
-@Setter
-@Getter
+@Data
 class Customization {
     private String title;
     private String description;

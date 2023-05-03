@@ -1,68 +1,90 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
-import lombok.RequiredArgsConstructor;
+import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class ChapaService {
+    private final String bearerToken;
+    private final String paymentInitiationURI;
+    private final String paymentVerificationURI;
 
-    private final Logger logger = LoggerFactory.getLogger(ChapaService.class);
-    public ChapaInitializeResponse chapaInitialize(ChapaRequestDTO chapaRequest) {
+    public ChapaService(@Value("${CHAPA.BEARER_TOKEN}") String bearerToken,
+                        @Value("${CHAPA.PAYMENT_INITIATION_URI}") String paymentInitiationURI,
+                        @Value("${CHAPA.PAYMENT_VERIFICATION_URI}") String paymentVerificationURI) {
+        this.bearerToken = bearerToken;
+        this.paymentInitiationURI = paymentInitiationURI;
+        this.paymentVerificationURI = paymentVerificationURI;
+    }
+
+    /**
+     * Initializes a payment with Chapa.
+     *
+     * @param chapaRequest The Chapa request DTO.
+     * @return The Chapa initialize response.
+     * @throws RuntimeException if there is an error while initiating the payment request.
+     */
+    public ChapaInitializeResponse initializePayment(ChapaRequestDTO chapaRequest) {
         try {
-            final String URI = "https://api.chapa.co/v1/transaction/initialize";
-
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth("Bearer CHASECK_TEST-MozGIHYgzprWQQMVMbtg3zbr2XiyMwky");
+            headers.setBearerAuth(bearerToken);
 
             JSONObject requestBody = new JSONObject();
             requestBody.put("amount", chapaRequest.getAmount());
             requestBody.put("currency", "ETB");
             requestBody.put("email", chapaRequest.getEmail());
-            requestBody.put("first_name", chapaRequest.getFirst_name());
-            requestBody.put("last_name", chapaRequest.getLast_name());
-            requestBody.put("phone_number", "0912345678");
+            requestBody.put("first_name", chapaRequest.getFirstName());
+            requestBody.put("last_name", chapaRequest.getLastName());
             requestBody.put("tx_ref", chapaRequest.getOrderId());
-//            requestBody.put("callback_url", "callback_url");
-            requestBody.put("return_url", "http://localhost:3000/verifyChapa/" + chapaRequest.getOrderId() + "/" + chapaRequest.getCampaignId());
+            requestBody.put("callback_url", "http://localhost:8181/api/payment/chapaVerify/" + chapaRequest.getOrderId());
+            requestBody.put("return_url", chapaRequest.getReturnUrl());
             requestBody.put("customization[title]", "Payment for my favourite merchant");
             requestBody.put("customization[description]", "I love online payments");
 
             HttpEntity<String> request = new HttpEntity<String>(requestBody.toString(), headers);
-            ResponseEntity<ChapaInitializeResponse> response = restTemplate.postForEntity(URI, request, ChapaInitializeResponse.class);
+            ResponseEntity<ChapaInitializeResponse> response = restTemplate.postForEntity(paymentInitiationURI, request, ChapaInitializeResponse.class);
 
-            logger.info(String.valueOf(response.getBody()));
+            log.info("Request to chapa from jigii => {}|| ChapaInitializeResponse => {}", chapaRequest, response.getBody());
             return response.getBody();
         } catch (Exception e) {
+            log.error("Cannot initiate payment request for {} request", chapaRequest);
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    public ChapaVerifyResponse chapaVerify(String orderID) {
+    /**
+     * Verifies payment by sending a GET request to Chapa's API.
+     *
+     * @param orderID The unique identifier for the payment transaction.
+     * @return A ChapaVerifyResponse object containing the payment verification details.
+     * @throws ResourceNotFoundException If the payment cannot be verified.
+     */
+    public ChapaVerifyResponse verifyPayment(String orderID) {
         try {
-            final String URI = "https://api.chapa.co/v1/transaction/verify/" + orderID;
-
+            final String URI = paymentVerificationURI + orderID;
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.TEXT_PLAIN);
-            headers.setBearerAuth("Bearer CHASECK_TEST-MozGIHYgzprWQQMVMbtg3zbr2XiyMwky");
+            headers.setBearerAuth(bearerToken);
 
             HttpEntity<String> request = new HttpEntity<>(headers);
             ResponseEntity<ChapaVerifyResponse> response = restTemplate.exchange(URI, HttpMethod.GET, request, ChapaVerifyResponse.class);
 
-            logger.info(String.valueOf(response.getBody()));
+            log.info("ChapaVerifyResponse for {} orderID => {}", orderID, response.getBody());
             return response.getBody();
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            log.error("Cannot Verify payment for {} orderID", orderID);
+            throw new ResourceNotFoundException("Payment not paid yet");
         }
     }
 }

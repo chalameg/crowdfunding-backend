@@ -1,11 +1,9 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Setter
-@Getter
-public class Data {
+@Data
+public class PaymentData {
     private String first_name;
     private String last_name;
     private String email;

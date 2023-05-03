@@ -1,23 +1,36 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class ChapaRequestDTO {
     private Long userId;
-    @NotNull(message = "campaignId cannot be null")
+    @NotNull(message = "Campaign ID cannot be null")
     private Long campaignId;
-    @NotEmpty
+
+    @NotNull(message = "Amount cannot be null")
     private Double amount;
-    @NotEmpty
+
+    @NotBlank(message = "Email cannot be blank")
     private String email;
-    @NotEmpty
-    private String first_name;
-    @NotEmpty
-    private String last_name;
-    @NotNull(message = "isAnonymous cannot be null")
+
+    @NotBlank(message = "First name cannot be blank")
+    private String firstName;
+
+    @NotBlank(message = "Last name cannot be blank")
+    private String lastName;
+
+    @NotNull(message = "Anonymous payment status cannot be null")
     private Boolean isAnonymous;
+
+    @NotBlank(message = "Return URL cannot be blank")
+    private String returnUrl;
+
     private String orderId;
 }
+
+
+
+
