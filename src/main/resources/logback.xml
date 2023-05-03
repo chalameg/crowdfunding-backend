@@ -10,10 +10,10 @@
     </appender>
 
     <!-- Rolling File Appender -->
-    <appender name="CONTROLLERS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/controllers-logger.log</file>
+    <appender name="CHAPA_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/chapa-logger.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/controllers-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/archive/chapa-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>200MB</totalSizeCap>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -29,6 +29,7 @@
             </highlight>
         </encoder>
     </appender>
+
 
     <appender name="MODELS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/models-logger.log</file>
@@ -152,8 +153,8 @@
 
     <!-- Async Appender -->
 
-    <appender name="ASYNC_CONTROLLERS_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="CONTROLLERS_LOG"/>
+    <appender name="ASYNC_CHAPA_LOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CHAPA_LOG"/>
     </appender>
 
     <appender name="ASYNC_MODELS_LOG" class="ch.qos.logback.classic.AsyncAppender">
@@ -195,12 +196,12 @@
         </root>
 
         <!-- Logger for specific package -->
-        <logger name="com.dxvalley.crowdfunding.controller" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.payment.chapa" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_CONTROLLERS_LOG"/>
+            <appender-ref ref="ASYNC_CHAPA_LOG"/>
         </logger>
 
-        <logger name="com.dxvalley.crowdfunding.model" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.user.model" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_MODELS_LOG"/>
         </logger>

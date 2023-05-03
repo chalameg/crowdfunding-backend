@@ -1,0 +1,58 @@
+# Set the name of the Spring Boot application
+spring:
+  application:
+    name: JIGII-CROWDFUNDING
+
+  # Set the configuration for connecting to the PostgreSQL database
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crowdfunding # Database connection URL
+    username: postgres # Database username
+    password: 1313 # Database password
+
+  # Set the configuration for Hibernate, the ORM framework used by Spring Data JPA
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect # Set the SQL dialect for PostgreSQL
+    hibernate:
+      ddl-auto: update  # Set the strategy for Hibernate to create/update the database schema. Hibernate ddl auto (create, create-drop, validate, update)
+    # Set to true to log SQL queries
+    show-sql: true
+
+  # Set the preferred JSON mapper for HTTP message conversion
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+
+  # Set the configuration for handling multipart file uploads
+  servlet:
+    multipart:
+      max-file-size: 10MB # Maximum size of each file in a multipart request
+      max-request-size: 10MB # Maximum size of the entire multipart request
+
+  # Set the configuration for sending emails
+  mail:
+    host: smtp.gmail.com # SMTP server host
+    port: 587 # SMTP server port
+    username: abditrnhdev@gmail.com # Email account username
+    password: kykvlxnpgizjmvjn # Email account password
+    properties:
+      mail:
+        smtp:
+          auth: true # Enable SMTP authentication
+          starttls:
+            enable: true # Enable STARTTLS encryption for the SMTP connection
+
+  # Set the active Spring profile
+  profiles:
+    active: prod
+
+# Set the port number for the web server
+server:
+  port: 8181
+
+# Set the conditional property for seeding the database
+# NOTE: Set it to true only if you are starting this app for the first time.
+database:
+  seed: false
+
