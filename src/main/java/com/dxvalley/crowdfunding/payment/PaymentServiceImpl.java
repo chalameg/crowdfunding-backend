@@ -1,113 +1,234 @@
 package com.dxvalley.crowdfunding.payment;
 
+import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.model.Campaign;
-import com.dxvalley.crowdfunding.model.Users;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaInitializeResponse;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaRequestDTO;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaService;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaVerifyResponse;
+import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentRequest;
+import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
+import com.dxvalley.crowdfunding.payment.ebirr.EbirrRequestDTO;
+import com.dxvalley.crowdfunding.payment.ebirr.EbirrService;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentAddDTO;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
-import com.dxvalley.crowdfunding.repository.CampaignRepository;
-import com.dxvalley.crowdfunding.repository.UserRepository;
-import com.dxvalley.crowdfunding.service.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dxvalley.crowdfunding.user.UserService;
+import com.dxvalley.crowdfunding.user.model.Users;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
-    @Autowired
-    PaymentRepository paymentRepository;
-    @Autowired
-    CampaignRepository campaignRepository;
-    @Autowired
-    UserService userService;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    private DateTimeFormatter dateTimeFormatter;
-    @Autowired
-    ChapaService chapaService;
-    private final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
+    private final PaymentRepository paymentRepository;
+    private final UserService userService;
+    private final DateTimeFormatter dateTimeFormatter;
+    private final ChapaService chapaService;
+    private final EbirrService ebirrService;
+    private final PaymentUtils paymentUtils;
+
+    /**
+     * Initializes a Chapa payment.
+     *
+     * @param chapaRequest The Chapa request DTO.
+     * @return The API response with the Chapa initialize response.
+     */
+    @Override
+    @Transactional
+    public ResponseEntity initializeChapaPayment(ChapaRequestDTO chapaRequest) {
+        Campaign campaign = paymentUtils.getCampaignById(chapaRequest.getCampaignId());
+        Users user = paymentUtils.getUserById(chapaRequest.getUserId());
+
+        String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
+        chapaRequest.setOrderId(orderId);
+
+        Payment payment = paymentUtils.createPaymentFromChapaRequest(chapaRequest, campaign, user, orderId);
+
+        try {
+            payment.setPaymentStatus(PaymentStatus.PENDING.name());
+            paymentRepository.save(payment);
+
+            ChapaInitializeResponse response = chapaService.initializePayment(chapaRequest);
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            paymentUtils.handleFailedPayment(payment, e);
+            log.error(e.getMessage());
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "Currently, we can't process payments with Chapa");
+        }
+    }
+
+    /**
+     * Verifies a Chapa payment with the given order ID.
+     *
+     * @param orderId The order ID associated with the payment.
+     * @return The API response.
+     */
+    @Override
+    @Transactional
+    public ResponseEntity verifyChapaPayment(String orderId) {
+        Payment payment = paymentUtils.getPaymentByOrderId(orderId);
+        ChapaVerifyResponse verifyResponse = chapaService.verifyPayment(orderId);
+
+        paymentUtils.updatePaymentFromChapaVerifyResponse(payment, verifyResponse);
+
+        paymentUtils.updateCampaignFromPayment(payment);
+
+        return ApiResponse.success("Transaction completed successfully");
+    }
+
+    /**
+     * Processes a payment request with eBIRR payment gateway.
+     * Creates a Payment object, saves it as pending, sends the payment request to eBIRR, and updates the payment status
+     * based on the response from eBIRR. Also updates the associated Campaign object with the payment details.
+     *
+     * @param ebirrRequestDTO The payment request DTO containing payment details.
+     * @return A CompletableFuture object with the payment response from eBIRR.
+     */
+    @Override
+    @Async
+    @Transactional
+    public CompletableFuture<EbirrPaymentResponse> payWithEbirr(EbirrRequestDTO ebirrRequestDTO) {
+        Campaign campaign = paymentUtils.getCampaignById(ebirrRequestDTO.getCampaignId());
+        Users user = paymentUtils.getUserById(ebirrRequestDTO.getUserId());
+
+        String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
+        ebirrRequestDTO.setOrderId(orderId);
+
+        Payment payment = paymentUtils.createPaymentFromEbirrRequest(ebirrRequestDTO, campaign, user, orderId);
+
+        try {
+            payment.setPaymentStatus(PaymentStatus.PENDING.name());
+            paymentRepository.save(payment);
+
+            EbirrPaymentRequest ebirrPaymentRequest = ebirrService.requestToEbirrPaymentRequest(ebirrRequestDTO);
+            EbirrPaymentResponse ebirrPaymentResponse = ebirrService.sendToEbirr(ebirrPaymentRequest);
+
+            return CompletableFuture.completedFuture(ebirrPaymentResponse);
+        } catch (Exception e) {
+            paymentUtils.handleFailedPayment(payment, e);
+            log.error(e.getMessage());
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    /**
+     * Updates a Payment object with the payment details returned from the eBIRR payment gateway,
+     * and updates the associated Campaign object with the payment details.
+     *
+     * @param paymentFuture A CompletableFuture object containing the payment response from eBIRR.
+     */
+    @Override
+    @Transactional
+    public void updatePaymentForEbirr(CompletableFuture<EbirrPaymentResponse> paymentFuture) {
+        try {
+            Payment payment = paymentUtils.getPaymentByOrderId(paymentFuture.get().getRequestId());
+
+            payment.setPaymentStatus(PaymentStatus.SUCCESS.name());
+            payment.setTransactionCompletedDate(paymentFuture.get().getTimestamp());
+            payment.setTransactionId(paymentFuture.get().getParams().getTransactionId());
+            paymentRepository.save(payment);
+
+            paymentUtils.updateCampaignFromPayment(payment);
+        } catch (Exception ex) {
+            log.error("Error updatePaymentForEbirr ", ex.getMessage());
+            throw new RuntimeException("Error updatePaymentForEbirr ", ex);
+        }
+    }
+
+    /**
+     * Checks the status of pending payments and updates them accordingly.
+     * If a payment has been pending for more than 30 minutes, sets its status to FAILED.
+     * Otherwise, attempts to verify the payment using the ChapaVerify API.
+     */
+    @Scheduled(fixedRate = 1800000) // 30 minutes = 30 * 60 * 1000 = 1800000 milliseconds
+    public void chapaPaymentStatusChecker() {
+        log.debug("Checking Payment Status");
+        List<Payment> pendingPayments = paymentRepository.findByPaymentStatus(PaymentStatus.PENDING.name());
+        for (Payment payment : pendingPayments) {
+            long paymentTime = Duration.between(LocalDateTime.parse(payment.getTransactionOrderedDate(), dateTimeFormatter), LocalDateTime.now()).toMinutes();
+            if (paymentTime >= 30) {
+                payment.setPaymentStatus(PaymentStatus.FAILED.name());
+                paymentRepository.save(payment);
+            } else {
+                try {
+                    verifyChapaPayment(payment.getOrderId());
+                } catch (Exception e) {
+
+                }
+            }
+        }
+    }
 
     @Override
     public Payment addPayment(PaymentAddDTO paymentAddDTO) {
         try {
-            Campaign campaign = campaignRepository.findCampaignByCampaignId(paymentAddDTO.getCampaignId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
-            Users user = paymentAddDTO.getUserId() != null ?
-                    userRepository.findById(paymentAddDTO.getUserId()).get() : null;
+            Campaign campaign = paymentUtils.getCampaignById(paymentAddDTO.getCampaignId());
+            Users user = paymentUtils.getUserById(paymentAddDTO.getUserId());
 
             Payment payment = new Payment();
-            payment.setOrderId(generateUniqueOrderId(campaign.getFundingType().getName()));
-            payment.setUser(user);
+            payment.setOrderId(paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName()));
             payment.setPayerFullName(user != null ? user.getFullName() : null);
+            payment.setPaymentContactInfo(paymentAddDTO.getEmail());
             payment.setCampaign(campaign);
             payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
-            payment.setPaymentStatus("PENDING");
+            payment.setPaymentStatus(PaymentStatus.PENDING.name());
             payment.setIsAnonymous(paymentAddDTO.getIsAnonymous());
             payment.setAmount(paymentAddDTO.getAmount());
             payment.setCurrency(paymentAddDTO.getCurrency());
             payment.setCampaign(campaign);
+            payment.setUser(user);
             paymentRepository.save(payment);
 
-            logger.info("Adding payment");
             return new Payment(payment.getOrderId(), payment.getTransactionOrderedDate());
         } catch (DataAccessException ex) {
-            logger.error("Error Adding payment: {}", ex.getMessage());
+            log.error("Error Adding payment: {}", ex.getMessage());
             throw new RuntimeException("Error Adding payment ", ex);
         }
     }
 
     @Override
-    public void updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO) {
+    public ResponseEntity updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO) {
         try {
-            Payment payment = paymentRepository.findPaymentByOrderId(orderId).
-                    orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
-
+            Payment payment = paymentUtils.getPaymentByOrderId(orderId);
             payment.setPayerFullName(paymentUpdateDTO.getPayerFullName());
             payment.setTransactionId(paymentUpdateDTO.getTransactionId());
             payment.setPaymentStatus(paymentUpdateDTO.getPaymentStatus());
             payment.setTransactionCompletedDate(LocalDateTime.now().format(dateTimeFormatter));
-
-            var campaign = payment.getCampaign();
-            campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
-            var amount_collected = campaign.getTotalAmountCollected() + (payment.getCurrency().equals("USD")
-                    ? payment.getAmount() * 53.90 : payment.getAmount());
-            campaign.setTotalAmountCollected(amount_collected);
             paymentRepository.save(payment);
-            campaignRepository.save(campaign);
 
-            logger.info("payment updated");
+            paymentUtils.updateCampaignFromPayment(payment);
+            return ApiResponse.success("Payment Updated Successfully");
         } catch (DataAccessException ex) {
-            logger.error("Error Updating payment: {}", ex.getMessage());
+            log.error("Error Updating payment: {}", ex.getMessage());
             throw new RuntimeException("Error Updating payment ", ex);
         }
     }
 
-
     @Override
     public List<Payment> getPaymentByCampaignId(Long campaignId) {
         try {
+            List<Payment> payments = paymentRepository.findPaymentsByCampaignCampaignIdAndPaymentStatus(campaignId, "SUCCESS");
+            payments.stream().filter(payment -> payment.getIsAnonymous()).forEach(payment -> payment.setPayerFullName("Anonymous"));
 
-            List<Payment> payments = paymentRepository.findPaymentsByCampaignCampaignIdAndPaymentStatus(campaignId, "COMPLETED");
-            payments.stream().filter(payment -> payment.getIsAnonymous())
-                    .forEach(payment -> payment.setPayerFullName("Anonymous"));
-
-            logger.info("Retrieved {} Payment by Campaign", payments.size());
+            log.info("Retrieved {} Payment by Campaign", payments.size());
             return payments;
         } catch (DataAccessException ex) {
-            logger.error("Error Getting Payment By Campaign: {}", ex.getMessage());
+            log.error("Error Getting Payment By Campaign: {}", ex.getMessage());
             throw new RuntimeException("Error Getting Payment By Campaign ", ex);
         }
     }
@@ -120,122 +241,11 @@ public class PaymentServiceImpl implements PaymentService {
             if (payments.isEmpty()) {
                 throw new ResourceNotFoundException("You have not contributed yet.");
             }
-            logger.info("Retrieved {} Payment by User", payments.size());
+            log.info("Retrieved {} Payment by User", payments.size());
             return payments;
         } catch (DataAccessException ex) {
-            logger.error("Error Getting Payment By User: {}", ex.getMessage());
+            log.error("Error Getting Payment By User: {}", ex.getMessage());
             throw new RuntimeException("Error Getting Payment By User ", ex);
         }
     }
-
-    @Override
-    public Double totalAmountCollectedOnPlatform() {
-        try {
-            var amount = paymentRepository.findTotalAmountRaisedOnPlatform();
-            logger.info("getting total Amount collected on platform = {} ", amount);
-            return amount;
-        } catch (DataAccessException ex) {
-            logger.error("Error Getting totalAmountCollectedOnPlatform: {}", ex.getMessage());
-            throw new RuntimeException("Error Getting totalAmountCollectedOnPlatform", ex);
-        }
-    }
-
-    @Override
-    public Double totalAmountCollectedForCampaign(Long campaignId) {
-        try {
-            var amount = paymentRepository.findTotalAmountOfPaymentForCampaign(campaignId);
-            logger.info("getting total Amount collected for campaign = {} ", amount);
-            return amount;
-        } catch (DataAccessException ex) {
-            logger.error("Error Getting total amount collected for campaign: {}", ex.getMessage());
-            throw new RuntimeException("Error Getting total amount collected for campaign", ex);
-        }
-    }
-
-
-    @Override
-    public Object chapaInitialize(ChapaRequestDTO chapaRequest) {
-        try {
-            Campaign campaign = campaignRepository.findCampaignByCampaignId(chapaRequest.getCampaignId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Campaign not found"));
-            Users user = chapaRequest.getUserId() != null ?
-                    userRepository.findById(chapaRequest.getUserId()).get() : null;
-
-            String orderId = generateUniqueOrderId(campaign.getFundingType().getName());
-
-            chapaRequest.setOrderId(orderId);
-            ChapaInitializeResponse chapaInitializeResponse = chapaService.chapaInitialize(chapaRequest);
-
-            Payment payment = new Payment();
-            payment.setPayerFullName(chapaRequest.getFirst_name() + " " + chapaRequest.getLast_name());
-            payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
-            payment.setPaymentStatus("PENDING");
-            payment.setIsAnonymous(chapaRequest.getIsAnonymous());
-            payment.setAmount(chapaRequest.getAmount());
-            payment.setCurrency("ETB");
-            payment.setPaymentProcessor(PaymentProcessor.CHAPA);
-            payment.setOrderId(orderId);
-            payment.setUser(user);
-            payment.setCampaign(campaign);
-            paymentRepository.save(payment);
-
-            return chapaInitializeResponse;
-        } catch (Exception e) {
-            throw new ResourceNotFoundException(e.getMessage());
-        }
-    }
-
-    @Override
-    public Object chapaVerify(String orderID) {
-        try {
-            Payment payment = paymentRepository.findPaymentByOrderId(orderID).
-                    orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
-
-            ChapaVerifyResponse chapaVerifyResponse = chapaService.chapaVerify(orderID);
-
-            payment.setPaymentStatus(chapaVerifyResponse.getStatus());
-            payment.setTransactionCompletedDate(chapaVerifyResponse.getData().getUpdated_at());
-
-            var campaign = payment.getCampaign();
-            campaign.setNumberOfBackers(campaign.getNumberOfBackers() + 1);
-            var amount_collected = campaign.getTotalAmountCollected() + (payment.getCurrency().equals("USD")
-                    ? payment.getAmount() * 53.90 : payment.getAmount());
-            campaign.setTotalAmountCollected(amount_collected);
-            paymentRepository.save(payment);
-            campaignRepository.save(campaign);
-
-            return new ApiResponse("success", "Transaction completed successfully");
-        } catch (Exception e) {
-            return new ApiResponse("error", "Transaction is failed.");
-        }
-    }
-
-
-    private String generateUniqueOrderId(String fundingType) {
-        final String ALL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
-        final int LENGTH = 13;
-        SecureRandom random = new SecureRandom();
-
-        String orderId;
-        do {
-            StringBuilder stringBuilder = new StringBuilder(LENGTH);
-            for (int i = 0; i < LENGTH; i++) {
-                int randomIndex = random.nextInt(ALL_CHARS.length());
-                stringBuilder.append(ALL_CHARS.charAt(randomIndex));
-            }
-            String randomString = stringBuilder.toString();
-
-            orderId = switch (fundingType.toUpperCase()) {
-                case "DONATION" -> "DN_" + randomString;
-                case "EQUITY" -> "EQ_" + randomString;
-                case "REWARD" -> "RW_" + randomString;
-                default -> randomString;
-            };
-
-        } while (paymentRepository.findPaymentByOrderId(orderId).isPresent());
-
-        return orderId;
-    }
-
 }
-

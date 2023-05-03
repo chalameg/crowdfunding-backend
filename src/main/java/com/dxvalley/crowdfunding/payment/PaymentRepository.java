@@ -23,4 +23,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT SUM(p.amount) FROM Payment as p")
     Double findTotalAmountRaisedOnPlatform();
 
+    List<Payment> findByPaymentStatus(String status);
 }

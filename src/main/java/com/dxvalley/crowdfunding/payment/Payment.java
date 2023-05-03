@@ -1,7 +1,7 @@
 package com.dxvalley.crowdfunding.payment;
 
-import com.dxvalley.crowdfunding.model.Campaign;
-import com.dxvalley.crowdfunding.model.Users;
+import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
+import com.dxvalley.crowdfunding.user.model.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +28,7 @@ public class Payment {
     private String paymentStatus;
     private String transactionId;
     private String payerFullName;
+    private String paymentContactInfo;
     private String transactionOrderedDate;
     private String transactionCompletedDate;
     private Boolean isAnonymous;
