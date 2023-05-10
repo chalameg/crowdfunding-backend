@@ -1,12 +1,13 @@
 package com.dxvalley.crowdfunding.tokenManager;
 
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.messageManager.email.EmailBuilder;
 import com.dxvalley.crowdfunding.messageManager.email.EmailService;
 import com.dxvalley.crowdfunding.messageManager.sms.SmsService;
 import com.dxvalley.crowdfunding.user.UserRepository;
-import com.dxvalley.crowdfunding.user.userRole.Users;
+import com.dxvalley.crowdfunding.user.Users;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,17 +17,14 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ConfirmationTokenServiceImpl implements ConfirmationTokenService {
-    @Autowired
-    private ConfirmationTokenRepository confirmationTokenRepository;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private SmsService smsService;
-    @Autowired
-    private DateTimeFormatter dateTimeFormatter;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final EmailService emailService;
+    private final EmailBuilder emailBuilder;
+    private final UserRepository userRepository;
+    private final SmsService smsService;
+    private final DateTimeFormatter dateTimeFormatter;
 
     @Override
     public ConfirmationToken saveConfirmationToken(Users user, String token, int expirationTimeInMinutes) {
@@ -60,7 +58,7 @@ public class ConfirmationTokenServiceImpl implements ConfirmationTokenService {
 
             emailService.send(
                     username,
-                    emailService.emailBuilderForUserConfirmation(user.getFullName(), link),
+                    emailBuilder.emailBuilderForUserConfirmation(user.getFullName(), link),
                     "Confirm your email");
 
             saveConfirmationToken(user, token, 30);
