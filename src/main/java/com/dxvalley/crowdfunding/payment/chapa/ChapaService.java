@@ -1,6 +1,8 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
+import com.dxvalley.crowdfunding.exception.PaymentCannotProcessedException;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,12 +27,11 @@ public class ChapaService {
 
     /**
      * Initializes a payment with Chapa.
-     *
      * @param chapaRequest The Chapa request DTO.
      * @return The Chapa initialize response.
      * @throws RuntimeException if there is an error while initiating the payment request.
      */
-    public ChapaInitializeResponse initializePayment(ChapaRequestDTO chapaRequest) {
+    public ChapaInitializeResponse initializePayment(PaymentRequestDTO chapaRequest) {
         try {
             RestTemplate restTemplate = new RestTemplate();
 
@@ -41,7 +42,7 @@ public class ChapaService {
             JSONObject requestBody = new JSONObject();
             requestBody.put("amount", chapaRequest.getAmount());
             requestBody.put("currency", "ETB");
-            requestBody.put("email", chapaRequest.getEmail());
+            requestBody.put("email", chapaRequest.getPaymentContactInfo());
             requestBody.put("first_name", chapaRequest.getFirstName());
             requestBody.put("last_name", chapaRequest.getLastName());
             requestBody.put("tx_ref", chapaRequest.getOrderId());
@@ -57,13 +58,12 @@ public class ChapaService {
             return response.getBody();
         } catch (Exception e) {
             log.error("Cannot initiate payment request for {} request", chapaRequest);
-            throw new RuntimeException(e.getMessage());
+            throw new PaymentCannotProcessedException(e.getMessage());
         }
     }
 
     /**
      * Verifies payment by sending a GET request to Chapa's API.
-     *
      * @param orderID The unique identifier for the payment transaction.
      * @return A ChapaVerifyResponse object containing the payment verification details.
      * @throws ResourceNotFoundException If the payment cannot be verified.
@@ -84,7 +84,7 @@ public class ChapaService {
             return response.getBody();
         } catch (Exception e) {
             log.error("Cannot Verify payment for {} orderID", orderID);
-            throw new ResourceNotFoundException("Payment not paid yet");
+            throw new PaymentCannotProcessedException("Cannot verify payment");
         }
     }
 }

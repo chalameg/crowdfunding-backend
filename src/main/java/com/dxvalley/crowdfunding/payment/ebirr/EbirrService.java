@@ -1,6 +1,7 @@
 package com.dxvalley.crowdfunding.payment.ebirr;
 
 import com.dxvalley.crowdfunding.exception.PaymentCannotProcessedException;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -50,14 +51,14 @@ public class EbirrService {
 
     /**
      * Converts an instance of EbirrRequestDTO to an instance of EbirrPaymentRequest.
-     * @param ebirrRequestDTO An instance of EbirrRequestDTO.
+     * @param paymentRequestDTO An instance of EbirrRequestDTO.
      * @return An instance of EbirrPaymentRequest.
      */
-    public EbirrPaymentRequest requestToEbirrPaymentRequest(EbirrRequestDTO ebirrRequestDTO) {
+    public EbirrPaymentRequest requestToEbirrPaymentRequest(PaymentRequestDTO paymentRequestDTO) {
 
         EbirrPaymentRequest paymentRequest = new EbirrPaymentRequest();
         paymentRequest.setSchemaVersion(schemaVersion);
-        paymentRequest.setRequestId(ebirrRequestDTO.getOrderId());
+        paymentRequest.setRequestId(paymentRequestDTO.getOrderId());
         paymentRequest.setTimestamp(LocalDateTime.now().format(dateTimeFormatter));
         paymentRequest.setChannelName(channelName);
         paymentRequest.setServiceName(serviceName);
@@ -69,15 +70,15 @@ public class EbirrService {
         serviceParams.setApiUserId(apiUserId);
 
         PayerInfo payerInfo = new PayerInfo();
-        payerInfo.setAccountNo(ebirrRequestDTO.getPhoneNumber());
+        payerInfo.setAccountNo(paymentRequestDTO.getPaymentContactInfo());
         serviceParams.setPayerInfo(payerInfo);
 
         TransactionInfo transactionInfo = new TransactionInfo();
-        transactionInfo.setAmount(ebirrRequestDTO.getAmount());
+        transactionInfo.setAmount(String.valueOf(paymentRequestDTO.getAmount()));
         transactionInfo.setCurrency("ETB");
         transactionInfo.setDescription("description");
-        transactionInfo.setReferenceId(ebirrRequestDTO.getOrderId());
-        transactionInfo.setInvoiceId(ebirrRequestDTO.getOrderId());
+        transactionInfo.setReferenceId(paymentRequestDTO.getOrderId());
+        transactionInfo.setInvoiceId(paymentRequestDTO.getOrderId());
         serviceParams.setTransactionInfo(transactionInfo);
         paymentRequest.setServiceParams(serviceParams);
 
