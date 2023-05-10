@@ -1,9 +1,8 @@
 package com.dxvalley.crowdfunding.payment;
 
-import com.dxvalley.crowdfunding.payment.chapa.ChapaRequestDTO;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
-import com.dxvalley.crowdfunding.payment.ebirr.EbirrRequestDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentAddDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
 import org.springframework.http.ResponseEntity;
 
@@ -11,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface PaymentService {
-    Payment addPayment(PaymentAddDTO paymentAddDTO);
+    Payment addPayment(PaymentRequestDTO1 paymentAddDTO);
 
     ResponseEntity updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO);
 
@@ -19,11 +18,15 @@ public interface PaymentService {
 
     List<Payment> getPaymentByUserId(Long userId);
 
-    ResponseEntity initializeChapaPayment(ChapaRequestDTO requestDTO);
+    ResponseEntity initializeChapaPayment(PaymentRequestDTO requestDTO);
 
     ResponseEntity verifyChapaPayment(String orderID);
+    ResponseEntity initializeCooPassPayment(PaymentRequestDTO requestDTO);
+    ResponseEntity verifyCooPassPayment(String orderID);
 
-    CompletableFuture<EbirrPaymentResponse> payWithEbirr(EbirrRequestDTO ebirrRequestDTO);
+    CompletableFuture<Void> chapaPaymentStatusChecker();
+
+    CompletableFuture<EbirrPaymentResponse> payWithEbirr(PaymentRequestDTO paymentRequest);
 
     void updatePaymentForEbirr(CompletableFuture<EbirrPaymentResponse> paymentFuture);
 }

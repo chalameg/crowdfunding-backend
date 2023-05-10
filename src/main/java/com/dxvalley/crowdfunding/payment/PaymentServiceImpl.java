@@ -1,27 +1,28 @@
 package com.dxvalley.crowdfunding.payment;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaInitializeResponse;
-import com.dxvalley.crowdfunding.payment.chapa.ChapaRequestDTO;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaService;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaVerifyResponse;
+import com.dxvalley.crowdfunding.payment.cooPass.CooPassInitResponse;
+import com.dxvalley.crowdfunding.payment.cooPass.CooPassService;
+import com.dxvalley.crowdfunding.payment.cooPass.CooPassVerifyResponse;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentRequest;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
-import com.dxvalley.crowdfunding.payment.ebirr.EbirrRequestDTO;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrService;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentAddDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
 import com.dxvalley.crowdfunding.user.UserService;
-import com.dxvalley.crowdfunding.user.model.Users;
+import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,30 +41,32 @@ public class PaymentServiceImpl implements PaymentService {
     private final DateTimeFormatter dateTimeFormatter;
     private final ChapaService chapaService;
     private final EbirrService ebirrService;
+    private final CooPassService cooPassService;
     private final PaymentUtils paymentUtils;
 
     /**
      * Initializes a Chapa payment.
      *
-     * @param chapaRequest The Chapa request DTO.
+     * @param paymentRequest The Chapa request DTO.
      * @return The API response with the Chapa initialize response.
      */
     @Override
     @Transactional
-    public ResponseEntity initializeChapaPayment(ChapaRequestDTO chapaRequest) {
-        Campaign campaign = paymentUtils.getCampaignById(chapaRequest.getCampaignId());
-        Users user = paymentUtils.getUserById(chapaRequest.getUserId());
+    public ResponseEntity initializeChapaPayment(PaymentRequestDTO paymentRequest) {
+        Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
+        Users user = paymentUtils.getUserById(paymentRequest.getUserId());
 
         String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
-        chapaRequest.setOrderId(orderId);
+        paymentRequest.setOrderId(orderId);
+        paymentRequest.setPaymentProcessor(PaymentProcessor.CHAPA);
 
-        Payment payment = paymentUtils.createPaymentFromChapaRequest(chapaRequest, campaign, user, orderId);
+        Payment payment = paymentUtils.createPaymentFromRequestDTO(paymentRequest, campaign, user, orderId);
 
         try {
             payment.setPaymentStatus(PaymentStatus.PENDING.name());
             paymentRepository.save(payment);
 
-            ChapaInitializeResponse response = chapaService.initializePayment(chapaRequest);
+            ChapaInitializeResponse response = chapaService.initializePayment(paymentRequest);
             return ApiResponse.success(response);
         } catch (Exception e) {
             paymentUtils.handleFailedPayment(payment, e);
@@ -92,30 +95,80 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
-     * Processes a payment request with eBIRR payment gateway.
-     * Creates a Payment object, saves it as pending, sends the payment request to eBIRR, and updates the payment status
-     * based on the response from eBIRR. Also updates the associated Campaign object with the payment details.
+     * Initializes a CooPass payment.
      *
-     * @param ebirrRequestDTO The payment request DTO containing payment details.
-     * @return A CompletableFuture object with the payment response from eBIRR.
+     * @param paymentRequest The CooPass request DTO.
+     * @return The API response with the Chapa initialize response.
      */
     @Override
-    @Async
     @Transactional
-    public CompletableFuture<EbirrPaymentResponse> payWithEbirr(EbirrRequestDTO ebirrRequestDTO) {
-        Campaign campaign = paymentUtils.getCampaignById(ebirrRequestDTO.getCampaignId());
-        Users user = paymentUtils.getUserById(ebirrRequestDTO.getUserId());
+    public ResponseEntity initializeCooPassPayment(PaymentRequestDTO paymentRequest) {
+        Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
+        Users user = paymentUtils.getUserById(paymentRequest.getUserId());
 
         String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
-        ebirrRequestDTO.setOrderId(orderId);
+        paymentRequest.setOrderId(orderId);
+        paymentRequest.setPaymentProcessor(PaymentProcessor.COOPASS);
 
-        Payment payment = paymentUtils.createPaymentFromEbirrRequest(ebirrRequestDTO, campaign, user, orderId);
+        Payment payment = paymentUtils.createPaymentFromRequestDTO(paymentRequest, campaign, user, orderId);
 
         try {
             payment.setPaymentStatus(PaymentStatus.PENDING.name());
             paymentRepository.save(payment);
 
-            EbirrPaymentRequest ebirrPaymentRequest = ebirrService.requestToEbirrPaymentRequest(ebirrRequestDTO);
+            CooPassInitResponse response = cooPassService.initializePayment(paymentRequest);
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            paymentUtils.handleFailedPayment(payment, e);
+            log.error(e.getMessage());
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "Currently, we can't process payments with CooPass");
+        }
+    }
+
+    /**
+     * Verifies a CooPass payment with the given order ID.
+     * @param orderId The order ID associated with the payment.
+     * @return The API response.
+     */
+    @Override
+    @Transactional
+    public ResponseEntity verifyCooPassPayment(String orderId) {
+        Payment payment = paymentUtils.getPaymentByOrderId(orderId);
+        CooPassVerifyResponse verifyResponse = cooPassService.verifyPayment(orderId);
+
+        paymentUtils.updatePaymentFromCooPassVerifyResponse(payment,verifyResponse);
+
+        paymentUtils.updateCampaignFromPayment(payment);
+
+        return ApiResponse.success("Transaction completed successfully");
+    }
+
+
+    /**
+     * Processes a payment request with eBIRR payment gateway.
+     * Creates a Payment object, saves it as pending, sends the payment request to eBIRR, and updates the payment status
+     * based on the response from eBIRR. Also updates the associated Campaign object with the payment details.
+     * @param paymentRequest The payment request DTO containing payment details.
+     * @return A CompletableFuture object with the payment response from eBIRR.
+     */
+    @Override
+    @Async
+    @Transactional
+    public CompletableFuture<EbirrPaymentResponse> payWithEbirr(PaymentRequestDTO paymentRequest) {
+        Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
+        Users user = paymentUtils.getUserById(paymentRequest.getUserId());
+
+        String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
+        paymentRequest.setOrderId(orderId);
+        paymentRequest.setPaymentProcessor(PaymentProcessor.EBIRR);
+
+        Payment payment = paymentUtils.createPaymentFromRequestDTO(paymentRequest, campaign, user, orderId);
+
+        try {
+            payment.setPaymentStatus(PaymentStatus.PENDING.name());
+            paymentRepository.save(payment);
+
+            EbirrPaymentRequest ebirrPaymentRequest = ebirrService.requestToEbirrPaymentRequest(paymentRequest);
             EbirrPaymentResponse ebirrPaymentResponse = ebirrService.sendToEbirr(ebirrPaymentRequest);
 
             return CompletableFuture.completedFuture(ebirrPaymentResponse);
@@ -129,7 +182,6 @@ public class PaymentServiceImpl implements PaymentService {
     /**
      * Updates a Payment object with the payment details returned from the eBIRR payment gateway,
      * and updates the associated Campaign object with the payment details.
-     *
      * @param paymentFuture A CompletableFuture object containing the payment response from eBIRR.
      */
     @Override
@@ -155,9 +207,9 @@ public class PaymentServiceImpl implements PaymentService {
      * If a payment has been pending for more than 30 minutes, sets its status to FAILED.
      * Otherwise, attempts to verify the payment using the ChapaVerify API.
      */
-    @Scheduled(fixedRate = 1800000) // 30 minutes = 30 * 60 * 1000 = 1800000 milliseconds
-    public void chapaPaymentStatusChecker() {
-        log.debug("Checking Payment Status");
+    @Async
+    @Override
+    public CompletableFuture<Void> chapaPaymentStatusChecker() {
         List<Payment> pendingPayments = paymentRepository.findByPaymentStatus(PaymentStatus.PENDING.name());
         for (Payment payment : pendingPayments) {
             long paymentTime = Duration.between(LocalDateTime.parse(payment.getTransactionOrderedDate(), dateTimeFormatter), LocalDateTime.now()).toMinutes();
@@ -172,10 +224,12 @@ public class PaymentServiceImpl implements PaymentService {
                 }
             }
         }
+        return CompletableFuture.completedFuture(null);
     }
 
+
     @Override
-    public Payment addPayment(PaymentAddDTO paymentAddDTO) {
+    public Payment addPayment(PaymentRequestDTO1 paymentAddDTO) {
         try {
             Campaign campaign = paymentUtils.getCampaignById(paymentAddDTO.getCampaignId());
             Users user = paymentUtils.getUserById(paymentAddDTO.getUserId());

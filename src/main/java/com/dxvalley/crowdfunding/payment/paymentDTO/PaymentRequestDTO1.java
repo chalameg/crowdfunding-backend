@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public
-class PaymentAddDTO {
+class PaymentRequestDTO1 {
     private Long userId;
     @NotNull(message = "campaignId cannot be null")
     private Long campaignId;

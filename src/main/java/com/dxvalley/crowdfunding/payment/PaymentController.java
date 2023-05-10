@@ -1,11 +1,10 @@
 package com.dxvalley.crowdfunding.payment;
 
-import com.dxvalley.crowdfunding.dto.ApiResponse;
-import com.dxvalley.crowdfunding.payment.chapa.ChapaRequestDTO;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
-import com.dxvalley.crowdfunding.payment.ebirr.EbirrRequestDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentAddDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +29,7 @@ public class PaymentController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addPayment(@RequestBody @Valid PaymentAddDTO paymentAddDTO) {
+    public ResponseEntity<?> addPayment(@RequestBody @Valid PaymentRequestDTO1 paymentAddDTO) {
         return ApiResponse.success(paymentService.addPayment(paymentAddDTO));
     }
 
@@ -40,18 +39,26 @@ public class PaymentController {
     }
 
     @PostMapping("/chapaInitialize")
-    public ResponseEntity<?> initializeChapaPayment(@RequestBody @Valid ChapaRequestDTO chapaRequest) {
+    public ResponseEntity<?> initializeChapaPayment(@RequestBody @Valid PaymentRequestDTO chapaRequest) {
         return paymentService.initializeChapaPayment(chapaRequest);
+    }
+    @PostMapping("/cooPassInitialize")
+    public ResponseEntity<?> initializeCooPassPayment(@RequestBody @Valid PaymentRequestDTO paymentRequest) {
+        return paymentService.initializeCooPassPayment(paymentRequest);
     }
 
     @GetMapping("/chapaVerify/{orderId}")
     public ResponseEntity<?> verifyChapaPayment(@PathVariable String orderId) {
         return paymentService.verifyChapaPayment(orderId);
     }
+    @GetMapping("/cooPassVerify/{orderId}")
+    public ResponseEntity<?> verifyCooPassPayment(@PathVariable String orderId) {
+        return paymentService.verifyCooPassPayment(orderId);
+    }
 
     @PostMapping("/ebirrPayment")
-    public ResponseEntity<?> payWithEbirr(@RequestBody @Valid EbirrRequestDTO ebirrRequestDTO) {
-        CompletableFuture<EbirrPaymentResponse> paymentFuture = paymentService.payWithEbirr(ebirrRequestDTO);
+    public ResponseEntity<?> payWithEbirr(@RequestBody @Valid PaymentRequestDTO paymentRequest) {
+        CompletableFuture<EbirrPaymentResponse> paymentFuture = paymentService.payWithEbirr(paymentRequest);
         paymentFuture.thenAcceptAsync(paymentSuccessful -> {
             paymentService.updatePaymentForEbirr(paymentFuture);
         });
