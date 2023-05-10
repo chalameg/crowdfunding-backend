@@ -1,8 +1,6 @@
 package com.dxvalley.crowdfunding.exception;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +23,6 @@ public class ApplicationExceptionHandler {
         private final String message;
     }
 
-    private final Logger logger = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
     @Autowired
     private DateTimeFormatter dateTimeFormatter;
 
@@ -48,7 +45,6 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 ex.getMessage()
         );
-        logger.error(ex.getMessage(), ex);
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
@@ -61,7 +57,6 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 ex.getMessage()
         );
-        logger.error(ex.getMessage(), ex);
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
@@ -74,7 +69,18 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 ex.getMessage()
         );
-        logger.error(ex.getMessage(), ex);
+        return new ResponseEntity<>(apiException, httpStatus);
+    }
+
+    @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+    @ExceptionHandler(PaymentCannotProcessedException.class)
+    public ResponseEntity<Object> handlePaymentCannotProcessedException(PaymentCannotProcessedException ex) {
+        HttpStatus httpStatus = HttpStatus.PAYMENT_REQUIRED;
+        ExceptionResponse apiException = new ExceptionResponse(
+                LocalDateTime.now().format(dateTimeFormatter),
+                httpStatus,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(apiException, httpStatus);
     }
 
@@ -88,7 +94,6 @@ public class ApplicationExceptionHandler {
                 httpStatus,
                 "Internal Server Error"
         );
-        logger.error(ex.getMessage(), ex);
         return ResponseEntity.status(httpStatus).body(apiException);
     }
 }
