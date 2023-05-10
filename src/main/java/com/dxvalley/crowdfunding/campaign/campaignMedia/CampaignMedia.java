@@ -1,26 +1,26 @@
-package com.dxvalley.crowdfunding.campaign.campaignUpdate;
+package com.dxvalley.crowdfunding.campaign.campaignMedia;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.user.Users;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "campaign_updates")
+@Table(name = "campaign_media")
 @Data
 @NoArgsConstructor
-public class CampaignUpdate {
+public class CampaignMedia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    @Lob
-    private String description;
-    private String dateTime;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Users author;
+    @Column(name = "file_name")
+    private String fileName;
+    @Column(name = "file_type")
+    private String fileType;
+    @Column(name = "file_size")
+    private Long fileSize;
+    @Column(name = "public_id")
+    private String publicId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "campaign_id")
     private Campaign campaign;
