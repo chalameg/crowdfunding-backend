@@ -2,13 +2,13 @@ package com.dxvalley.crowdfunding.payment;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignRepository;
-import com.dxvalley.crowdfunding.dto.ApiResponse;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.payment.chapa.ChapaRequestDTO;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaVerifyResponse;
-import com.dxvalley.crowdfunding.payment.ebirr.EbirrRequestDTO;
+import com.dxvalley.crowdfunding.payment.cooPass.CooPassVerifyResponse;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import com.dxvalley.crowdfunding.user.UserService;
-import com.dxvalley.crowdfunding.user.model.Users;
+import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,47 +43,23 @@ public class PaymentUtils {
     }
 
     /**
-     * Creates a Payment object from a Chapa request.
+     * Creates a Payment object from a PaymentRequestDTO request.
      *
-     * @param chapaRequest The Chapa request.
+     * @param paymentRequest The PaymentRequestDTO request.
      * @param campaign     The campaign associated with the payment.
      * @param user         The user associated with the payment.
      * @return The Payment object.
      */
-    public Payment createPaymentFromChapaRequest(ChapaRequestDTO chapaRequest, Campaign campaign, Users user, String orderId) {
+    public Payment createPaymentFromRequestDTO(PaymentRequestDTO paymentRequest, Campaign campaign, Users user, String orderId) {
         Payment payment = new Payment();
-        payment.setPayerFullName(chapaRequest.getFirstName() + " " + chapaRequest.getLastName());
-        payment.setPaymentContactInfo(chapaRequest.getEmail());
+        payment.setPayerFullName(paymentRequest.getFirstName() + " " + paymentRequest.getLastName());
+        payment.setPaymentContactInfo(paymentRequest.getPaymentContactInfo());
         payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
-        payment.setIsAnonymous(chapaRequest.getIsAnonymous());
-        payment.setAmount(chapaRequest.getAmount());
+        payment.setIsAnonymous(paymentRequest.getIsAnonymous());
+        payment.setAmount(paymentRequest.getAmount());
         payment.setCurrency("ETB");
-        payment.setPaymentProcessor(PaymentProcessor.CHAPA);
+        payment.setPaymentProcessor(paymentRequest.getPaymentProcessor());
         payment.setOrderId(orderId);
-        payment.setUser(user);
-        payment.setCampaign(campaign);
-
-        return payment;
-    }
-
-    /**
-     * Creates a Payment object from an Ebirr request.
-     *
-     * @param ebirrRequestDTO The Ebirr request.
-     * @param campaign        The campaign associated with the payment.
-     * @param user            The user associated with the payment.
-     * @return The Payment object.
-     */
-    public Payment createPaymentFromEbirrRequest(EbirrRequestDTO ebirrRequestDTO, Campaign campaign, Users user, String orderId) {
-        Payment payment = new Payment();
-        payment.setPayerFullName(ebirrRequestDTO.getFirstName() + " " + ebirrRequestDTO.getLastName());
-        payment.setPaymentContactInfo(ebirrRequestDTO.getPhoneNumber());
-        payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
-        payment.setIsAnonymous(ebirrRequestDTO.getIsAnonymous());
-        payment.setCurrency("ETB");
-        payment.setPaymentProcessor(PaymentProcessor.EBIRR);
-        payment.setOrderId(orderId);
-        payment.setAmount(Double.parseDouble(ebirrRequestDTO.getAmount()));
         payment.setUser(user);
         payment.setCampaign(campaign);
 
@@ -106,7 +82,6 @@ public class PaymentUtils {
 
     /**
      * Updates a Payment object from a ChapaVerifyResponse object.
-     *
      * @param payment             The Payment object to be updated.
      * @param chapaVerifyResponse The ChapaVerifyResponse object containing the updated payment details.
      */
@@ -119,8 +94,20 @@ public class PaymentUtils {
     }
 
     /**
+     * Updates a Payment object from a CooPassVerifyResponse object.
+     * @param payment             The Payment object to be updated.
+     * @param cooPassVerifyResponse The CooPassVerifyResponse object containing the updated payment details.
+     */
+    @Transactional
+    public void updatePaymentFromCooPassVerifyResponse(Payment payment, CooPassVerifyResponse cooPassVerifyResponse) {
+        payment.setPaymentStatus(cooPassVerifyResponse.getStatus().toUpperCase());
+        payment.setTransactionCompletedDate(cooPassVerifyResponse.getData().getCompletedAt());
+        payment.setTransactionId(cooPassVerifyResponse.getData().getTransactionId());
+        paymentRepository.save(payment);
+    }
+
+    /**
      * Updates a Campaign object from a Payment object.
-     *
      * @param payment The Payment object to be used to update the Campaign object.
      */
     @Transactional
