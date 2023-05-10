@@ -1,11 +1,10 @@
 package com.dxvalley.crowdfunding;
 
-import com.dxvalley.crowdfunding.model.Role;
-import com.dxvalley.crowdfunding.model.Users;
-import com.dxvalley.crowdfunding.repository.RoleRepository;
-import com.dxvalley.crowdfunding.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.dxvalley.crowdfunding.user.UserRepository;
+import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.user.role.Role;
+import com.dxvalley.crowdfunding.user.role.RoleRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +16,8 @@ import java.util.List;
 
 @Configuration
 @ConditionalOnProperty(prefix = "database", name = "seed", havingValue = "true")
+@Slf4j
 public class ApplicationRunner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationRunner.class);
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DateTimeFormatter dateTimeFormatter;
@@ -54,9 +53,9 @@ public class ApplicationRunner {
                 johnDoe.setRoles(roles);
                 userRepository.save(johnDoe);
 
-                LOGGER.info("Preloaded roles and user");
+                log.info("Preloaded roles and user");
             } catch (Exception ex) {
-                LOGGER.error("Preloading Error: {}", ex.getMessage());
+                log.error("Preloading Error: {}", ex.getMessage());
                 throw new RuntimeException("Preloading Error ", ex);
             }
         };
