@@ -1,0 +1,6 @@
+# Set the configuration for connecting to the PostgreSQL database
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crowdfunding # Database connection URL
+    username: postgres # Database username
+    password: 1313 # Database password
