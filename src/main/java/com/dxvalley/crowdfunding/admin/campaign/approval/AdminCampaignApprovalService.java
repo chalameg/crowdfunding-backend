@@ -55,11 +55,7 @@ public class AdminCampaignApprovalService {
             return campaignApprovalMapper.toAdminApprovalResponse(campaignApproval);
 
         } catch (DataAccessException ex) {
-            log.error("An error occurred in {}.{} while accessing the database. Details: {}",
-                    getClass().getSimpleName(),
-                    Thread.currentThread().getStackTrace()[1].getMethodName(),
-                    ex.getMessage());
-
+            logError("getCampaignApprovalByCampaignId",ex);
             throw new DatabaseAccessException("An error occurred while accessing the database");
         }
     }
@@ -95,11 +91,7 @@ public class AdminCampaignApprovalService {
 
             return ApiResponse.created(campaignApprovalMapper.toAdminApprovalResponse(savedCampaignApproval));
         } catch (DataAccessException ex) {
-            log.error("An error occurred in {}.{} while accessing the database. Details: {}",
-                    getClass().getSimpleName(),
-                    Thread.currentThread().getStackTrace()[1].getMethodName(),
-                    ex.getMessage());
-
+            logError("approveCampaign",ex);
             throw new DatabaseAccessException("An error occurred while accessing the database");
         }
     }
@@ -156,6 +148,13 @@ public class AdminCampaignApprovalService {
         Users user = userService.utilGetUserByUsername(username);
         user.setTotalCampaigns((short) (user.getTotalCampaigns() != null ? user.getTotalCampaigns() + 1 : 1));
         userService.saveUser(user);
+    }
+
+    private void logError(String methodName, DataAccessException ex) {
+        log.error("An error occurred in {}.{} while accessing the database. Details: {}",
+                getClass().getSimpleName(),
+                methodName,
+                ex.getMessage());
     }
 }
 
