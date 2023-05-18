@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.configuration;
 
-import com.dxvalley.crowdfunding.campaign.campaign.CampaignService;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignStatusUpdater;
 import com.dxvalley.crowdfunding.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @EnableScheduling
 @RequiredArgsConstructor
 public class ScheduledTasksConfig {
-    private final CampaignService campaignService;
+    private final CampaignStatusUpdater campaignStatusUpdater;
     private final PaymentService paymentService;
 
     /**
@@ -22,7 +22,7 @@ public class ScheduledTasksConfig {
      */
     @Scheduled(fixedDelay = 21600000) // runs every 6 hours
     public void updateCampaignStatus() {
-        campaignService.updateCampaignStatus();
+        campaignStatusUpdater.updateCampaignStatus();
     }
 
     /**
