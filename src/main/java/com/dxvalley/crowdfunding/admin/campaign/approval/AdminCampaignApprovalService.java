@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.admin.campaign.approval;
 
-import com.dxvalley.crowdfunding.campaign.CampaignUtils;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
 import com.dxvalley.crowdfunding.campaign.campaignApproval.ApprovalStatus;
@@ -13,6 +13,7 @@ import com.dxvalley.crowdfunding.exception.BadRequestException;
 import com.dxvalley.crowdfunding.exception.DatabaseAccessException;
 import com.dxvalley.crowdfunding.exception.ResourceAlreadyExistsException;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.fileUpload.FileUploadService;
 import com.dxvalley.crowdfunding.user.UserService;
 import com.dxvalley.crowdfunding.user.Users;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
@@ -22,9 +23,11 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,7 +39,7 @@ public class AdminCampaignApprovalService {
     private final UserService userService;
     private final DateTimeFormatter dateTimeFormatter;
     private final CampaignApprovalMapper campaignApprovalMapper;
-
+    private final FileUploadService fileUploadService;
 
 
     /**
@@ -60,7 +63,6 @@ public class AdminCampaignApprovalService {
         }
     }
 
-
     /**
      * Create a campaign approval.
      *
@@ -76,9 +78,9 @@ public class AdminCampaignApprovalService {
             if (existingApproval.isPresent())
                 throw new ResourceAlreadyExistsException("This campaign has already been approved.");
 
-            Campaign campaign = campaignUtils.utilGetPendingCampaignById(campaignApprovalDTO.getCampaignId(), CampaignStage.PENDING);
+            Campaign campaign = campaignUtils.utilGetCampaignByIdAndStage(campaignApprovalDTO.getCampaignId(), CampaignStage.PENDING);
 
-            if (!isValidCampaign(campaign))
+            if (!campaignUtils.isValidCampaign(campaign))
                 throw new BadRequestException("Unable to approve the campaign with the provided data. please provide all required information and try again.");
 
             if (campaignApprovalDTO.getApprovalStatus().equalsIgnoreCase(ApprovalStatus.ACCEPTED.name()))
@@ -87,11 +89,37 @@ public class AdminCampaignApprovalService {
                 rejectCampaign(campaign);
 
             CampaignApproval campaignApproval = createCampaignApproval(campaign, campaignApprovalDTO);
-            CampaignApproval savedCampaignApproval = campaignApprovalRepository.save(campaignApproval);
+            CampaignApproval savedcampaignApproval = campaignApprovalRepository.save(campaignApproval);
 
-            return ApiResponse.created(campaignApprovalMapper.toAdminApprovalResponse(savedCampaignApproval));
+            return ApiResponse.success(campaignApprovalMapper.toAdminApprovalResponse(savedcampaignApproval));
         } catch (DataAccessException ex) {
-            logError("approveCampaign",ex);
+            logError("approveCampaign", ex);
+            throw new DatabaseAccessException("An error occurred while accessing the database");
+        }
+    }
+
+
+    /**
+     * Adds approval files to a campaign approval.
+     *
+     * @param campaignId    The ID of the campaign approval.
+     * @param files The list of files to be added.
+     * @return The response entity with the updated campaign approval.
+     * @throws ResourceNotFoundException If the campaign approval with the given ID does not exist.
+     * @throws DatabaseAccessException   If an error occurs while accessing the database.
+     */
+    public ResponseEntity<?> addCampaignApprovalFiles(Long campaignId, List<MultipartFile> files) {
+        try {
+            CampaignApproval campaignApproval = campaignApprovalRepository.findCampaignApprovalByCampaignCampaignId((campaignId))
+                    .orElseThrow(() -> new ResourceNotFoundException("Campaign approval not found with ID: " + campaignId));
+
+            if (files != null && !files.isEmpty())
+                campaignApproval.setApprovalFiles(fileUploadService.uploadFiles(files));
+
+            CampaignApproval savedcampaignApproval = campaignApprovalRepository.save(campaignApproval);
+            return ApiResponse.success(campaignApprovalMapper.toAdminApprovalResponse(savedcampaignApproval));
+        } catch (DataAccessException ex) {
+            logError("addCampaignApprovalFiles", ex);
             throw new DatabaseAccessException("An error occurred while accessing the database");
         }
     }
@@ -105,10 +133,10 @@ public class AdminCampaignApprovalService {
     private boolean isValidCampaign(Campaign campaign) {
         return campaign.getShortDescription() != null && !campaign.getShortDescription().isEmpty()
                 && ((campaign.getImageUrl() != null && !campaign.getImageUrl().isEmpty()) || (campaign.getVideoLink() != null && !campaign.getVideoLink().isEmpty()))
-                && campaign.getGoalAmount() != null
+                && campaign.getGoalAmount() != null && campaign.getGoalAmount() != 0
                 && campaign.getProjectType() != null && !campaign.getProjectType().isEmpty()
                 && campaign.getDescription() != null && !campaign.getDescription().isEmpty()
-                && campaign.getCampaignDuration() != null;
+                && campaign.getCampaignDuration() != null && campaign.getCampaignDuration() != 0;
     }
 
     private CampaignApproval createCampaignApproval(Campaign campaign, CampaignApprovalDTO campaignApprovalDTO) {

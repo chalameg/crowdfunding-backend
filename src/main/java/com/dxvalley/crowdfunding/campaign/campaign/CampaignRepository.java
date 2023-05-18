@@ -10,6 +10,8 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     Optional<Campaign> findCampaignByCampaignId(Long campaignId);
 
+    Optional<Campaign> findCampaignByCampaignIdAndCampaignStage(Long campaignId, CampaignStage campaignStage);
+
     List<Campaign> findCampaignsByOwner(String owner);
 
     List<Campaign> findCampaignsByCampaignStage(CampaignStage campaignStage);

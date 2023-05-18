@@ -1,13 +1,13 @@
 package com.dxvalley.crowdfunding.campaign.campaign.dto;
 
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
-import com.dxvalley.crowdfunding.campaign.campaignBankAccount.CampaignBankAccount;
+import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountDTO;
 import com.dxvalley.crowdfunding.campaign.campaignCollaborator.Collaborator;
 import com.dxvalley.crowdfunding.campaign.campaignFundingType.FundingType;
 import com.dxvalley.crowdfunding.campaign.campaignPromotion.Promotion;
 import com.dxvalley.crowdfunding.campaign.campaignReward.Reward;
 import com.dxvalley.crowdfunding.campaign.campaignSubCategory.CampaignSubCategory;
-import com.dxvalley.crowdfunding.payment.Payment;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentResponse;
 import lombok.Data;
 
 import java.util.List;
@@ -40,9 +40,9 @@ public class CampaignDTO {
     private String enabledAt;
     private String completedAt;
     private String ownerFullName;
-    private CampaignBankAccount campaignBankAccount;
+    private BankAccountDTO campaignBankAccount;
     private Integer numberOfCampaigns;
-    private List<Payment> contributors;
+    private List<PaymentResponse> contributors;
     private List<Reward> rewards;
     private List<Promotion> promotions;
     private List<Collaborator> collaborators;

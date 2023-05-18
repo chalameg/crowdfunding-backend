@@ -1,7 +1,7 @@
 package com.dxvalley.crowdfunding.campaign.campaignUpdate;
 
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.campaign.campaign.CampaignService;
 import com.dxvalley.crowdfunding.campaign.campaignUpdate.dto.CampaignUpdateDTO;
 import com.dxvalley.crowdfunding.campaign.campaignUpdate.dto.CampaignUpdateMapper;
 import com.dxvalley.crowdfunding.campaign.campaignUpdate.dto.CampaignUpdateResponseDTO;
@@ -23,7 +23,7 @@ public class CampaignUpdateServiceImpl implements CampaignUpdateService {
     private final CampaignUpdateRepository campaignUpdateRepository;
     private final DateTimeFormatter dateTimeFormatter;
     private final UserService userService;
-    private final CampaignService campaignService;
+    private final CampaignUtils campaignUtils;
 
     /**
      Retrieves all campaign updates for a given campaign ID.
@@ -50,7 +50,7 @@ public class CampaignUpdateServiceImpl implements CampaignUpdateService {
      */
     public CampaignUpdateResponseDTO createCampaignUpdate(CampaignUpdateDTO campaignUpdateDTO) {
         CampaignUpdate campaignUpdate = new CampaignUpdate();
-        Campaign campaign = campaignService.utilGetCampaignById(campaignUpdateDTO.getCampaignId());
+        Campaign campaign = campaignUtils.utilGetCampaignById(campaignUpdateDTO.getCampaignId());
         Users user = userService.utilGetUserByUserId(campaignUpdateDTO.getAuthorID());
 
         campaignUpdate.setTitle(campaignUpdateDTO.getTitle());

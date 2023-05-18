@@ -10,7 +10,7 @@ public enum CampaignStage {
     PAUSED,
     COMPLETED,
     SUSPENDED,
-    TIME_PASSED;
+    DELETED;
 
     public static CampaignStage lookup(String campaignStage) {
         return Arrays.stream(CampaignStage.values())

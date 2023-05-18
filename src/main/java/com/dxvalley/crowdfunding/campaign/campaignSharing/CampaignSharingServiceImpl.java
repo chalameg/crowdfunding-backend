@@ -21,13 +21,13 @@ public class CampaignSharingServiceImpl implements CampaignSharingService {
     private final CampaignSharingRepository campaignSharingRepository;
     private final DateTimeFormatter dateTimeFormatter;
 
-    @Override
     /**
      * Retrieves the share counts for a campaign based on the campaign ID.
      *
      * @param campaignId the ID of the campaign
      * @return the CampaignShareResponse object containing the share counts for different platforms
      */
+    @Override
     public CampaignShareResponse getByCampaignId(Long campaignId) {
         try {
             List<CampaignSharing> campaignShares = campaignSharingRepository.findByCampaignId(campaignId);

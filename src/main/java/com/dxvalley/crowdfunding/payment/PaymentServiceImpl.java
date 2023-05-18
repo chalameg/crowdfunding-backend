@@ -1,6 +1,7 @@
 package com.dxvalley.crowdfunding.payment;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
+import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
 import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaInitializeResponse;
 import com.dxvalley.crowdfunding.payment.chapa.ChapaService;
@@ -11,9 +12,8 @@ import com.dxvalley.crowdfunding.payment.cooPass.CooPassVerifyResponse;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentRequest;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrService;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.*;
+import com.dxvalley.crowdfunding.payment.paymentGateway.PaymentGatewayService;
 import com.dxvalley.crowdfunding.user.UserService;
 import com.dxvalley.crowdfunding.user.Users;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
@@ -39,10 +39,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final UserService userService;
     private final DateTimeFormatter dateTimeFormatter;
+    private final PaymentGatewayService paymentGatewayService;
     private final ChapaService chapaService;
     private final EbirrService ebirrService;
     private final CooPassService cooPassService;
     private final PaymentUtils paymentUtils;
+
 
     /**
      * Initializes a Chapa payment.
@@ -55,6 +57,13 @@ public class PaymentServiceImpl implements PaymentService {
     public ResponseEntity initializeChapaPayment(PaymentRequestDTO paymentRequest) {
         Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
         Users user = paymentUtils.getUserById(paymentRequest.getUserId());
+
+        boolean isActive = paymentGatewayService.isPaymentGatewayActive(PaymentProcessor.CHAPA.name());
+        if (!isActive)
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "The payment gateway is currently deactivated");
+
+        if (!(campaign.getCampaignStage() == CampaignStage.FUNDING))
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "This campaign is not in the funding stage and can't accept payment.");
 
         String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
         paymentRequest.setOrderId(orderId);
@@ -106,6 +115,13 @@ public class PaymentServiceImpl implements PaymentService {
         Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
         Users user = paymentUtils.getUserById(paymentRequest.getUserId());
 
+        boolean isActive = paymentGatewayService.isPaymentGatewayActive(PaymentProcessor.COOPASS.name());
+        if (!isActive)
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "The payment gateway is currently deactivated");
+
+        if (!(campaign.getCampaignStage() == CampaignStage.FUNDING))
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "This campaign is not in the funding stage and can't accept payment.");
+
         String orderId = paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName());
         paymentRequest.setOrderId(orderId);
         paymentRequest.setPaymentProcessor(PaymentProcessor.COOPASS);
@@ -155,6 +171,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Async
     @Transactional
     public CompletableFuture<EbirrPaymentResponse> payWithEbirr(PaymentRequestDTO paymentRequest) {
+
         Campaign campaign = paymentUtils.getCampaignById(paymentRequest.getCampaignId());
         Users user = paymentUtils.getUserById(paymentRequest.getUserId());
 
@@ -228,11 +245,25 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
 
+    /**
+     * Adds a payment based on the provided PaymentRequestDTO1 object.
+     *
+     * @param paymentAddDTO the PaymentRequestDTO1 object containing payment details
+     * @return a ResponseEntity representing the response for adding the payment
+     * @throws RuntimeException if there is an error adding the payment
+     */
     @Override
-    public Payment addPayment(PaymentRequestDTO1 paymentAddDTO) {
+    public ResponseEntity<?> addPayment(PaymentRequestDTO1 paymentAddDTO) {
         try {
             Campaign campaign = paymentUtils.getCampaignById(paymentAddDTO.getCampaignId());
             Users user = paymentUtils.getUserById(paymentAddDTO.getUserId());
+
+            boolean isActive = paymentGatewayService.isPaymentGatewayActive(PaymentProcessor.lookup(paymentAddDTO.getPaymentProcessor()).name());
+            if (!isActive)
+                return ApiResponse.error(HttpStatus.FORBIDDEN, "The payment gateway is currently deactivated");
+
+            if (!(campaign.getCampaignStage() == CampaignStage.FUNDING))
+                return ApiResponse.error(HttpStatus.FORBIDDEN, "This campaign is not in the funding stage and can't accept payment.");
 
             Payment payment = new Payment();
             payment.setOrderId(paymentUtils.generateUniqueOrderId(campaign.getFundingType().getName()));
@@ -241,6 +272,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setCampaign(campaign);
             payment.setTransactionOrderedDate(LocalDateTime.now().format(dateTimeFormatter));
             payment.setPaymentStatus(PaymentStatus.PENDING.name());
+            payment.setPaymentProcessor(PaymentProcessor.lookup(paymentAddDTO.getPaymentProcessor()));
             payment.setIsAnonymous(paymentAddDTO.getIsAnonymous());
             payment.setAmount(paymentAddDTO.getAmount());
             payment.setCurrency(paymentAddDTO.getCurrency());
@@ -248,7 +280,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setUser(user);
             paymentRepository.save(payment);
 
-            return new Payment(payment.getOrderId(), payment.getTransactionOrderedDate());
+            return ApiResponse.created(new Payment(payment.getOrderId(), payment.getTransactionOrderedDate()));
         } catch (DataAccessException ex) {
             log.error("Error Adding payment: {}", ex.getMessage());
             throw new RuntimeException("Error Adding payment ", ex);
@@ -274,13 +306,11 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<Payment> getPaymentByCampaignId(Long campaignId) {
+    public List<PaymentResponse> getPaymentByCampaignId(Long campaignId) {
         try {
             List<Payment> payments = paymentRepository.findPaymentsByCampaignCampaignIdAndPaymentStatus(campaignId, "SUCCESS");
-            payments.stream().filter(payment -> payment.getIsAnonymous()).forEach(payment -> payment.setPayerFullName("Anonymous"));
 
-            log.info("Retrieved {} Payment by Campaign", payments.size());
-            return payments;
+            return payments.stream().map(PaymentMapper::toPaymentResponse).toList();
         } catch (DataAccessException ex) {
             log.error("Error Getting Payment By Campaign: {}", ex.getMessage());
             throw new RuntimeException("Error Getting Payment By Campaign ", ex);

@@ -12,12 +12,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/campaign-approvals")
 public class AdminCampaignApprovalController {
     private final AdminCampaignApprovalService adminCampaignApprovalService;
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getCampaignApprovalByCampaignId(@PathVariable Long id) {
-        return ApiResponse.success(adminCampaignApprovalService.getCampaignApprovalByCampaignId(id));
+
+    @GetMapping("/{campaignId}")
+    public ResponseEntity<?> getCampaignApprovalByCampaignId(@PathVariable Long campaignId) {
+        return ApiResponse.success(adminCampaignApprovalService.getCampaignApprovalByCampaignId(campaignId));
     }
+
     @PostMapping
-    public ResponseEntity<?> createCampaignApproval(@RequestBody @Valid CampaignApprovalDTO campaignApprovalDTO) {
+    ResponseEntity<?> approveCampaign(@Valid @RequestParam CampaignApprovalDTO campaignApprovalDTO) {
         return adminCampaignApprovalService.approveCampaign(campaignApprovalDTO);
+    }
+
+    @PutMapping
+    public ResponseEntity<?> addCampaignApprovalFiles(@RequestParam Long campaignId) {
+        System.err.println("we are here bitch");
+        return ApiResponse.success("hello");
     }
 }
