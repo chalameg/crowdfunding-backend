@@ -1,12 +1,16 @@
 package com.dxvalley.crowdfunding.payment;
 
+import com.dxvalley.crowdfunding.campaign.campaign.CampaignService;
+import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
 import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
+import com.dxvalley.crowdfunding.payment.paymentGateway.PaymentGatewayService;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +21,8 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
+    private final PaymentGatewayService paymentGatewayService;
+    private final CampaignService campaignService;
 
     @GetMapping("/getPaymentByCampaign/{campaignId}")
     public ResponseEntity<?> getPaymentByCampaign(@PathVariable Long campaignId) {
@@ -30,7 +36,7 @@ public class PaymentController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addPayment(@RequestBody @Valid PaymentRequestDTO1 paymentAddDTO) {
-        return ApiResponse.success(paymentService.addPayment(paymentAddDTO));
+        return paymentService.addPayment(paymentAddDTO);
     }
 
     @PutMapping("/update/{orderId}")
@@ -58,6 +64,15 @@ public class PaymentController {
 
     @PostMapping("/ebirrPayment")
     public ResponseEntity<?> payWithEbirr(@RequestBody @Valid PaymentRequestDTO paymentRequest) {
+        boolean isActive = paymentGatewayService.isPaymentGatewayActive(PaymentProcessor.EBIRR.name());
+        if(!isActive)
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "The payment gateway is currently deactivated");
+
+        var campaign = campaignService.getCampaignById(paymentRequest.getCampaignId());
+
+        if (!(campaign.getCampaignStage() == CampaignStage.FUNDING))
+            return ApiResponse.error(HttpStatus.FORBIDDEN, "This campaign is not in the funding stage and can't accept payment.");
+
         CompletableFuture<EbirrPaymentResponse> paymentFuture = paymentService.payWithEbirr(paymentRequest);
         paymentFuture.thenAcceptAsync(paymentSuccessful -> {
             paymentService.updatePaymentForEbirr(paymentFuture);

@@ -8,9 +8,6 @@ import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findPaymentByOrderId(String orderId);
-
-    @Query("SELECT new Payment(p.paymentId, p.amount, p.payerFullName,p.transactionCompletedDate,p.isAnonymous,p.currency,p.paymentStatus)" +
-            " FROM Payment as p WHERE p.campaign.campaignId = :campaignId AND paymentStatus = :paymentStatus")
     List<Payment> findPaymentsByCampaignCampaignIdAndPaymentStatus(Long campaignId, String paymentStatus);
 
     @Query("SELECT new Payment(p.paymentId, p.amount, p.payerFullName,p.transactionCompletedDate,p.isAnonymous,p.currency,p.paymentStatus)" +

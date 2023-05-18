@@ -16,13 +16,16 @@ public class ChapaService {
     private final String bearerToken;
     private final String paymentInitiationURI;
     private final String paymentVerificationURI;
+    private final String callBackPaymentVerificationURI;
 
     public ChapaService(@Value("${CHAPA.BEARER_TOKEN}") String bearerToken,
                         @Value("${CHAPA.PAYMENT_INITIATION_URI}") String paymentInitiationURI,
-                        @Value("${CHAPA.PAYMENT_VERIFICATION_URI}") String paymentVerificationURI) {
+                        @Value("${CHAPA.PAYMENT_VERIFICATION_URI}") String paymentVerificationURI,
+                        @Value("${CHAPA.CALLBACK_PAYMENT_VERIFICATION_URI}") String callBackPaymentVerificationURI) {
         this.bearerToken = bearerToken;
         this.paymentInitiationURI = paymentInitiationURI;
         this.paymentVerificationURI = paymentVerificationURI;
+        this.callBackPaymentVerificationURI = callBackPaymentVerificationURI;
     }
 
     /**
@@ -46,7 +49,7 @@ public class ChapaService {
             requestBody.put("first_name", chapaRequest.getFirstName());
             requestBody.put("last_name", chapaRequest.getLastName());
             requestBody.put("tx_ref", chapaRequest.getOrderId());
-            requestBody.put("callback_url", "http://localhost:8181/api/payment/chapaVerify/" + chapaRequest.getOrderId());
+            requestBody.put("callback_url", callBackPaymentVerificationURI + chapaRequest.getOrderId());
             requestBody.put("return_url", chapaRequest.getReturnUrl());
             requestBody.put("customization[title]", "Payment for my favourite merchant");
             requestBody.put("customization[description]", "I love online payments");
