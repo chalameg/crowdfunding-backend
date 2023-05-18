@@ -37,7 +37,7 @@ public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
         campaignDTO.setCampaignDuration(campaign.getCampaignDuration());
 
         campaignDTO.setCreatedAt(campaign.getCreatedAt());
-        campaignDTO.setEnabledAt(campaign.getEnabledAt());
+        campaignDTO.setEnabledAt(campaign.getApprovedAt());
         campaignDTO.setCompletedAt(campaign.getExpiredAt());
 
         if (campaign.getExpiredAt() != null)

@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -26,8 +28,11 @@ public class CampaignApproval {
     @Column(nullable = false)
     private ApprovalStatus approvalStatus;
 
-    @Column(columnDefinition = "TEXT",nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String reason;
+
+    private List<String> approvalFiles;
+
     private Double commissionRate;
 
     @Column(nullable = false)

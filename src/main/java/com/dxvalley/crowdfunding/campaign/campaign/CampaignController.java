@@ -87,19 +87,28 @@ public class CampaignController {
         return ApiResponse.success(campaignService.uploadFiles(campaignId, files));
     }
 
-    @PutMapping("enableCampaign/{campaignId}")
-    ResponseEntity<?> enableCampaign(@PathVariable Long campaignId) {
-        return ApiResponse.success(campaignService.enableCampaign(campaignId));
-    }
-
     @PutMapping("submit-withdraw/{campaignId}")
-    ResponseEntity<?> submitWithdrawCampaign(@PathVariable Long campaignId) {
-        return ApiResponse.success(campaignService.submitWithdrawCampaign(campaignId));
+    ResponseEntity<?> submitWithdrawCampaign(@PathVariable Long campaignId, @RequestParam String action) {
+        if (action.equalsIgnoreCase("SUBMIT")) {
+            CampaignDTO campaignDTO = campaignService.submitCampaign(campaignId);
+            return ApiResponse.success(campaignDTO);
+        } else if (action.equalsIgnoreCase("WITHDRAW")) {
+            CampaignDTO campaignDTO = campaignService.withdrawCampaign(campaignId);
+            return ApiResponse.success(campaignDTO);
+        } else
+            return ApiResponse.error(HttpStatus.BAD_REQUEST, "Invalid action. Action should be either 'SUBMIT' or 'WITHDRAW'.");
     }
 
     @PutMapping("pause-resume/{campaignId}")
-    ResponseEntity<?> pauseResumeCampaign(@PathVariable Long campaignId) {
-        return campaignService.pauseResumeCampaign(campaignId);
+    ResponseEntity<?> pauseResumeCampaign(@PathVariable Long campaignId, @RequestParam String action) {
+        if (action.equalsIgnoreCase("PAUSE")) {
+            CampaignDTO campaignDTO = campaignService.pauseCampaign(campaignId);
+            return ApiResponse.success(campaignDTO);
+        } else if (action.equalsIgnoreCase("RESUME")) {
+            CampaignDTO campaignDTO = campaignService.resumeCampaign(campaignId);
+            return ApiResponse.success(campaignDTO);
+        } else
+            return ApiResponse.error(HttpStatus.BAD_REQUEST, "Invalid action. Action should be either 'PAUSE' or 'RESUME'.");
     }
 
     @DeleteMapping("delete/{campaignId}")

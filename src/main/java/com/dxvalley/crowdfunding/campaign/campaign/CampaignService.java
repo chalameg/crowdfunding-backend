@@ -3,19 +3,29 @@ package com.dxvalley.crowdfunding.campaign.campaign;
 import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignAddDto;
 import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignDTO;
 import com.dxvalley.crowdfunding.campaign.campaignLike.CampaignLikeDTO;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 
 public interface CampaignService {
     Campaign addCampaign(CampaignAddDto campaignAddRequestDto);
 
-    String likeCampaign(CampaignLikeDTO campaignLikeDTO);
-
     CampaignDTO editCampaign(Long campaignId, CampaignDTO campaignDTO);
+
+    CampaignDTO uploadMedias(Long campaignId, MultipartFile campaignImage, String campaignVideo);
+
+    CampaignDTO uploadFiles(Long campaignId, List<MultipartFile> files);
+
+    CampaignDTO submitCampaign(Long campaignId);
+
+    CampaignDTO withdrawCampaign(Long campaignId);
+
+    CampaignDTO pauseCampaign(Long campaignId);
+
+    CampaignDTO resumeCampaign(Long campaignId);
+
+    String likeCampaign(CampaignLikeDTO campaignLikeDTO);
 
     List<CampaignDTO> getCampaigns();
 
@@ -25,11 +35,7 @@ public interface CampaignService {
 
     List<CampaignDTO> getCampaignBySubCategory(Long subCategoryId);
 
-    void deleteCampaign(Long campaignId);
-
     List<CampaignDTO> getCampaignsByOwner(String owner);
-
-    Campaign enableCampaign(Long campaignId);
 
     List<CampaignDTO> searchCampaigns(String searchParam);
 
@@ -37,17 +43,5 @@ public interface CampaignService {
 
     List<CampaignDTO> getCampaignsByFundingType(Long fundingTypeId);
 
-    ResponseEntity pauseResumeCampaign(Long campaignID);
-
-    Campaign utilGetCampaignById(Long campaignId);
-
-    CampaignDTO uploadMedias(Long campaignId, MultipartFile campaignImage, String campaignVideo);
-
-    CampaignDTO submitWithdrawCampaign(Long campaignId);
-
-    CampaignDTO uploadFiles(Long campaignId, List<MultipartFile> files);
-
-    CompletableFuture<ResponseEntity<?>> createCampaignWithMediaAsync(Long campaignId, List<MultipartFile> files);
-
-    CompletableFuture<Void> updateCampaignStatus();
+    void deleteCampaign(Long campaignId);
 }

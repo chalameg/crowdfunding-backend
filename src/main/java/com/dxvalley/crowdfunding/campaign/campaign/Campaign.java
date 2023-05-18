@@ -43,7 +43,7 @@ public class Campaign {
     private Boolean isEnabled;
 
     private String createdAt;
-    private String enabledAt;
+    private String approvedAt;
     private String editedAt;
     private String expiredAt;
 

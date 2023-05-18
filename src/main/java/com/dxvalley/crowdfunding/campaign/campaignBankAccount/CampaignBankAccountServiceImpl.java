@@ -1,7 +1,7 @@
 package com.dxvalley.crowdfunding.campaign.campaignBankAccount;
 
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.campaign.campaign.CampaignService;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountDTO;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountExistenceDTO;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountMapper;
@@ -21,16 +21,15 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class CampaignBankAccountServiceImpl implements CampaignBankAccountService {
     private final CampaignBankAccountRepository campaignBankAccountRepository;
-    private final CampaignService campaignService;
+    private final CampaignUtils campaignUtils;
     private final String checkBankAccountURI;
 
     public CampaignBankAccountServiceImpl(
             CampaignBankAccountRepository campaignBankAccountRepository,
-            CampaignService campaignService,
-            @Value("${APP_CONNECT.CHECK_BANK_ACCOUNT_URI}") String checkBankAccountURI
-            ) {
+            CampaignUtils campaignUtils, @Value("${APP_CONNECT.CHECK_BANK_ACCOUNT_URI}") String checkBankAccountURI
+    ) {
         this.campaignBankAccountRepository = campaignBankAccountRepository;
-        this.campaignService = campaignService;
+        this.campaignUtils = campaignUtils;
         this.checkBankAccountURI = checkBankAccountURI;
     }
 
@@ -104,7 +103,7 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
             campaignBankAccountRepository.findCampaignBankAccountByCampaignCampaignId(campaignId)
                     .ifPresent(bankAccount1 -> campaignBankAccountRepository.delete(bankAccount1));
 
-            Campaign campaign = campaignService.utilGetCampaignById(campaignId);
+            Campaign campaign = campaignUtils.utilGetCampaignById(campaignId);
 
             CampaignBankAccount campaignBankAccount = new CampaignBankAccount();
             campaignBankAccount.setBankAccount(bankAccount);
