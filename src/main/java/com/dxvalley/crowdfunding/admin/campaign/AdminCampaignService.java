@@ -59,7 +59,7 @@ public class AdminCampaignService {
             if(isAccepted){
                 campaign.setIsEnabled(true);
                 campaign.setCampaignStage(CampaignStage.FUNDING);
-                campaign.setEnabledAt(LocalDateTime.now().format(dateTimeFormatter));
+                campaign.setApprovedAt(LocalDateTime.now().format(dateTimeFormatter));
                 campaign.setExpiredAt(LocalDateTime.now().plusDays(campaign.getCampaignDuration()).format(dateTimeFormatter));
 
                 var user = userService.utilGetUserByUsername(campaign.getOwner());
