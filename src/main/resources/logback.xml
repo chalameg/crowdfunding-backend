@@ -10,10 +10,10 @@
     </appender>
 
     <!-- Rolling File Appender -->
-    <appender name="CHAPA_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/chapa-logger.log</file>
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/chapa-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/archive/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>200MB</totalSizeCap>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -30,17 +30,14 @@
         </encoder>
     </appender>
 
+    <!-- Async Appender for Root Logger -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="ROLLING_FILE"/>
+    </appender>
 
-    <appender name="MODELS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/models-logger.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/models-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
+    <!-- Payment-specific File Appender -->
+    <appender name="PAYMENT_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/payment.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
             <highlight>
@@ -49,138 +46,20 @@
                 <color value="RED" background="YELLOW" level="ERROR"/>
             </highlight>
         </encoder>
-    </appender>
-
-    <appender name="REPOSITORIES_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/repositories-logger.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/repositories-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <fileNamePattern>${LOG_DIR}/archive/payment-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>120</maxHistory>
             <totalSizeCap>200MB</totalSizeCap>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-            <highlight>
-                <color value="GREEN" background="BLACK" level="INFO"/>
-                <color value="YELLOW" background="BLACK" level="WARN"/>
-                <color value="RED" background="YELLOW" level="ERROR"/>
-            </highlight>
-        </encoder>
     </appender>
 
-    <appender name="NOTIFICATIONS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/notifications-logger.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/notifications-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-            <highlight>
-                <color value="GREEN" background="BLACK" level="INFO"/>
-                <color value="YELLOW" background="BLACK" level="WARN"/>
-                <color value="RED" background="YELLOW" level="ERROR"/>
-            </highlight>
-        </encoder>
+    <!-- Async Appender for Payment Logger -->
+    <appender name="ASYNC_PAYMENT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="PAYMENT_FILE"/>
     </appender>
-
-    <appender name="SERVICES_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/services-logger.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/services-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-            <highlight>
-                <color value="GREEN" background="BLACK" level="INFO"/>
-                <color value="YELLOW" background="BLACK" level="WARN"/>
-                <color value="RED" background="YELLOW" level="ERROR"/>
-            </highlight>
-        </encoder>
-    </appender>
-
-    <appender name="SECURITIES_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/securities-logger.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/securities-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-            <highlight>
-                <color value="GREEN" background="BLACK" level="INFO"/>
-                <color value="YELLOW" background="BLACK" level="WARN"/>
-                <color value="RED" background="YELLOW" level="ERROR"/>
-            </highlight>
-        </encoder>
-    </appender>
-
-    <appender name="ROOTS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/roots-logger.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/archive/roots-logger-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-            <highlight>
-                <color value="GREEN" background="BLACK" level="INFO"/>
-                <color value="YELLOW" background="BLACK" level="WARN"/>
-                <color value="RED" background="YELLOW" level="ERROR"/>
-            </highlight>
-        </encoder>
-    </appender>
-
-    <!-- Async Appender -->
-
-    <appender name="ASYNC_CHAPA_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="CHAPA_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_MODELS_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="MODELS_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_REPOSITORIES_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="REPOSITORIES_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_NOTIFICATIONS_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="NOTIFICATIONS_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_SERVICES_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="SERVICES_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_SECURITIES_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="SECURITIES_LOG"/>
-    </appender>
-
-    <appender name="ASYNC_ROOTS_LOG" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="ROOTS_LOG"/>
-    </appender>
-
 
     <springProfile name="dev">
         <root level="INFO">
@@ -190,45 +69,16 @@
 
     <springProfile name="prod">
         <!-- Root Logger -->
-        <root level="INFO">
+        <root level="WARN">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_ROOTS_LOG"/>
+            <appender-ref ref="ASYNC"/>
         </root>
 
         <!-- Logger for specific package -->
-        <logger name="com.dxvalley.crowdfunding.payment.chapa" level="INFO" additivity="false">
+        <logger name="com.dxvalley.crowdfunding.payment" level="INFO" additivity="false">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_CHAPA_LOG"/>
-        </logger>
-
-        <logger name="com.dxvalley.crowdfunding.user.model" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_MODELS_LOG"/>
-        </logger>
-
-        <logger name="com.dxvalley.crowdfunding.repository" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_REPOSITORIES_LOG"/>
-        </logger>
-
-        <logger name="com.dxvalley.crowdfunding.service.impl" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SERVICES_LOG"/>
-        </logger>
-
-        <logger name="com.dxvalley.crowdfunding.security" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_SECURITIES_LOG"/>
-        </logger>
-
-        <logger name="com.dxvalley.crowdfunding.notification" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="ASYNC_NOTIFICATIONS_LOG"/>
+            <appender-ref ref="ASYNC_PAYMENT"/>
         </logger>
     </springProfile>
 
 </configuration>
-
-
-
-
