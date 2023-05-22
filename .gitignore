@@ -1,9 +1,6 @@
 HELP.md
 target/
 logs/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 .run/
 
 ### STS ###
@@ -16,7 +13,7 @@ logs/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -27,9 +24,42 @@ logs/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore build artifacts
+target/
+build/
+
+# Ignore IDE-specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore Maven-specific files
+mvnw
+mvnw.cmd
+.mvn/
+mvn/
+
+# Ignore Gradle-specific files
+.gradle/
+build.gradle
+gradlew
+gradlew.bat
+
+# Ignore test reports and coverage results
+/test-output/
+/jacoco/
+
+# Ignore test-specific configuration files
+src/test/resources/
+
+# Ignore test database files
+*.db
+
+# Ignore any other test-related files or directories
+**/*Test.*
+**/*Tests.*
