@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.fileUpload;
+package com.dxvalley.crowdfunding.fileUploadManager;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -23,10 +23,11 @@ public class FileUploadServiceImpl implements FileUploadService {
     private final Cloudinary cloudinaryConfig;
 
     /**
-     Uploads a file to Cloudinary and returns the URL of the uploaded file.
-     @param multipartFile The MultipartFile representing the file to be uploaded.
-     @return The URL of the uploaded file.
-     @throws IllegalArgumentException If there is an error with the file size or format.
+     * Uploads a file to Cloudinary and returns the URL of the uploaded file.
+     *
+     * @param multipartFile The MultipartFile representing the file to be uploaded.
+     * @return The URL of the uploaded file.
+     * @throws IllegalArgumentException If there is an error with the file size or format.
      */
     @Override
     /**
