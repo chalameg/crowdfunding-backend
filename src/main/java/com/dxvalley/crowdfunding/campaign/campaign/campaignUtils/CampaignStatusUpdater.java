@@ -3,32 +3,41 @@ package com.dxvalley.crowdfunding.campaign.campaign.campaignUtils;
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignRepository;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
-import com.dxvalley.crowdfunding.exception.DatabaseAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-@Service
+
+@Configuration
+@EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
 public class CampaignStatusUpdater {
     private final CampaignRepository campaignRepository;
     private final DateTimeFormatter dateTimeFormatter;
 
+
     /**
-     * Asynchronously updates the campaign status for all campaigns whose expiration date has passed.
+     * Scheduled task that updates the campaign status by checking the expiration time.
+     * <p>
+     * This task runs every 5 minutes and is executed asynchronously using the "asyncExecutor" thread pool.
+     * It retrieves campaigns in the "FUNDING" stage from the repository, compares their expiration time
+     * with the current time, and updates the campaign stage to "COMPLETED" if the expiration time has passed.
+     * The updated campaigns are then saved back to the repository.
      *
-     * @return a CompletableFuture representing the completion of the update operation
+     * @throws DataAccessException if an error occurs while accessing the database.
      */
-    @Async
-    public CompletableFuture<Void> updateCampaignStatus() {
+    @Scheduled(fixedDelay = 300000) // runs every 5 minutes
+    @Async("asyncExecutor")
+    public void updateCampaignStatus() {
         try {
             List<Campaign> campaigns = campaignRepository.findCampaignsByCampaignStage(CampaignStage.FUNDING);
 
@@ -41,14 +50,11 @@ public class CampaignStatusUpdater {
             }
 
             campaignRepository.saveAll(campaigns);
-            return CompletableFuture.completedFuture(null);
         } catch (DataAccessException ex) {
             log.error("An error occurred in {}.{} while accessing the database. Details: {}",
                     getClass().getSimpleName(),
                     Thread.currentThread().getStackTrace()[1].getMethodName(),
                     ex.getMessage());
-
-            throw new DatabaseAccessException("An error occurred while accessing the database");
         }
     }
 }
