@@ -1,23 +1,21 @@
 package com.dxvalley.crowdfunding.campaign.campaignCategory;
 
-import com.dxvalley.crowdfunding.campaign.campaignSubCategory.CampaignSubCategory;
-import jakarta.persistence.*;
-import lombok.Getter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class CampaignCategory {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long campaignCategoryId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Short id;
     private String name;
     private String description;
-    @Transient
-    private List<CampaignSubCategory> campaignSubCategories;
 }

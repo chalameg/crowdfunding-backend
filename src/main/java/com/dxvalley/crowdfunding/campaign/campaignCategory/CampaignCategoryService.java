@@ -1,17 +1,20 @@
 package com.dxvalley.crowdfunding.campaign.campaignCategory;
 
-import com.dxvalley.crowdfunding.campaign.campaignCategory.CampaignCategory;
+import com.dxvalley.crowdfunding.campaign.campaignCategory.dto.CategoryReq;
+import com.dxvalley.crowdfunding.campaign.campaignCategory.dto.CategoryResponse;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface CampaignCategoryService {
-    CampaignCategory addCampaignCategory(CampaignCategory campaignCategory);
+    CampaignCategory addCampaignCategory(CategoryReq categoryReq);
 
-    CampaignCategory editCampaignCategory(CampaignCategory campaignCategory, Long campaignCategoryId);
+    CampaignCategory editCampaignCategory(CampaignCategory campaignCategory, Short campaignCategoryId);
 
-    List<CampaignCategory> getCampaignCategories();
+    List<CategoryResponse> getCampaignCategories();
 
-    CampaignCategory getCampaignCategoryById(Long campaignCategoryId);
+    CategoryResponse getCampaignCategoryById(Short campaignCategoryId);
 
-    void deleteCampaignCategory(Long campaignCategoryId);
+    ResponseEntity<ApiResponse> deleteCampaignCategory(Short campaignCategoryId);
 }
