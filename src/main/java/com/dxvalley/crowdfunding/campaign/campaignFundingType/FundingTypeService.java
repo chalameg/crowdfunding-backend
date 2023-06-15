@@ -1,15 +1,19 @@
 package com.dxvalley.crowdfunding.campaign.campaignFundingType;
 
+import com.dxvalley.crowdfunding.campaign.campaignFundingType.dto.FundingTypeReq;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 
 public interface FundingTypeService {
-    FundingType addFundingType(FundingType fundingType);
+    FundingType addFundingType(FundingTypeReq fundingTypeReq);
 
-    FundingType editFundingType(FundingType fundingType);
+    FundingType editFundingType(Short id, FundingTypeReq fundingTypeReq);
 
     List<FundingType> getFundingTypes();
 
-    FundingType getFundingTypeById(Long fundingTypeId);
+    FundingType getFundingTypeById(Short fundingTypeId);
 
-    void deleteFundingType(Long fundingTypeId);
+    ResponseEntity<ApiResponse> deleteFundingType(Short fundingTypeId);
 }

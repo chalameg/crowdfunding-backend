@@ -1,9 +1,9 @@
 package com.dxvalley.crowdfunding.campaign.campaignFundingType;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
-public interface FundingTypeRepository extends JpaRepository<FundingType,Long> {
-    Optional<FundingType> findFundingTypeByFundingTypeId(Long fundingTypeId);
+@Repository
+public interface FundingTypeRepository extends JpaRepository<FundingType, Short> {
+    FundingType findByName(String name);
 }
