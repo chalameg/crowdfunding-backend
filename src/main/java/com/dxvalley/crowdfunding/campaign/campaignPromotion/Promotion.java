@@ -2,26 +2,23 @@ package com.dxvalley.crowdfunding.campaign.campaignPromotion;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Promotion {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long promotionId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     private String promotionLink;
     private String description;
-    @ManyToOne
+    private String createdAt;
+    private String updatedAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id")
     private Campaign campaign;
-
-    public Promotion(Long promotionId, String promotionLink, String description) {
-        this.promotionId = promotionId;
-        this.promotionLink = promotionLink;
-        this.description = description;
-    }
 }
