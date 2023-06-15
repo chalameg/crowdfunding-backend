@@ -1,14 +1,10 @@
 package com.dxvalley.crowdfunding.campaign.campaignCategory;
 
-import com.dxvalley.crowdfunding.campaign.campaignCategory.CampaignCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
-@Transactional(readOnly = true)
-public interface CampaignCategoryRepository extends JpaRepository<CampaignCategory, Long> {
-    Optional<CampaignCategory> findCampaignCategoryByCampaignCategoryId(Long campaignCategoryId);
+@Repository
+public interface CampaignCategoryRepository extends JpaRepository<CampaignCategory, Short> {
     CampaignCategory findByName(String name);
 }
 

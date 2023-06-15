@@ -1,44 +1,47 @@
 package com.dxvalley.crowdfunding.campaign.campaignCategory;
 
+import com.dxvalley.crowdfunding.campaign.campaignCategory.dto.CategoryReq;
+import com.dxvalley.crowdfunding.campaign.campaignCategory.dto.CategoryResponse;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/campaignCategories")
 public class CampaignCategoryController {
-    @Autowired
-    private CampaignCategoryService campaignCategoryService;
+    private final CampaignCategoryService campaignCategoryService;
 
     @GetMapping
-    ResponseEntity<?> getCampaignCategories() {
-        var categories = campaignCategoryService.getCampaignCategories();
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+    ResponseEntity<List<CategoryResponse>> getCampaignCategories() {
+        return ResponseEntity.ok(campaignCategoryService.getCampaignCategories());
     }
 
     @GetMapping("/{campaignCategoryId}")
-    ResponseEntity<?> getCampaignCategory(@PathVariable Long campaignCategoryId) {
-        var category = campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
-        return new ResponseEntity<>(category, HttpStatus.OK);
+    ResponseEntity<CategoryResponse> getCampaignCategory(@PathVariable Short campaignCategoryId) {
+        CategoryResponse category = campaignCategoryService.getCampaignCategoryById(campaignCategoryId);
+        return ResponseEntity.ok(category);
     }
 
     @PostMapping
-    ResponseEntity<?> addCategory(@RequestBody CampaignCategory campaignCategories) {
-        var category = campaignCategoryService.addCampaignCategory(campaignCategories);
-        return new ResponseEntity<>(category, HttpStatus.OK);
+    ResponseEntity<CampaignCategory> addCategory(@RequestBody @Valid CategoryReq categoryReq) {
+        CampaignCategory category = campaignCategoryService.addCampaignCategory(categoryReq);
+        return ResponseEntity.status(HttpStatus.CREATED).body(category);
     }
 
     @PutMapping("/{campaignCategoryId}")
-    ResponseEntity<?> editCampaignCategory(@RequestBody CampaignCategory tempCampaignCategory, @PathVariable Long campaignCategoryId) {
-        var category = campaignCategoryService.editCampaignCategory(tempCampaignCategory, campaignCategoryId);
-        return new ResponseEntity<>(category, HttpStatus.OK);
+    ResponseEntity<CampaignCategory> editCampaignCategory(@RequestBody CampaignCategory tempCampaignCategory, @PathVariable Short campaignCategoryId) {
+        CampaignCategory category = campaignCategoryService.editCampaignCategory(tempCampaignCategory, campaignCategoryId);
+        return ResponseEntity.ok(category);
     }
 
     @DeleteMapping("/{campaignCategoryId}")
-    ResponseEntity<?> deleteCampaignCategory(@PathVariable Long campaignCategoryId) {
-        campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
-        return ApiResponse.success("CampaignCategory Deleted successfully!");
+    ResponseEntity<ApiResponse> deleteCampaignCategory(@PathVariable Short campaignCategoryId) {
+        return campaignCategoryService.deleteCampaignCategory(campaignCategoryId);
     }
 }

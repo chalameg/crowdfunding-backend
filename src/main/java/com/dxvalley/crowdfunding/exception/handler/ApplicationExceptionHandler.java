@@ -2,7 +2,6 @@ package com.dxvalley.crowdfunding.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -17,17 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class ApplicationExceptionHandler {
-    @RequiredArgsConstructor
-    private class ExceptionResponse {
-        private final String timeStamp;
-        private final HttpStatus error;
-        private final String message;
-        private final String requestPath;
-    }
-
-    @Autowired
-    private DateTimeFormatter dateTimeFormatter;
+    private final DateTimeFormatter dateTimeFormatter;
+    
+    public static final String DB_ERROR_MESSAGE = "Sorry, we encountered a database error.\n"
+            + "Please try again later or contact support.";
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -59,7 +53,7 @@ public class ApplicationExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -72,7 +66,7 @@ public class ApplicationExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -85,7 +79,7 @@ public class ApplicationExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -98,7 +92,7 @@ public class ApplicationExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
@@ -111,25 +105,25 @@ public class ApplicationExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(DatabaseAccessException.class)
-    public ResponseEntity<?> handleDatabaseAccessException(DatabaseAccessException ex, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponse> handleDatabaseAccessException(DatabaseAccessException ex, HttpServletRequest request) {
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
                 httpStatus,
-                "An unexpected error occurred while processing your request. Please try again later or contact support.",
+                DB_ERROR_MESSAGE,
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponse> handleException(Exception ex, HttpServletRequest request) {
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         ExceptionResponse apiException = new ExceptionResponse(
                 LocalDateTime.now().format(dateTimeFormatter),
@@ -137,7 +131,7 @@ public class ApplicationExceptionHandler {
                 "An unexpected error occurred while processing your request. Please try again later or contact support.",
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(apiException, httpStatus);
+        return ResponseEntity.status(httpStatus).body(apiException);
     }
 }
 

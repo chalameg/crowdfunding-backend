@@ -1,19 +1,22 @@
 package com.dxvalley.crowdfunding.campaign.campaignSubCategory;
 
-import com.dxvalley.crowdfunding.campaign.campaignSubCategory.CampaignSubCategory;
+import com.dxvalley.crowdfunding.campaign.campaignSubCategory.dto.SubCategoryReq;
+import com.dxvalley.crowdfunding.campaign.campaignSubCategory.dto.SubCategoryRes;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface CampaignSubCategoryService {
-    CampaignSubCategory addCampaignSubCategory(CampaignSubCategory campaignSubCategory);
+    CampaignSubCategory addCampaignSubCategory(SubCategoryReq subCategoryReq);
 
-    CampaignSubCategory editCampaignSubCategory(Long campaignSubCategoryId, CampaignSubCategory campaignSubCategory);
+    CampaignSubCategory editCampaignSubCategory(Short campaignSubCategoryId, CampaignSubCategory campaignSubCategory);
 
-    List<CampaignSubCategory> getCampaignSubCategories();
+    List<SubCategoryRes> getCampaignSubCategories();
 
-    CampaignSubCategory getCampaignSubCategoryById(Long campaignSubCategoryId);
+    CampaignSubCategory getCampaignSubCategoryById(Short campaignSubCategoryId);
 
-    void deleteCampaignSubCategory(Long campaignSubCategoryId);
+    List<SubCategoryRes> getCampaignSubCategoryByCategory(Short campaignCategoryId);
 
-    List<CampaignSubCategory> getCampaignSubCategoryByCategory(Long campaignCategoryId);
+    ResponseEntity<ApiResponse> deleteCampaignSubCategory(Short campaignSubCategoryId);
 }

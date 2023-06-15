@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.user.dto;
+package com.dxvalley.crowdfunding.userManager.userDTO;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
