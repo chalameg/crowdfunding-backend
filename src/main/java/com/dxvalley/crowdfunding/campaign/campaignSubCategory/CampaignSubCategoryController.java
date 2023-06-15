@@ -1,10 +1,14 @@
 package com.dxvalley.crowdfunding.campaign.campaignSubCategory;
 
+import com.dxvalley.crowdfunding.campaign.campaignSubCategory.dto.SubCategoryReq;
+import com.dxvalley.crowdfunding.campaign.campaignSubCategory.dto.SubCategoryRes;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/campaignSubCategory")
@@ -13,39 +17,38 @@ public class CampaignSubCategoryController {
     private CampaignSubCategoryService campaignSubCategoryService;
 
     @GetMapping("/getSubCategories")
-    ResponseEntity<?> getCampaignSubcategories() {
-        var subCategories = campaignSubCategoryService.getCampaignSubCategories();
-        return new ResponseEntity<>(subCategories, HttpStatus.OK);
+    ResponseEntity<List<SubCategoryRes>> getCampaignSubcategories() {
+        List<SubCategoryRes> subCategories = campaignSubCategoryService.getCampaignSubCategories();
+        return ResponseEntity.ok(subCategories);
     }
 
     @GetMapping("/{CampaignSubCategoryId}")
-    ResponseEntity<?> getCampaignSubCategory(@PathVariable Long CampaignSubCategoryId) {
-        var subCategory = campaignSubCategoryService.getCampaignSubCategoryById(CampaignSubCategoryId);
-        return new ResponseEntity<>(subCategory, HttpStatus.OK);
+    ResponseEntity<CampaignSubCategory> getCampaignSubCategory(@PathVariable Short CampaignSubCategoryId) {
+        CampaignSubCategory subCategory = campaignSubCategoryService.getCampaignSubCategoryById(CampaignSubCategoryId);
+        return ResponseEntity.ok(subCategory);
     }
 
     @GetMapping("/getByCategoryId/{campaignCategoryId}")
-    ResponseEntity<?> getCampaignSubCategoryByCategory(@PathVariable Long campaignCategoryId) {
-        var subCategories = campaignSubCategoryService.getCampaignSubCategoryByCategory(campaignCategoryId);
-        return new ResponseEntity<>(subCategories, HttpStatus.OK);
+    ResponseEntity<List<SubCategoryRes>> getCampaignSubCategoryByCategory(@PathVariable Short campaignCategoryId) {
+        List<SubCategoryRes> subCategories = campaignSubCategoryService.getCampaignSubCategoryByCategory(campaignCategoryId);
+        return ResponseEntity.ok(subCategories);
     }
 
     @PostMapping("/add")
-    ResponseEntity<?> addCampaignSubCategory(@RequestBody CampaignSubCategory campaignSubCategory) {
-        var subCategory = campaignSubCategoryService.addCampaignSubCategory(campaignSubCategory);
-        return new ResponseEntity<>(subCategory, HttpStatus.OK);
+    ResponseEntity<CampaignSubCategory> addCampaignSubCategory(@RequestBody @Valid SubCategoryReq subCategoryReq) {
+        CampaignSubCategory subCategory = campaignSubCategoryService.addCampaignSubCategory(subCategoryReq);
+        return ResponseEntity.ok(subCategory);
     }
 
     @PutMapping("/edit/{campaignSubCategoryId}")
-    ResponseEntity<?> editCampaignSubCategory(@RequestBody CampaignSubCategory tempSubCampaignCategory, @PathVariable Long campaignSubCategoryId) {
-        var subCategory = campaignSubCategoryService.editCampaignSubCategory(campaignSubCategoryId, tempSubCampaignCategory);
-        return new ResponseEntity<>(subCategory, HttpStatus.OK);
+    ResponseEntity<CampaignSubCategory> editCampaignSubCategory(@RequestBody CampaignSubCategory tempSubCampaignCategory, @PathVariable Short campaignSubCategoryId) {
+        CampaignSubCategory subCategory = campaignSubCategoryService.editCampaignSubCategory(campaignSubCategoryId, tempSubCampaignCategory);
+        return ResponseEntity.ok(subCategory);
     }
 
     @DeleteMapping("/delete/{campaignSubCategoryId}")
-    ResponseEntity<?> deleteCampaignCategory(@PathVariable Long campaignSubCategoryId) {
-        campaignSubCategoryService.deleteCampaignSubCategory(campaignSubCategoryId);
-        return ApiResponse.success( "Campaign subCategory Deleted successfully!");
+    ResponseEntity<ApiResponse> deleteCampaignCategory(@PathVariable Short campaignSubCategoryId) {
+        return campaignSubCategoryService.deleteCampaignSubCategory(campaignSubCategoryId);
     }
 }
 
