@@ -1,12 +1,10 @@
 package com.dxvalley.crowdfunding.campaign.campaignLike;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-public class CampaignLikeDTO {
+@Data
+public class CampaignLikeReq {
     @NotNull
     private Long campaignId;
     @NotNull
