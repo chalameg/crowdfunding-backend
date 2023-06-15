@@ -1,24 +1,26 @@
 package com.dxvalley.crowdfunding.campaign.campaignLike;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CampaignLike {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long likeId;
-    @OneToOne
-    @JoinColumn(name = "campaign_Id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id")
     private Campaign campaign;
-    @OneToOne
-    @JoinColumn(name = "user_Id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private Users user;
 }
