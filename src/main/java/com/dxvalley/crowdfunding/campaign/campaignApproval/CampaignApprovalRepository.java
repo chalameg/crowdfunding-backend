@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface CampaignApprovalRepository extends JpaRepository<CampaignApproval, Long> {
-    Optional<CampaignApproval> findCampaignApprovalByCampaignCampaignId(Long campaignId);
+    Optional<CampaignApproval> findByCampaignId(Long campaignId);
 }
 
