@@ -1,15 +1,20 @@
 package com.dxvalley.crowdfunding.campaign.campaignReward;
 
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardRequest;
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardResponse;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 
 public interface RewardService {
-    List<Reward> findRewardsByCampaignId(Long campaignId);
+    List<RewardResponse> getByCampaign(Long campaignId);
 
-    Reward getRewardById(Long rewardId);
+    RewardResponse getRewardById(Long rewardId);
 
-    Reward addReward(Long campaignId, Reward reward);
+    RewardResponse addReward(RewardRequest rewardUpdate);
 
-    Reward editReward(Long rewardId, Reward reward);
+    RewardResponse editReward(Long rewardId, RewardRequest rewardRequest);
 
-    void deleteReward(Long rewardId);
+    ResponseEntity<ApiResponse> deleteReward(Long rewardId);
 }

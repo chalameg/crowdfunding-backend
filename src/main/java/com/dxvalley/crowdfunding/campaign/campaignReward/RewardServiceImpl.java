@@ -1,61 +1,95 @@
 package com.dxvalley.crowdfunding.campaign.campaignReward;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.campaign.campaign.CampaignRepository;
-import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardMapper;
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardRequest;
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardResponse;
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-//TODO: update current impl
+
 @Service
+@RequiredArgsConstructor
 public class RewardServiceImpl implements RewardService {
-    @Autowired
-    private RewardRepository rewardRepository;
-    @Autowired
-    CampaignRepository campaignRepository;
+
+    private final RewardRepository rewardRepository;
+    private final CampaignUtils campaignUtils;
+    private final DateTimeFormatter dateTimeFormatter;
 
     @Override
-    public Reward addReward(Long campaignId, Reward reward) {
-        Campaign campaign = campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
-                () -> new ResourceNotFoundException("There is no campaign with this ID.")
-        );
+    public RewardResponse addReward(RewardRequest rewardRequest) {
+        Campaign campaign = campaignUtils.utilGetCampaignById(rewardRequest.getCampaignId());
+
+        Reward reward = new Reward();
+
+        reward.setTitle(rewardRequest.getTitle());
+        reward.setDescription(rewardRequest.getDescription());
+        reward.setAmountToCollect(rewardRequest.getAmountToCollect());
+        reward.setDeliveryTime(LocalDateTime.now().format(dateTimeFormatter));
         reward.setCampaign(campaign);
-        return rewardRepository.save(reward);
+        reward.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
+
+        Reward savedReward = rewardRepository.save(reward);
+
+        return RewardMapper.toRewardResponse(savedReward);
     }
 
     @Override
-    public Reward editReward(Long rewardId, Reward tempReward) {
-        Reward reward = getRewardById(rewardId);
+    public RewardResponse editReward(Long rewardId, RewardRequest rewardUpdate) {
+        Reward reward = utilGetRewardById(rewardId);
 
-        reward.setTitle(tempReward.getTitle() != null ? tempReward.getTitle() : reward.getTitle());
-        reward.setDescription(tempReward.getDescription() != null ? tempReward.getDescription() : reward.getDescription());
-        reward.setAmountToCollect(tempReward.getAmountToCollect() != null ? tempReward.getAmountToCollect() : reward.getAmountToCollect());
-        reward.setDeliveryTime(tempReward.getDeliveryTime() != null ? tempReward.getDeliveryTime() : reward.getDeliveryTime());
+        if (rewardUpdate.getTitle() != null)
+            reward.setTitle(rewardUpdate.getTitle());
 
-        return rewardRepository.save(reward);
+        if (rewardUpdate.getDescription() != null)
+            reward.setDescription(rewardUpdate.getDescription());
+
+        if (rewardUpdate.getAmountToCollect() != null)
+            reward.setAmountToCollect(rewardUpdate.getAmountToCollect());
+
+        if (rewardUpdate.getDeliveryTime() != null)
+            reward.setDeliveryTime(rewardUpdate.getDeliveryTime());
+
+        reward.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+
+        Reward savedReward = rewardRepository.save(reward);
+
+        return RewardMapper.toRewardResponse(savedReward);
+    }
+
+
+    @Override
+    public List<RewardResponse> getByCampaign(Long campaignId) {
+        List<Reward> rewards = rewardRepository.findByCampaignId(campaignId);
+
+        return rewards.stream().map(RewardMapper::toRewardResponse).toList();
     }
 
     @Override
-    public List<Reward> findRewardsByCampaignId(Long campaignId) {
-        var rewards = rewardRepository.findRewardsByCampaignId(campaignId);
-        if (rewards.isEmpty())
-            throw new ResourceNotFoundException("Currently, There is no reward for this Campaign");
-        return rewards;
+    public RewardResponse getRewardById(Long rewardId) {
+        Reward reward = utilGetRewardById(rewardId);
+        return RewardMapper.toRewardResponse(reward);
     }
 
     @Override
-    public Reward getRewardById(Long rewardId) {
-        Reward reward = rewardRepository.findRewardByRewardId(rewardId).orElseThrow(
-                () -> new ResourceNotFoundException("There is no Reward with this Id")
-        );
-        return reward;
+    public ResponseEntity<ApiResponse> deleteReward(Long rewardId) {
+        utilGetRewardById(rewardId);
+        rewardRepository.deleteById(rewardId);
+
+        return ApiResponse.success("Deleted Successfully");
     }
 
-    @Override
-    public void deleteReward(Long rewardId) {
-        var reward = getRewardById(rewardId);
-        rewardRepository.delete(reward);
+
+    private Reward utilGetRewardById(Long rewardId) {
+        return rewardRepository.findById(rewardId).orElseThrow(
+                () -> new ResourceNotFoundException("There is no Reward with this Id"));
     }
 
 }
