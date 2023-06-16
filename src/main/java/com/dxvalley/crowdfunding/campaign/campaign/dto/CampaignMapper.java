@@ -8,15 +8,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
-public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
+public class CampaignMapper {
     private final DateTimeFormatter dateTimeFormatter;
 
-    @Override
-    public CampaignDTO apply(Campaign campaign) {
+    public CampaignDTO toDTO(Campaign campaign) {
         CampaignDTO campaignDTO = new CampaignDTO();
 
         campaignDTO.setCampaignId(campaign.getId());
@@ -50,16 +48,18 @@ public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
         return campaignDTO;
     }
 
-    public CampaignDTO applyById(Campaign campaign) {
-        CampaignDTO campaignDTO = apply(campaign);
+    public CampaignDTO toDTOById(Campaign campaign) {
+        CampaignDTO campaignDTO = toDTO(campaign);
 
         campaignDTO.setDescription(campaign.getDescription());
         campaignDTO.setRisks(campaign.getRisks());
         campaignDTO.setVideos(campaign.getVideos());
-        campaignDTO.setOwner(campaign.getUser().getUsername());
+        campaignDTO.setOwner(campaign.getUser().getFullName());
         campaignDTO.setCampaignDuration(campaign.getCampaignDuration());
         campaignDTO.setFundingType(campaign.getFundingType());
         campaignDTO.setCampaignSubCategory(campaign.getCampaignSubCategory());
+        if (campaign.getBankAccount() != null)
+            campaignDTO.setCampaignBankAccount(campaign.getBankAccount());
 
         return campaignDTO;
     }
