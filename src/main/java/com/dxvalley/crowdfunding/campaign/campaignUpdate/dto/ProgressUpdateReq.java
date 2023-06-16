@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class CampaignUpdateDTO {
+public class ProgressUpdateReq {
     @NotNull(message = "Title is required")
     private String title;
     @NotNull(message = "Description is required")

@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CampaignUpdateRepository extends JpaRepository<CampaignUpdate, Long> {
-    List<CampaignUpdate> findCampaignUpdatesByCampaignCampaignId(Long campaignId);
+public interface CampaignProgressUpdateRepository extends JpaRepository<CampaignProgressUpdate, Long> {
+    List<CampaignProgressUpdate> findByCampaignId(Long campaignId);
 }
