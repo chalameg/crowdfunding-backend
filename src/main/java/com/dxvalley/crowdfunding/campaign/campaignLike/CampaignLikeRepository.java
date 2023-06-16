@@ -11,5 +11,5 @@ public interface CampaignLikeRepository extends JpaRepository<CampaignLike, Long
 
     List<CampaignLike> findByCampaignId(Long campaignId);
 
-    List<CampaignLike> findByUserId(Long userId, Long campaignId);
+    List<CampaignLike> findByUserUserId(Long userId);
 }
