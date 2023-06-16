@@ -1,6 +1,5 @@
 package com.dxvalley.crowdfunding.campaign.campaignBankAccount;
 
-import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,10 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CampaignBankAccount {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long campaignBankAccountId;
-    private String bankAccount;
-    @OneToOne
-    @JoinColumn(name = "campaign_id")
-    private Campaign campaign;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    @Column(nullable = false, unique = true)
+    private String accountNumber;
+    @Column(nullable = false)
+    private String accountOwner;
+    @Column(nullable = false)
+    private String addedAt;
 }

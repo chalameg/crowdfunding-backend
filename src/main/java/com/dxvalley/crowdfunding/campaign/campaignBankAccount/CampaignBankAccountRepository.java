@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface CampaignBankAccountRepository extends JpaRepository<CampaignBankAccount, Long>{
-    Optional<CampaignBankAccount> findCampaignBankAccountByCampaignCampaignId(Long campaignId);
+public interface CampaignBankAccountRepository extends JpaRepository<CampaignBankAccount, Long> {
+    Optional<CampaignBankAccount> findByAccountNumber(String accountNumber);
 }
 

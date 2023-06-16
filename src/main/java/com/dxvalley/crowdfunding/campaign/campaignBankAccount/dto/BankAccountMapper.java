@@ -1,16 +1,30 @@
 package com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto;
 
+import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.CampaignBankAccount;
-import org.springframework.stereotype.Component;
 
-@Component
+import java.util.List;
+
 public class BankAccountMapper {
-    public static BankAccountDTO toBankAccountDTO(CampaignBankAccount campaignBankAccount) {
-        BankAccountDTO bankAccountDTO = new BankAccountDTO();
-        bankAccountDTO.setCampaignBankAccountId(campaignBankAccount.getCampaignBankAccountId());
-        bankAccountDTO.setBankAccount(campaignBankAccount.getBankAccount());
-        bankAccountDTO.setCampaignTitle(campaignBankAccount.getCampaign().getTitle());
+    private BankAccountMapper() {
+        // Private constructor to enforce non-instantiability
+    }
 
-        return bankAccountDTO;
+    public static BankAccountRes toBankAccountDTO(CampaignBankAccount campaignBankAccount, List<Campaign> campaigns) {
+        BankAccountRes bankAccountRes = new BankAccountRes();
+        bankAccountRes.setId(campaignBankAccount.getId());
+        bankAccountRes.setAccountNumber(campaignBankAccount.getAccountNumber());
+        bankAccountRes.setAccountOwner(campaignBankAccount.getAccountOwner());
+        bankAccountRes.setAddedAt(campaignBankAccount.getAddedAt());
+
+        for (Campaign campaign : campaigns) {
+            BankAccountRes.CampaignInfo campaignInfo = new BankAccountRes.CampaignInfo();
+            campaignInfo.setCampaignOwner(campaign.getUser().getFullName());
+            campaignInfo.setCampaignTitle(campaign.getTitle());
+
+            bankAccountRes.addCampaign(campaignInfo);
+        }
+
+        return bankAccountRes;
     }
 }
