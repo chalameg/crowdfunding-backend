@@ -49,24 +49,39 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
     @Override
     public CampaignBankAccount addBankAccount(AccountAddReq accountAddReq) {
         Campaign campaign = campaignUtils.utilGetCampaignById(accountAddReq.getCampaignId());
-        Optional<CampaignBankAccount> optionalCampaignBankAccount = campaignBankAccountRepository.findByAccountNumber(accountAddReq.getAccountNumber());
 
-        if (campaign.getBankAccount().getAccountNumber().equals(accountAddReq.getAccountNumber()))
-            throw new ResourceAlreadyExistsException(accountAddReq.getAccountNumber() + " is already set up for this campaign.");
+        String accountNumber = accountAddReq.getAccountNumber();
+        String accountOwner = accountAddReq.getAccountOwner();
 
-        CampaignBankAccount campaignBankAccount = optionalCampaignBankAccount.orElseGet(() -> {
-            CampaignBankAccount newBankAccount = new CampaignBankAccount();
-            newBankAccount.setAccountNumber(accountAddReq.getAccountNumber());
-            newBankAccount.setAccountOwner(accountAddReq.getAccountOwner());
-            newBankAccount.setAddedAt(LocalDateTime.now().format(dateTimeFormatter));
-            return campaignBankAccountRepository.save(newBankAccount);
-        });
+        validateBankAccount(accountNumber, campaign);
+        CampaignBankAccount campaignBankAccount = getOrCreateCampaignBankAccount(accountNumber, accountOwner);
 
         campaign.setBankAccount(campaignBankAccount);
         campaignUtils.saveCampaign(campaign);
 
         return campaignBankAccount;
     }
+
+    private void validateBankAccount(String accountNumber, Campaign campaign) {
+        if (campaign.getBankAccount() != null && campaign.getBankAccount().getAccountNumber().equals(accountNumber)) {
+            throw new ResourceAlreadyExistsException(accountNumber + " is already set up for this campaign.");
+        }
+    }
+
+    private CampaignBankAccount getOrCreateCampaignBankAccount(String accountNumber, String accountOwner) {
+        Optional<CampaignBankAccount> optionalCampaignBankAccount = campaignBankAccountRepository.findByAccountNumber(accountNumber);
+        return optionalCampaignBankAccount.orElseGet(
+                () -> createCampaignBankAccount(accountNumber, accountOwner));
+    }
+
+    private CampaignBankAccount createCampaignBankAccount(String accountNumber, String accountOwner) {
+        CampaignBankAccount newBankAccount = new CampaignBankAccount();
+        newBankAccount.setAccountNumber(accountNumber);
+        newBankAccount.setAccountOwner(accountOwner);
+        newBankAccount.setAddedAt(LocalDateTime.now().format(dateTimeFormatter));
+        return campaignBankAccountRepository.save(newBankAccount);
+    }
+
 
     // Description: Checks the existence of a bank account using the given account number.
     @Override
