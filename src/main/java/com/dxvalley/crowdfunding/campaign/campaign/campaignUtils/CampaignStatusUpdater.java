@@ -4,7 +4,6 @@ import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignRepository;
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Async;
@@ -19,7 +18,6 @@ import java.util.List;
 @Configuration
 @EnableScheduling
 @RequiredArgsConstructor
-@Slf4j
 public class CampaignStatusUpdater {
     private final CampaignRepository campaignRepository;
     private final DateTimeFormatter dateTimeFormatter;
@@ -38,23 +36,16 @@ public class CampaignStatusUpdater {
     @Scheduled(fixedDelay = 300000) // runs every 5 minutes
     @Async("asyncExecutor")
     public void updateCampaignStatus() {
-        try {
-            List<Campaign> campaigns = campaignRepository.findCampaignsByCampaignStage(CampaignStage.FUNDING);
+        List<Campaign> campaigns = campaignRepository.findCampaignsByCampaignStage(CampaignStage.FUNDING);
 
-            LocalDateTime currentDateTime = LocalDateTime.now();
-            for (Campaign campaign : campaigns) {
-                LocalDateTime expiredAt = LocalDateTime.parse(campaign.getExpiredAt(), dateTimeFormatter);
-                if (expiredAt.isBefore(currentDateTime)) {
-                    campaign.setCampaignStage(CampaignStage.COMPLETED);
-                }
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        for (Campaign campaign : campaigns) {
+            LocalDateTime expiredAt = LocalDateTime.parse(campaign.getCompletedAt(), dateTimeFormatter);
+            if (expiredAt.isBefore(currentDateTime)) {
+                campaign.setCampaignStage(CampaignStage.COMPLETED);
             }
-
-            campaignRepository.saveAll(campaigns);
-        } catch (DataAccessException ex) {
-            log.error("An error occurred in {}.{} while accessing the database. Details: {}",
-                    getClass().getSimpleName(),
-                    Thread.currentThread().getStackTrace()[1].getMethodName(),
-                    ex.getMessage());
         }
+
+        campaignRepository.saveAll(campaigns);
     }
 }
