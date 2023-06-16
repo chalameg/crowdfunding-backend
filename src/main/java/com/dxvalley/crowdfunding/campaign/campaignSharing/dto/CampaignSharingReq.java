@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class CampaignSharingDTO {
+public class CampaignSharingReq {
     @NotNull(message = "Campaign ID must not be blank")
     private Long campaignId;
     @NotBlank(message = "Sharing platform must not be blank")
