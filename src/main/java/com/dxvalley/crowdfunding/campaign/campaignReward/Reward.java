@@ -1,35 +1,26 @@
 package com.dxvalley.crowdfunding.campaign.campaignReward;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reward {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long rewardId;
-
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     private String title;
     private String description;
-    private String amountToCollect;
-    @JsonFormat(pattern="yyyy-MM-dd",shape = JsonFormat.Shape.STRING)
+    private Double amountToCollect;
     private String deliveryTime;
-
-    @ManyToOne
-	private Campaign campaign;
-
-    public Reward(Long rewardId, String title, String description, String amountToCollect, String deliveryTime) {
-        this.rewardId = rewardId;
-        this.title = title;
-        this.description = description;
-        this.amountToCollect = amountToCollect;
-        this.deliveryTime = deliveryTime;
-    }
+    private String createdAt;
+    private String editedAt;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "campaignId", nullable = false)
+    private Campaign campaign;
 }

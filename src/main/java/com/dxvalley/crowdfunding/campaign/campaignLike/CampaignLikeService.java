@@ -10,8 +10,8 @@ import java.util.List;
 public class CampaignLikeService {
     private final CampaignLikeRepository campaignLikeRepository;
 
-    public List<CampaignLike> findByUser(Long userId, Long campaignId) {
-        return campaignLikeRepository.findByUserId(userId, campaignId);
+    public List<CampaignLike> findByUser(Long userId) {
+        return campaignLikeRepository.findByUserUserId(userId);
     }
 
     public List<CampaignLike> findByCampaign(Long campaignId) {

@@ -1,20 +1,20 @@
 package com.dxvalley.crowdfunding.campaign.campaignCollaborator;
 
-import com.dxvalley.crowdfunding.user.dto.InviteRequest;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaborationRequest;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaboratorResponse;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface CollaboratorService {
-    ResponseEntity sendInvitation(InviteRequest inviteRequest);
+    CollaboratorResponse getCollaboratorById(Long collaboratorId);
 
-    List<Collaborator> getCollaborators();
+    List<CollaboratorResponse> getCollaboratorByCampaignId(Long campaignId);
 
-    Collaborator getCollaboratorById(Long collaboratorId);
+    CollaboratorResponse sendInvitation(CollaborationRequest collaborationRequest);
 
-    List<Collaborator> getCollaboratorByCampaignId(Long campaignId);
+    ResponseEntity<ApiResponse> respondToCollaborationInvitation(Long collaboratorId, boolean accepted);
 
-    String deleteCollaborator(Long collaboratorId);
-
-    ResponseEntity acceptOrRejectInvitation(Long collaboratorId, Boolean flag);
+    ResponseEntity<ApiResponse> deleteCollaborator(Long collaboratorId);
 }

@@ -1,45 +1,47 @@
 package com.dxvalley.crowdfunding.campaign.campaignReward;
 
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardRequest;
+import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardResponse;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/rewards")
 public class RewardController {
-    @Autowired
-    private RewardService rewardService;
+    private final RewardService rewardService;
 
     @GetMapping("/getByCampaignId/{campaignId}")
-    ResponseEntity<?> getRewards(@PathVariable Long campaignId) {
-        var reward = rewardService.findRewardsByCampaignId(campaignId);
-        return new ResponseEntity<>(reward, HttpStatus.OK);
+    ResponseEntity<List<RewardResponse>> getRewards(@PathVariable Long campaignId) {
+        List<RewardResponse> rewards = rewardService.getByCampaign(campaignId);
+        return ResponseEntity.ok(rewards);
     }
 
     @GetMapping("getRewardById/{rewardId}")
-    ResponseEntity<?> getReward(@PathVariable Long rewardId) {
-        Reward reward = rewardService.getRewardById(rewardId);
-        return new ResponseEntity<>(reward, HttpStatus.OK);
+    ResponseEntity<RewardResponse> getReward(@PathVariable Long rewardId) {
+        RewardResponse reward = rewardService.getRewardById(rewardId);
+        return ResponseEntity.ok(reward);
     }
 
-    @PostMapping("add/{campaignId}")
-    public ResponseEntity<?> addReward(@RequestBody Reward reward, @PathVariable Long campaignId) {
-        var reward1 = rewardService.addReward(campaignId, reward);
-        return new ResponseEntity<>(reward1, HttpStatus.OK);
+    @PostMapping("/add")
+    public ResponseEntity<RewardResponse> addReward(@RequestBody @Valid RewardRequest rewardRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(rewardService.addReward(rewardRequest));
     }
 
-    @PutMapping("edit/{rewardId}")
-    ResponseEntity<?> editReward(@RequestBody Reward reward, @PathVariable Long rewardId) {
-        var reward1 = rewardService.editReward(rewardId, reward);
-        return new ResponseEntity<>(reward1, HttpStatus.OK);
+    @PutMapping("/edit/{rewardId}")
+    ResponseEntity<RewardResponse> editReward(@PathVariable Long rewardId, @RequestBody RewardRequest rewardRequest) {
+        return ResponseEntity.ok(rewardService.editReward(rewardId, rewardRequest));
     }
 
     @DeleteMapping("delete/{rewardId}")
-    ResponseEntity<?> deleteReward(@PathVariable Long rewardId) {
-        rewardService.deleteReward(rewardId);
-        return ApiResponse.success("Reward Deleted successfully!");
+    ResponseEntity<ApiResponse> deleteReward(@PathVariable Long rewardId) {
+        return rewardService.deleteReward(rewardId);
     }
 
 }

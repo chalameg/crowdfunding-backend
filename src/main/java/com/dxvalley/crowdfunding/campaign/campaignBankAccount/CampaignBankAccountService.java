@@ -1,10 +1,14 @@
 package com.dxvalley.crowdfunding.campaign.campaignBankAccount;
 
-import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountDTO;
-import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountExistenceDTO;
+import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.AccountAddReq;
+import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.AccountExistenceRes;
+import com.dxvalley.crowdfunding.campaign.campaignBankAccount.dto.BankAccountRes;
 
 public interface CampaignBankAccountService {
-    BankAccountDTO addBankAccount(Long campaignId, String bankAccount);
-    BankAccountExistenceDTO checkBankAccountExistence(String bankAccount);
-    BankAccountDTO getCampaignBankAccountByCampaignId(Long campaignId);
+    BankAccountRes getByAccountNumber(String accountNumber);
+
+    CampaignBankAccount addBankAccount(AccountAddReq accountAddReq);
+
+    AccountExistenceRes checkBankAccountExistence(String bankAccount);
+
 }

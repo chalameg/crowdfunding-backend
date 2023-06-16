@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PromotionRes {
+public class PromotionResponse {
     private Long id;
     private String promotionLink;
     private String description;

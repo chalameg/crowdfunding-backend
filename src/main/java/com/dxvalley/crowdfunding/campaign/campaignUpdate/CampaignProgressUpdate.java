@@ -1,23 +1,25 @@
 package com.dxvalley.crowdfunding.campaign.campaignUpdate;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "campaign_updates")
 @Data
 @NoArgsConstructor
-public class CampaignUpdate {
+@AllArgsConstructor
+public class CampaignProgressUpdate {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String title;
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
-    private String dateTime;
+    private String createdAt;
+    private String updatedAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private Users author;

@@ -4,12 +4,9 @@ import lombok.Data;
 
 @Data
 public class CampaignShareResponse {
-    private int facebookShares;
-    private int tiktokShares;
-    private int twitterShares;
-    private int telegramShares;
-    private int whatsappShares;
-    private int linkedinShares;
-    private int instagramShares;
-    private int otherShares;
+    private Long id;
+    private String username;
+    private String sharingPlatform;
+    private String sharingTime;
+    private int shareCount;
 }

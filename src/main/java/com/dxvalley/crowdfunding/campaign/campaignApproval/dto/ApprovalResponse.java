@@ -1,12 +1,12 @@
 package com.dxvalley.crowdfunding.campaign.campaignApproval.dto;
 
+import com.dxvalley.crowdfunding.campaign.campaignApproval.file.ApprovalFile;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
-
 public class ApprovalResponse {
     private Long id;
     private String campaignTitle;
@@ -16,5 +16,5 @@ public class ApprovalResponse {
     private String reason;
     private Double commissionRate;
     private String approvalTime;
-    private List<String> approvalFiles;
+    private List<ApprovalFile> approvalFiles;
 }

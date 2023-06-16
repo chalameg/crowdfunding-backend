@@ -1,7 +1,7 @@
 package com.dxvalley.crowdfunding.campaign.campaignPromotion;
 
 import com.dxvalley.crowdfunding.campaign.campaignPromotion.dto.PromotionReq;
-import com.dxvalley.crowdfunding.campaign.campaignPromotion.dto.PromotionRes;
+import com.dxvalley.crowdfunding.campaign.campaignPromotion.dto.PromotionResponse;
 import com.dxvalley.crowdfunding.campaign.campaignPromotion.dto.PromotionUpdateReq;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
@@ -19,30 +19,30 @@ public class PromotionController {
     private final PromotionService promotionService;
 
     @GetMapping("/{promotionId}")
-    ResponseEntity<Promotion> getPromotion(@PathVariable Long promotionId) {
-        Promotion promotion = promotionService.getPromotionById(promotionId);
+    ResponseEntity<PromotionResponse> getPromotion(@PathVariable Long promotionId) {
+        PromotionResponse promotion = promotionService.getPromotionById(promotionId);
         return ResponseEntity.ok(promotion);
     }
 
-    @GetMapping("/byCampaign/{promotionId}")
-    ResponseEntity<List<PromotionRes>> getPromotionByCampaign(@PathVariable Long promotionId) {
-        List<PromotionRes> promotionRes = promotionService.getPromotionByCampaign(promotionId);
+    @GetMapping("/byCampaign/{campaignId}")
+    ResponseEntity<List<PromotionResponse>> getPromotionByCampaign(@PathVariable Long campaignId) {
+        List<PromotionResponse> promotionRes = promotionService.getPromotionByCampaign(campaignId);
         return ResponseEntity.ok(promotionRes);
     }
 
     @PostMapping("/add")
-    ResponseEntity<PromotionRes> addPromotion(@RequestBody @Valid PromotionReq promotionReq) {
-        PromotionRes promotionRes = promotionService.addPromotion(promotionReq);
-        return ResponseEntity.ok(promotionRes);
+    ResponseEntity<PromotionResponse> addPromotion(@RequestBody @Valid PromotionReq promotionReq) {
+        PromotionResponse promotionResponse = promotionService.addPromotion(promotionReq);
+        return ResponseEntity.ok(promotionResponse);
     }
 
     @PutMapping("/edit/{promotionId}")
-    ResponseEntity<PromotionRes> editPromotion(@PathVariable Long promotionId, @RequestBody @Valid PromotionUpdateReq promotionUpdateReq) {
-        PromotionRes promotionRes = promotionService.editPromotion(promotionId, promotionUpdateReq);
-        return ResponseEntity.ok(promotionRes);
+    ResponseEntity<PromotionResponse> editPromotion(@PathVariable Long promotionId, @RequestBody @Valid PromotionUpdateReq promotionUpdateReq) {
+        PromotionResponse promotionResponse = promotionService.editPromotion(promotionId, promotionUpdateReq);
+        return ResponseEntity.ok(promotionResponse);
     }
 
-    @DeleteMapping("delete/{promotionId}")
+    @DeleteMapping("/{promotionId}")
     ResponseEntity<ApiResponse> deletePromotion(@PathVariable Long promotionId) {
         return promotionService.deletePromotion(promotionId);
     }

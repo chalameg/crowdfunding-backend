@@ -1,11 +1,11 @@
 package com.dxvalley.crowdfunding.campaign.campaignSharing;
 
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
+import com.dxvalley.crowdfunding.campaign.campaignSharing.dto.CampaignShareCountResponse;
+import com.dxvalley.crowdfunding.campaign.campaignSharing.dto.CampaignShareMapper;
 import com.dxvalley.crowdfunding.campaign.campaignSharing.dto.CampaignShareResponse;
-import com.dxvalley.crowdfunding.campaign.campaignSharing.dto.CampaignSharingDTO;
-import com.dxvalley.crowdfunding.exception.DatabaseAccessException;
+import com.dxvalley.crowdfunding.campaign.campaignSharing.dto.CampaignSharingReq;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,49 +16,29 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CampaignSharingServiceImpl implements CampaignSharingService {
     private final CampaignSharingRepository campaignSharingRepository;
     private final DateTimeFormatter dateTimeFormatter;
+    private final CampaignUtils campaignUtils;
 
-    /**
-     * Retrieves the share counts for a campaign based on the campaign ID.
-     *
-     * @param campaignId the ID of the campaign
-     * @return the CampaignShareResponse object containing the share counts for different platforms
-     */
+    // Retrieves the share counts for a campaign based on the campaign ID.
     @Override
-    public CampaignShareResponse getByCampaignId(Long campaignId) {
-        try {
-            List<CampaignSharing> campaignShares = campaignSharingRepository.findByCampaignId(campaignId);
-            CampaignShareResponse campaignShareResponse = new CampaignShareResponse();
+    public CampaignShareCountResponse getByCampaignId(Long campaignId) {
+        List<CampaignSharing> campaignShares = campaignSharingRepository.findByCampaignId(campaignId);
+        CampaignShareCountResponse campaignShareCountResponse = new CampaignShareCountResponse();
 
-            campaignShares.stream()
-                    .map(CampaignSharing::getSharingPlatform)
-                    .map(SharingPlatform::valueOf)
-                    .forEach(sharingPlatform -> {
-                        int shareCount = calculateShareCount(campaignShares, sharingPlatform);
-                        setShareCount(campaignShareResponse, sharingPlatform, shareCount);
-                    });
+        campaignShares.stream()
+                .map(CampaignSharing::getSharingPlatform)
+                .map(SharingPlatform::valueOf)
+                .forEach(sharingPlatform -> {
+                    int shareCount = calculateShareCount(campaignShares, sharingPlatform);
+                    setShareCount(campaignShareCountResponse, sharingPlatform, shareCount);
+                });
 
-            return campaignShareResponse;
-        } catch (DataAccessException ex) {
-            log.error("An error occurred in {}.{} while accessing the database. Details: {}",
-                    getClass().getSimpleName(),
-                    Thread.currentThread().getStackTrace()[1].getMethodName(),
-                    ex.getMessage());
-
-            throw new DatabaseAccessException("An error occurred while accessing the database");
-        }
+        return campaignShareCountResponse;
     }
 
-    /**
-     * Calculates the total share count for a specific sharing platform.
-     *
-     * @param campaignShares  the list of campaign shares
-     * @param sharingPlatform the sharing platform to calculate the share count for
-     * @return the total share count for the specified sharing platform
-     */
+    //Calculates the total share count for a specific sharing platform.
     private int calculateShareCount(List<CampaignSharing> campaignShares, SharingPlatform sharingPlatform) {
         return campaignShares.stream()
                 .filter(campaignSharing -> campaignSharing.getSharingPlatform().equals(sharingPlatform.name()))
@@ -66,93 +46,69 @@ public class CampaignSharingServiceImpl implements CampaignSharingService {
                 .sum();
     }
 
-    /**
-     * Sets the share count for a specific sharing platform in the CampaignShareResponse object.
-     *
-     * @param campaignShareResponse the CampaignShareResponse object to set the share count on
-     * @param sharingPlatform       the sharing platform to set the share count for
-     * @param shareCount            the share count to set
-     */
-    private void setShareCount(CampaignShareResponse campaignShareResponse, SharingPlatform sharingPlatform, int shareCount) {
+    // Sets the share count for a specific sharing platform in the CampaignShareCountResponse object.
+    private void setShareCount(CampaignShareCountResponse campaignShareCountResponse, SharingPlatform sharingPlatform, int shareCount) {
         switch (sharingPlatform) {
             case FACEBOOK:
-                campaignShareResponse.setFacebookShares(shareCount);
+                campaignShareCountResponse.setFacebookShares(shareCount);
                 break;
             case TIKTOK:
-                campaignShareResponse.setTiktokShares(shareCount);
+                campaignShareCountResponse.setTiktokShares(shareCount);
                 break;
             case TWITTER:
-                campaignShareResponse.setTwitterShares(shareCount);
+                campaignShareCountResponse.setTwitterShares(shareCount);
                 break;
             case TELEGRAM:
-                campaignShareResponse.setTelegramShares(shareCount);
+                campaignShareCountResponse.setTelegramShares(shareCount);
                 break;
             case WHATSAPP:
-                campaignShareResponse.setWhatsappShares(shareCount);
+                campaignShareCountResponse.setWhatsappShares(shareCount);
                 break;
             case LINKEDIN:
-                campaignShareResponse.setLinkedinShares(shareCount);
+                campaignShareCountResponse.setLinkedinShares(shareCount);
                 break;
             case INSTAGRAM:
-                campaignShareResponse.setInstagramShares(shareCount);
+                campaignShareCountResponse.setInstagramShares(shareCount);
                 break;
             default:
-                campaignShareResponse.setOtherShares(shareCount);
+                campaignShareCountResponse.setOtherShares(shareCount);
                 break;
         }
     }
 
-    /**
-     * Adds a share for a campaign.
-     *
-     * @param campaignSharingDTO The DTO containing the information for the campaign share.
-     * @return The CampaignSharing object representing the updated or newly created share.
-     */
+    // Adds a share for a campaign.
 
     @Override
     @Transactional
-    public CampaignSharing addShareCampaign(CampaignSharingDTO campaignSharingDTO) {
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    public CampaignShareResponse addShareCampaign(CampaignSharingReq campaignSharingReq) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            CampaignSharing existingSharing = findExistingSharing(campaignSharingDTO, username);
-            if (existingSharing != null) {
-                existingSharing.setShareCount(existingSharing.getShareCount() + 1);
-                existingSharing.setSharingTime(LocalDateTime.now().format(dateTimeFormatter));
-                return campaignSharingRepository.save(existingSharing);
-            }
-
-            CampaignSharing newSharing = createNewSharing(campaignSharingDTO, username);
-            return campaignSharingRepository.save(newSharing);
-        } catch (DataAccessException ex) {
-            log.error("An error occurred in {}.{} while accessing the database. Details: {}",
-                    getClass().getSimpleName(),
-                    Thread.currentThread().getStackTrace()[1].getMethodName(),
-                    ex.getMessage());
-
-            throw new DatabaseAccessException("An error occurred while accessing the database");
+        CampaignSharing existingSharing = findExistingSharing(campaignSharingReq, username);
+        if (existingSharing != null) {
+            existingSharing.setShareCount(existingSharing.getShareCount() + 1);
+            existingSharing.setSharingTime(LocalDateTime.now().format(dateTimeFormatter));
+            CampaignSharing campaignSharing = campaignSharingRepository.save(existingSharing);
+            return CampaignShareMapper.toCampaignShareResponse(campaignSharing);
         }
+
+        CampaignSharing newSharing = createNewSharing(campaignSharingReq, username);
+        return CampaignShareMapper.toCampaignShareResponse(newSharing);
     }
 
-    /**
-     * Finds an existing campaign share based on the campaign ID, username, and sharing platform.
-     *
-     * @param campaignSharingDTO The DTO containing the information for the campaign share.
-     * @return The existing CampaignSharing object, or null if not found.
-     */
-    private CampaignSharing findExistingSharing(CampaignSharingDTO campaignSharingDTO, String username) {
-        if (!username.equals("anonymousUser")) {
+    // Finds an existing campaign share based on the campaign ID, username, and sharing platform.
+    private CampaignSharing findExistingSharing(CampaignSharingReq campaignSharingReq, String username) {
+        if (!username.equals("anonymousUser"))
             return campaignSharingRepository.findByCampaignIdAndUsernameAndSharingPlatform(
-                    campaignSharingDTO.getCampaignId(), username, SharingPlatform.lookup(campaignSharingDTO.getSharingPlatform()));
-        }
+                    campaignSharingReq.getCampaignId(), username, SharingPlatform.lookup(campaignSharingReq.getSharingPlatform()));
+
         return null;
     }
 
-    private CampaignSharing createNewSharing(CampaignSharingDTO campaignSharingDTO, String username) {
+    private CampaignSharing createNewSharing(CampaignSharingReq campaignSharingReq, String username) {
         CampaignSharing newSharing = new CampaignSharing();
-        newSharing.setCampaignId(campaignSharingDTO.getCampaignId());
+        newSharing.setCampaign(campaignUtils.utilGetCampaignById(campaignSharingReq.getCampaignId()));
         newSharing.setUsername(username);
-        newSharing.setSharingPlatform(SharingPlatform.lookup(campaignSharingDTO.getSharingPlatform()));
+        newSharing.setSharingPlatform(SharingPlatform.lookup(campaignSharingReq.getSharingPlatform()));
         newSharing.setSharingTime(LocalDateTime.now().format(dateTimeFormatter));
         newSharing.setShareCount(1);
         return newSharing;

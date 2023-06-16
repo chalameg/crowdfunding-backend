@@ -1,5 +1,6 @@
-package com.dxvalley.crowdfunding.exception;
+package com.dxvalley.crowdfunding.exception.handler;
 
+import com.dxvalley.crowdfunding.exception.customException.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ApplicationExceptionHandler {
     private final DateTimeFormatter dateTimeFormatter;
-    
-    public static final String DB_ERROR_MESSAGE = "Sorry, we encountered a database error.\n"
+
+    public static final String DB_ERROR_MESSAGE = "Sorry, we encountered an error."
             + "Please try again later or contact support.";
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

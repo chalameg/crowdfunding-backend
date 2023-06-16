@@ -7,22 +7,22 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
+    Optional<Campaign> findCampaignByIdAndCampaignStage(Long campaignId, CampaignStage campaignStage);
 
-    Optional<Campaign> findCampaignByCampaignId(Long campaignId);
-
-    Optional<Campaign> findCampaignByCampaignIdAndCampaignStage(Long campaignId, CampaignStage campaignStage);
-
-    List<Campaign> findCampaignsByOwner(String owner);
+    List<Campaign> findCampaignsByUserUsername(String username);
 
     List<Campaign> findCampaignsByCampaignStage(CampaignStage campaignStage);
 
     List<Campaign> findCampaignsByCampaignStageIn(List<CampaignStage> campaignStages);
 
-    List<Campaign> findCampaignsByFundingTypeFundingTypeIdAndCampaignStageIn(Long fundingTypeId, List<CampaignStage> campaignStages);
+    List<Campaign> findCampaignsByFundingTypeIdAndCampaignStage(Long fundingTypeId, CampaignStage campaignStages);
 
-    List<Campaign> findCampaignsByCampaignSubCategoryCampaignCategoryCampaignCategoryIdAndCampaignStageIn(Long categoryId, List<CampaignStage> campaignStages);
+    List<Campaign> findCampaignsByCampaignSubCategoryCampaignCategoryIdAndCampaignStageIn(Long categoryId, List<CampaignStage> campaignStages);
 
-    List<Campaign> findCampaignsByCampaignSubCategoryCampaignSubCategoryIdAndCampaignStageIn(Long subCategoryId, List<CampaignStage> campaignStages);
+    List<Campaign> findCampaignsByCampaignSubCategoryIdAndCampaignStageIn(Long subCategoryId, List<CampaignStage> campaignStages);
+
+    List<Campaign> findByBankAccountAccountNumber(String accountNumber);
+
 
     @Query(value = "SELECT * " +
             "FROM campaign WHERE document @@ to_tsquery(:searchValue) AND campaign_stage IN('FUNDING','COMPLETED')" +

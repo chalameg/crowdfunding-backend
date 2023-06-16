@@ -1,57 +1,89 @@
 package com.dxvalley.crowdfunding.campaign.campaign;
 
+import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.image.CampaignImage;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.video.CampaignVideo;
+import com.dxvalley.crowdfunding.campaign.campaignBankAccount.CampaignBankAccount;
 import com.dxvalley.crowdfunding.campaign.campaignFundingType.FundingType;
 import com.dxvalley.crowdfunding.campaign.campaignSubCategory.CampaignSubCategory;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Campaign {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long campaignId;
+    private Long id;
 
     private String title;
     private String shortDescription;
     private String city;
-    private String imageUrl;
-    private String videoLink;
-    private List<String> files;
 
-    private Double goalAmount;
-    private String owner;
+    private double goalAmount;
     private String projectType;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CampaignStage campaignStage;
     @Column(columnDefinition = "TEXT")
     private String description;
     @Column(columnDefinition = "TEXT")
     private String risks;
 
-    private Short campaignDuration;
-    private Double commissionRate;
-    private Double totalAmountCollected;
-    private Integer numberOfBackers;
-    private Integer numberOfLikes;
-    private Boolean isEnabled;
+    private short campaignDuration;
+    private double commissionRate;
+    private double totalAmountCollected;
+    private int numberOfBackers;
+    private int numberOfLikes;
+    private boolean enabled;
 
     private String createdAt;
     private String approvedAt;
     private String editedAt;
-    private String expiredAt;
+    private String editedBy;
+    private String pausedAt;
+    private String pausedBy;
+    private String suspendedAt;
+    private String suspendedBy;
+    private String resumedAt;
+    private String resumedBy;
+    private String completedAt;
 
-    @OneToOne
-    @JoinColumn(name = "fundingType_id")
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<CampaignImage> images = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<CampaignVideo> videos = new ArrayList<>();
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "funding_type_id", nullable = false)
     private FundingType fundingType;
 
-    @OneToOne
-    @JoinColumn(name = "campaignSubCategory_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "campaign_subcategory_id", nullable = false)
     private CampaignSubCategory campaignSubCategory;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
+    @ManyToOne
+    @JoinColumn(name = "bank_account_id")
+    private CampaignBankAccount bankAccount;
+
+    public void addImage(CampaignImage campaignImage) {
+        this.images.add(campaignImage);
+    }
+
+    public void addVideo(CampaignVideo campaignVideo) {
+        this.videos.add(campaignVideo);
+    }
+
 }
