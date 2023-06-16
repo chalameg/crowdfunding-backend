@@ -1,35 +1,37 @@
 package com.dxvalley.crowdfunding.campaign.campaignCollaborator;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Collaborator {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long collaboratorId;
-    private Boolean isAccepted;
-    @OneToOne
-    @JoinColumn(name = "userId")
-    Users users;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "campaign_id")
-    private Campaign campaign;
-    private String invitationSentAt;
-    private String expiredAt;
-    private String respondedAt;
+    private Long id;
 
-    public Collaborator(Long collaboratorId, Users users, String invitationSentAt, String respondedAt) {
-        this.collaboratorId = collaboratorId;
-        this.users = users;
-        this.invitationSentAt = invitationSentAt;
-        this.respondedAt = respondedAt;
-    }
+    @Column(nullable = false)
+    private boolean accepted;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users invitee;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "campaignId", nullable = false)
+    private Campaign campaign;
+
+    @Column(nullable = false)
+    private String invitationSentAt;
+
+    private String invitationExpiredAt;
+
+    private String respondedAt;
 }

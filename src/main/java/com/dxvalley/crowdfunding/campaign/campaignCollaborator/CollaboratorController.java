@@ -1,55 +1,47 @@
 package com.dxvalley.crowdfunding.campaign.campaignCollaborator;
 
-import com.dxvalley.crowdfunding.user.dto.InviteRequest;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaborationRequest;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaboratorResponse;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/collaborators")
+@RequiredArgsConstructor
 public class CollaboratorController {
-  @Autowired
-  private CollaboratorService collaboratorService;
+    private final CollaboratorService collaboratorService;
 
-  @GetMapping
-  public ResponseEntity<?> getCollaborators() {
-      return new ResponseEntity<>(
-              collaboratorService.getCollaborators(),
-              HttpStatus.OK);
-  }
+    @GetMapping("/{id}")
+    public ResponseEntity<CollaboratorResponse> getCollaborator(@PathVariable Long id) {
+        return ResponseEntity.ok(collaboratorService.getCollaboratorById(id));
+    }
 
-  @GetMapping("getCollaboratorById/{collaboratorId}")
-  public ResponseEntity<?> getCollaborator(@PathVariable Long collaboratorId) {
-        return new ResponseEntity<>(
-                collaboratorService.getCollaboratorById(collaboratorId),
-                HttpStatus.OK);
-  }
-
-  @GetMapping("/getCollaboratorByCampaign/{campaignId}")
-  public ResponseEntity<?> getUserCollaborators(@PathVariable Long campaignId) {
-       return new ResponseEntity<>(
-               collaboratorService.getCollaboratorByCampaignId(campaignId),
-               HttpStatus.OK);
-  }
+    @GetMapping("/byCampaign/{campaignId}")
+    public ResponseEntity<List<CollaboratorResponse>> getUserCollaborators(@PathVariable Long campaignId) {
+        return ResponseEntity.ok(collaboratorService.getCollaboratorByCampaignId(campaignId));
+    }
 
 
-  @PostMapping("/invite")
-  public ResponseEntity<?> addCollaborator(@RequestBody @Valid InviteRequest inviteRequest) {
-      return collaboratorService.sendInvitation(inviteRequest);
-  }
+    @PostMapping("/invite")
+    public ResponseEntity<CollaboratorResponse> sendInvitation(@RequestBody @Valid CollaborationRequest collaborationRequest) {
+        CollaboratorResponse collaboratorResponse = collaboratorService.sendInvitation(collaborationRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(collaboratorResponse);
+    }
 
-  @PutMapping("/acceptOrReject/{collaboratorId}/{flag}")
-  public ResponseEntity<?> acceptInvitation(@PathVariable Long collaboratorId,@PathVariable Boolean flag){
-      return collaboratorService.acceptOrRejectInvitation(collaboratorId, flag);
-  }
+    @PutMapping("/respondToInvitation/{id}/{accepted}")
+    public ResponseEntity<ApiResponse> acceptInvitation(@PathVariable Long id, @PathVariable boolean accepted) {
+        return collaboratorService.respondToCollaborationInvitation(id, accepted);
+    }
 
-  @DeleteMapping("/{collaboratorId}")
-  public ResponseEntity<?> deleteCollaborator(@PathVariable Long collaboratorId) {
-    return new ResponseEntity<>(
-            collaboratorService.deleteCollaborator(collaboratorId),
-            HttpStatus.OK);
-  }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> deleteCollaborator(@PathVariable Long id) {
+        return collaboratorService.deleteCollaborator(id);
+    }
 }

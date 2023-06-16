@@ -1,15 +1,19 @@
 package com.dxvalley.crowdfunding.campaign.campaignCollaborator;
 
-import com.dxvalley.crowdfunding.campaign.campaign.CampaignRepository;
-import com.dxvalley.crowdfunding.exception.ResourceAlreadyExistsException;
-import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignUtils.CampaignUtils;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaborationRequest;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaboratorMapper;
+import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaboratorResponse;
+import com.dxvalley.crowdfunding.exception.customException.BadRequestException;
+import com.dxvalley.crowdfunding.exception.customException.ResourceAlreadyExistsException;
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.messageManager.email.EmailBuilder;
 import com.dxvalley.crowdfunding.messageManager.email.EmailServiceImpl;
-import com.dxvalley.crowdfunding.user.UserService;
-import com.dxvalley.crowdfunding.user.dto.InviteRequest;
+import com.dxvalley.crowdfunding.userManager.user.UserUtils;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,108 +22,105 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
-//TODO: update current impl
 @Service
 @RequiredArgsConstructor
 public class CollaboratorServiceImpl implements CollaboratorService {
     private final CollaboratorRepository collaboratorRepository;
-    private final UserService userService;
-    private final EmailBuilder emailBuilder;
+    private final UserUtils userUtils;
     private final EmailServiceImpl emailService;
-    private final CampaignRepository campaignRepository;
     private final DateTimeFormatter dateTimeFormatter;
+    private final CampaignUtils campaignUtils;
+    private final String invitationLink = "http://10.1.177.121:3000/invitationDetail/";
+
     @Override
-    public List<Collaborator> getCollaborators() {
-        var result = collaboratorRepository.findAll();
-        if(result.size()==0){
-            throw new ResourceNotFoundException("Currently, There is no collaborators");
-        }
-        return result;
+    public List<CollaboratorResponse> getCollaboratorByCampaignId(Long campaignId) {
+        List<Collaborator> collaborators = collaboratorRepository
+                .findCollaboratorsByCampaignIdAndAccepted(campaignId, true);
+
+        return collaborators.stream().map(CollaboratorMapper::toCollResponse).toList();
     }
 
     @Override
-    public ResponseEntity sendInvitation(InviteRequest inviteRequest) {
-        var invitee = userService.utilGetUserByUsername(inviteRequest.getUsername());
-        var campaign = campaignRepository.findCampaignByCampaignId(inviteRequest.getCampaignId()).get();
-        var inviteSender = userService.getUserByUsername(campaign.getOwner());
+    public CollaboratorResponse getCollaboratorById(Long id) {
+        return CollaboratorMapper.toCollResponse(utilGetCollaboratorById(id));
+    }
+
+
+    @Override
+    public CollaboratorResponse sendInvitation(CollaborationRequest collaborationRequest) {
+        Long campaignId = collaborationRequest.getCampaignId();
+        String inviteeEmail = collaborationRequest.getInviteeEmail();
+        checkIfAlreadyCollaborator(campaignId, inviteeEmail);
+
+        Users invitee = userUtils.utilGetUserByUsername(inviteeEmail);
+        userUtils.verifyUser(invitee);
+        userUtils.checkAccountActive(invitee);
+
+        Campaign campaign = campaignUtils.utilGetCampaignById(campaignId);
+        String inviter = campaign.getUser().getFullName();
 
         LocalDateTime invitationSentAt = LocalDateTime.now();
         LocalDateTime expiredAt = invitationSentAt.plusDays(1);
 
-        Collaborator collaborator = new Collaborator();
-        collaborator.setCampaign(campaign);
-        collaborator.setUsers(invitee);
-        collaborator.setInvitationSentAt(invitationSentAt.format(dateTimeFormatter));
-        collaborator.setExpiredAt(expiredAt.format(dateTimeFormatter));
-        collaborator.setIsAccepted(false);
+        Collaborator collaborator = Collaborator.builder()
+                .invitee(invitee)
+                .campaign(campaign)
+                .invitationSentAt(invitationSentAt.format(dateTimeFormatter))
+                .invitationExpiredAt(expiredAt.format(dateTimeFormatter))
+                .build();
 
-        var result = collaboratorRepository.save(collaborator);
+        Collaborator savedCollaborator = collaboratorRepository.save(collaborator);
 
-        String link = "http://10.1.177.121:3000/invitationDetail/" + result.getCollaboratorId();
+        String invitationDetailLink = invitationLink + savedCollaborator.getId();
 
         emailService.send(
-                inviteRequest.getUsername(),
-                emailBuilder.emailBuilderForCollaborationInvitation(
+                inviteeEmail,
+                EmailBuilder.buildCollaborationInvitationEmail(
                         invitee.getFullName(),
-                        inviteSender.getFullName(),
+                        inviter,
                         campaign.getTitle(),
-                        link),
+                        invitationDetailLink),
                 "Asking for Collaboration");
-        return ApiResponse.success("The invitation sent successfully!");
+
+        return CollaboratorMapper.toCollResponse(savedCollaborator);
+    }
+
+    private void checkIfAlreadyCollaborator(Long campaignId, String username) {
+        boolean isCollaborator = collaboratorRepository.existsByCampaignIdAndInviteeUsername(campaignId, username);
+        if (isCollaborator)
+            throw new ResourceAlreadyExistsException("An invitation has already been sent to this user for this campaign.");
     }
 
     @Override
-    public List<Collaborator> getCollaboratorByCampaignId(Long campaignId) {
-        campaignRepository.findCampaignByCampaignId(campaignId).orElseThrow(
-                () -> new ResourceNotFoundException("There is no campaign with this ID.")
-        );
-        var collaborator = collaboratorRepository.findAllCollaboratorByCampaignId(campaignId);
-        if (collaborator.isEmpty()) {
-            throw new ResourceNotFoundException("There is no collaborators for this campaign");
-        }
-        return collaborator;
+    public ResponseEntity<ApiResponse> respondToCollaborationInvitation(Long collaboratorId, boolean accepted) {
+        Collaborator collaborator = utilGetCollaboratorById(collaboratorId);
+
+        LocalDateTime expiredAt = LocalDateTime.parse(collaborator.getInvitationExpiredAt(), dateTimeFormatter);
+
+        if (expiredAt.isBefore(LocalDateTime.now()))
+            throw new BadRequestException("This invitation has already expired.");
+
+        collaborator.setRespondedAt(LocalDateTime.now().format(dateTimeFormatter));
+        collaborator.setAccepted(accepted);
+        collaboratorRepository.save(collaborator);
+
+        if (accepted)
+            return ApiResponse.success("Hooray! You have successfully become a collaborator.");
+        else
+            return ApiResponse.success("Collaboration was successfully rejected.");
+
     }
 
     @Override
-    public Collaborator getCollaboratorById(Long CollaboratorId) {
-        return collaboratorRepository.findCollaboratorByCollaboratorId(CollaboratorId).orElseThrow(
+    public ResponseEntity<ApiResponse> deleteCollaborator(Long CollaboratorId) {
+        utilGetCollaboratorById(CollaboratorId);
+        collaboratorRepository.deleteById(CollaboratorId);
+        return ApiResponse.success("Collaborator successfully deleted");
+    }
+
+    public Collaborator utilGetCollaboratorById(Long CollaboratorId) {
+        return collaboratorRepository.findById(CollaboratorId).orElseThrow(
                 () -> new ResourceNotFoundException("There is no Collaborator with this Id")
         );
     }
-
-    @Override
-    public String deleteCollaborator(Long CollaboratorId) {
-        var collaborator = getCollaboratorById(CollaboratorId);
-        collaboratorRepository.delete(collaborator);
-        return "Collaborator successfully deleted";
-    }
-
-    @Override
-    public ResponseEntity acceptOrRejectInvitation(Long collaboratorId, Boolean flag) {
-
-        Collaborator collaborator = getCollaboratorById(collaboratorId);
-        LocalDateTime expiredAt = LocalDateTime.parse(collaborator.getExpiredAt(), dateTimeFormatter);
-
-        if (collaborator.getRespondedAt() != null) {
-            throw new ResourceAlreadyExistsException("You have already responded to this invitation.");
-        }
-
-        LocalDateTime respondedAt = LocalDateTime.now();
-        collaborator.setRespondedAt(respondedAt.format(dateTimeFormatter));
-
-        if (expiredAt.isBefore(LocalDateTime.now())){
-            collaboratorRepository.save(collaborator);
-            return ApiResponse.error(HttpStatus.BAD_REQUEST, "This invitation has already expired.");
-        }
-
-        if(flag){
-            collaborator.setIsAccepted(true);
-            collaboratorRepository.save(collaborator);
-            return ApiResponse.success("Hooray! You have successfully become a collaborator.");
-        }
-
-        collaboratorRepository.save(collaborator);
-        return ApiResponse.success("Collaboration was successfully rejected.");
-    }
-
 }
