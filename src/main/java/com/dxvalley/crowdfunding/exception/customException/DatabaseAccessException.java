@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.exception;
+package com.dxvalley.crowdfunding.exception.customException;
 
 public class DatabaseAccessException extends RuntimeException {
 
