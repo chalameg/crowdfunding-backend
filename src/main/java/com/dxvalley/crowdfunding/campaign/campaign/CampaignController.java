@@ -1,8 +1,9 @@
 package com.dxvalley.crowdfunding.campaign.campaign;
 
-import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignAddDto;
+import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignAddReq;
 import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignDTO;
-import com.dxvalley.crowdfunding.campaign.campaignLike.CampaignLikeDTO;
+import com.dxvalley.crowdfunding.campaign.campaign.dto.CampaignUpdateReq;
+import com.dxvalley.crowdfunding.campaign.campaignLike.CampaignLikeReq;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,87 +15,83 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/campaigns")
 @RequiredArgsConstructor
+@RequestMapping("/api/campaigns")
 public class CampaignController {
-    private final CampaignService campaignService;
+    private final CampaignOperationService campaignOperationService;
+    private final CampaignRetrievalService campaignRetrievalService;
 
     @GetMapping("/getCampaigns")
-    ResponseEntity<?> getCampaigns() {
-        return ApiResponse.success(campaignService.getCampaigns());
+    ResponseEntity<List<CampaignDTO>> getCampaigns() {
+        return ResponseEntity.ok(campaignRetrievalService.getCampaigns());
     }
 
     @GetMapping("getCampaignById/{campaignId}")
-    ResponseEntity<?> getCampaign(@PathVariable Long campaignId) {
-        return ApiResponse.success(campaignService.getCampaignById(campaignId));
+    ResponseEntity<CampaignDTO> getCampaign(@PathVariable Long campaignId) {
+        return ResponseEntity.ok(campaignRetrievalService.getCampaignById(campaignId));
     }
 
     @GetMapping("/getCampaignByOwner/{owner}")
-    ResponseEntity<?> getCampaignByOwner(@PathVariable String owner) {
-        return new ResponseEntity<>(campaignService.getCampaignsByOwner(owner), HttpStatus.OK);
+    ResponseEntity<List<CampaignDTO>> getCampaignByOwner(@PathVariable String owner) {
+        return new ResponseEntity<>(campaignRetrievalService.getCampaignsByOwner(owner), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsByCategory/{categoryId}")
-    ResponseEntity<?> getCampaignsByCategory(@PathVariable Long categoryId) {
-        return ApiResponse.success(campaignService.getCampaignByCategory(categoryId));
+    ResponseEntity<List<CampaignDTO>> getCampaignsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(campaignRetrievalService.getCampaignByCategory(categoryId));
     }
 
     @GetMapping("/getCampaignsBySubCategory/{subCategoryId}")
-    ResponseEntity<?> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
-        return ApiResponse.success(campaignService.getCampaignBySubCategory(subCategoryId));
+    ResponseEntity<List<CampaignDTO>> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
+        return ResponseEntity.ok(campaignRetrievalService.getCampaignBySubCategory(subCategoryId));
     }
 
     @GetMapping("/getCampaignsByStage/{campaignStage}")
-    ResponseEntity<?> getCampaignsByStage(@PathVariable String campaignStage) {
-        return new ResponseEntity<>(campaignService.getCampaignsByStage(campaignStage), HttpStatus.OK);
+    ResponseEntity<List<CampaignDTO>> getCampaignsByStage(@PathVariable String campaignStage) {
+        return new ResponseEntity<>(campaignRetrievalService.getCampaignsByStage(campaignStage), HttpStatus.OK);
     }
 
     @GetMapping("/getCampaignsByFundingType/{fundingTypeId}")
-    ResponseEntity<?> getCampaignsByFundingType(@PathVariable Long fundingTypeId) {
-        return ApiResponse.success(campaignService.getCampaignsByFundingType(fundingTypeId));
+    ResponseEntity<List<CampaignDTO>> getCampaignsByFundingType(@PathVariable Long fundingTypeId) {
+        return ResponseEntity.ok(campaignRetrievalService.getCampaignsByFundingType(fundingTypeId));
     }
 
     @GetMapping("/searchCampaigns")
-    ResponseEntity<?> searchCampaigns(@RequestParam String searchParam) {
-        return ApiResponse.success(campaignService.searchCampaigns(searchParam));
+    ResponseEntity<List<CampaignDTO>> searchCampaigns(@RequestParam String searchParam) {
+        return ResponseEntity.ok(campaignRetrievalService.searchCampaigns(searchParam));
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addCampaign(@Valid @RequestBody CampaignAddDto campaignAddRequestDto) {
-        return ApiResponse.created(campaignService.addCampaign(campaignAddRequestDto));
+    public ResponseEntity<Campaign> addCampaign(@Valid @RequestBody CampaignAddReq campaignAddRequestDto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(campaignOperationService.addCampaign(campaignAddRequestDto));
     }
 
     @PostMapping("/like")
-    public ResponseEntity<?> likeCampaign(@RequestBody @Valid CampaignLikeDTO campaignLikeDTO) {
-        return ApiResponse.success(campaignService.likeCampaign(campaignLikeDTO));
+    public ResponseEntity<ApiResponse> likeCampaign(@RequestBody @Valid CampaignLikeReq campaignLikeReq) {
+        return campaignOperationService.likeCampaign(campaignLikeReq);
     }
 
     @PutMapping("edit/{campaignId}")
-    ResponseEntity<?> editCampaign(@PathVariable Long campaignId, @RequestBody CampaignDTO campaignDTO) {
-        return ApiResponse.success(campaignService.editCampaign(campaignId, campaignDTO));
+    ResponseEntity<CampaignDTO> editCampaign(@PathVariable Long campaignId, @RequestBody CampaignUpdateReq campaignUpdateReq) {
+        return ResponseEntity.ok(campaignOperationService.editCampaign(campaignId, campaignUpdateReq));
     }
 
     @PutMapping("uploadMedias/{campaignId}")
-    ResponseEntity<?> uploadMedias(
+    ResponseEntity<CampaignDTO> uploadMedias(
             @PathVariable Long campaignId,
             @RequestParam(required = false) MultipartFile campaignImage,
             @RequestParam(required = false) String campaignVideo) {
-        return ApiResponse.success(campaignService.uploadMedias(campaignId, campaignImage, campaignVideo));
-    }
-
-    @PutMapping("uploadFiles/{campaignId}")
-    ResponseEntity<?> uploadFiles(@PathVariable Long campaignId, @RequestParam List<MultipartFile> files) {
-        return ApiResponse.success(campaignService.uploadFiles(campaignId, files));
+        return ResponseEntity.ok(campaignOperationService.uploadCampaignMedias(campaignId, campaignImage, campaignVideo));
     }
 
     @PutMapping("submit-withdraw/{campaignId}")
     ResponseEntity<?> submitWithdrawCampaign(@PathVariable Long campaignId, @RequestParam String action) {
         if (action.equalsIgnoreCase("SUBMIT")) {
-            CampaignDTO campaignDTO = campaignService.submitCampaign(campaignId);
-            return ApiResponse.success(campaignDTO);
+            CampaignDTO campaignDTO = campaignOperationService.submitCampaign(campaignId);
+            return ResponseEntity.ok(campaignDTO);
         } else if (action.equalsIgnoreCase("WITHDRAW")) {
-            CampaignDTO campaignDTO = campaignService.withdrawCampaign(campaignId);
-            return ApiResponse.success(campaignDTO);
+            CampaignDTO campaignDTO = campaignOperationService.withdrawCampaign(campaignId);
+            return ResponseEntity.ok(campaignDTO);
         } else
             return ApiResponse.error(HttpStatus.BAD_REQUEST, "Invalid action. Action should be either 'SUBMIT' or 'WITHDRAW'.");
     }
@@ -102,19 +99,18 @@ public class CampaignController {
     @PutMapping("pause-resume/{campaignId}")
     ResponseEntity<?> pauseResumeCampaign(@PathVariable Long campaignId, @RequestParam String action) {
         if (action.equalsIgnoreCase("PAUSE")) {
-            CampaignDTO campaignDTO = campaignService.pauseCampaign(campaignId);
-            return ApiResponse.success(campaignDTO);
+            CampaignDTO campaignDTO = campaignOperationService.pauseCampaign(campaignId);
+            return ResponseEntity.ok(campaignDTO);
         } else if (action.equalsIgnoreCase("RESUME")) {
-            CampaignDTO campaignDTO = campaignService.resumeCampaign(campaignId);
-            return ApiResponse.success(campaignDTO);
+            CampaignDTO campaignDTO = campaignOperationService.resumeCampaign(campaignId);
+            return ResponseEntity.ok(campaignDTO);
         } else
             return ApiResponse.error(HttpStatus.BAD_REQUEST, "Invalid action. Action should be either 'PAUSE' or 'RESUME'.");
     }
 
     @DeleteMapping("delete/{campaignId}")
-    ResponseEntity<?> deleteCampaign(@PathVariable Long campaignId) {
-        campaignService.deleteCampaign(campaignId);
-        return ApiResponse.success("Campaign successfully deleted!");
+    ResponseEntity<ApiResponse> deleteCampaign(@PathVariable Long campaignId) {
+        return campaignOperationService.deleteCampaign(campaignId);
     }
 
 }
