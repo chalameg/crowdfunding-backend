@@ -4,8 +4,9 @@ import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Function;
 
@@ -16,16 +17,15 @@ public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
 
     @Override
     public CampaignDTO apply(Campaign campaign) {
-        var campaignDTO = new CampaignDTO();
+        CampaignDTO campaignDTO = new CampaignDTO();
 
-        campaignDTO.setCampaignId(campaign.getCampaignId());
+        campaignDTO.setCampaignId(campaign.getId());
         campaignDTO.setTitle(campaign.getTitle());
         campaignDTO.setShortDescription(campaign.getShortDescription());
 
         campaignDTO.setCity(campaign.getCity());
-        campaignDTO.setImageUrl(campaign.getImageUrl());
-        campaignDTO.setVideoUrl(campaign.getVideoLink());
-        campaignDTO.setFiles(campaign.getFiles());
+        campaignDTO.setImages(campaign.getImages());
+        campaignDTO.setVideos(campaign.getVideos());
         campaignDTO.setGoalAmount(campaign.getGoalAmount());
 
         campaignDTO.setTotalAmountCollected(campaign.getTotalAmountCollected());
@@ -38,45 +38,52 @@ public class CampaignDTOMapper implements Function<Campaign, CampaignDTO> {
 
         campaignDTO.setCreatedAt(campaign.getCreatedAt());
         campaignDTO.setEnabledAt(campaign.getApprovedAt());
-        campaignDTO.setCompletedAt(campaign.getExpiredAt());
+        campaignDTO.setCompletedAt(campaign.getCompletedAt());
 
-        if (campaign.getExpiredAt() != null)
-            campaignDTO.setCampaignDurationLeft(campaignDurationLeft(campaign.getExpiredAt()));
+        if (campaign.getCompletedAt() != null)
+            campaignDTO.setCampaignDurationLeft(campaignDurationLeft(campaign.getCompletedAt()));
 
         campaignDTO.setPercentageCollected(percentageCollected(
                 campaign.getTotalAmountCollected(),
-                campaign.getGoalAmount(),
-                campaign.getTitle()));
+                campaign.getGoalAmount()));
 
         return campaignDTO;
     }
-
 
     public CampaignDTO applyById(Campaign campaign) {
         CampaignDTO campaignDTO = apply(campaign);
 
         campaignDTO.setDescription(campaign.getDescription());
         campaignDTO.setRisks(campaign.getRisks());
-        campaignDTO.setVideoUrl(campaign.getVideoLink());
-        campaignDTO.setOwner(campaign.getOwner());
+        campaignDTO.setVideos(campaign.getVideos());
+        campaignDTO.setOwner(campaign.getUser().getUsername());
         campaignDTO.setCampaignDuration(campaign.getCampaignDuration());
-        campaignDTO.setFundingType(campaign.getFundingType());
         campaignDTO.setFundingType(campaign.getFundingType());
         campaignDTO.setCampaignSubCategory(campaign.getCampaignSubCategory());
 
         return campaignDTO;
     }
 
-    private short campaignDurationLeft(String expiredAt) {
-        Duration duration = Duration.between(LocalDateTime.now(), LocalDateTime.parse(expiredAt, dateTimeFormatter));
-        if (duration.toDays() < 0L)
-            return -1;
-        return (short) duration.toDays();
+    private String campaignDurationLeft(String expiredAt) {
+        LocalDateTime expirationDateTime = LocalDateTime.parse(expiredAt, dateTimeFormatter);
+
+        if (expirationDateTime.isBefore(LocalDateTime.now()))
+            return "COMPLETED";
+        else {
+            Period period = Period.between(LocalDate.now(), expirationDateTime.toLocalDate());
+            if (period.getDays() > 1) {
+                return period.getDays() + " DAYS LEFT";
+            } else {
+                return "ON THE LAST DAY";
+            }
+        }
     }
 
-    private double percentageCollected(Double totalAmountCollected, Double goalAmount, String name) {
+    private double percentageCollected(double totalAmountCollected, double goalAmount) {
         if (goalAmount == 0)
-            return 0;
-        return (totalAmountCollected / goalAmount) * 100;
+            return 0.0;
+
+        double percentage = (totalAmountCollected / goalAmount) * 100;
+        return Math.round(percentage * 100.0) / 100.0; // Round to two decimal places
     }
 }
