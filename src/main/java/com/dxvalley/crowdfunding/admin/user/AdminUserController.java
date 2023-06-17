@@ -1,10 +1,12 @@
 package com.dxvalley.crowdfunding.admin.user;
 
+import com.dxvalley.crowdfunding.userManager.userDTO.UserResponse;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/users")
@@ -13,28 +15,28 @@ public class AdminUserController {
     private final AdminUserService adminUserService;
 
     @GetMapping
-    public ResponseEntity<?> getUsers() {
-        return new ResponseEntity<>(adminUserService.getUsers(), HttpStatus.OK);
+    public ResponseEntity<List<UserResponse>> getUsers() {
+        return ResponseEntity.ok(adminUserService.getUsers());
     }
 
     @GetMapping("/userId/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
-        return new ResponseEntity<>(adminUserService.getUserById(userId), HttpStatus.OK);
+    public ResponseEntity<UserResponse> getByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(adminUserService.getUserById(userId));
     }
 
     @GetMapping("/username/{username}")
-    ResponseEntity<?> getByUsername(@PathVariable String username) {
-        return new ResponseEntity<>(adminUserService.getUserByUsername(username), HttpStatus.OK);
+    ResponseEntity<UserResponse> getByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(adminUserService.getUserByUsername(username));
     }
 
     @PutMapping("/activate-ban/{userId}")
-    public ResponseEntity<?> activate_ban(@PathVariable Long userId) {
-        return new ResponseEntity<>(adminUserService.activate_ban(userId), HttpStatus.OK);
+    public ResponseEntity<UserResponse> activate_ban(@PathVariable Long userId) {
+        return ResponseEntity.ok(adminUserService.activate_ban(userId));
     }
+
     @DeleteMapping("/delete/{username}")
-    ResponseEntity<?> deleteUser(@PathVariable String username) {
-        adminUserService.delete(username);
-        return ApiResponse.success("User Deleted Successfully");
+    ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
+        return adminUserService.delete(username);
     }
 
 }
