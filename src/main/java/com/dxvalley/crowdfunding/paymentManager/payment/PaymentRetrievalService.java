@@ -1,16 +1,14 @@
 package com.dxvalley.crowdfunding.payment;
 
-import com.dxvalley.crowdfunding.payment.ebirr.EbirrPaymentResponse;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentResponse;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
+import com.dxvalley.crowdfunding.payment.paymentDTO.*;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface PaymentService {
+    ResponseEntity processPaymentWithEbirr(EbirrPaymentReqDTO ebirrPaymentReqDTO);
+
     ResponseEntity<?> addPayment(PaymentRequestDTO1 paymentAddDTO);
 
     ResponseEntity<?> updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO);
@@ -19,7 +17,7 @@ public interface PaymentService {
 
     List<Payment> getPaymentByUserId(Long userId);
 
-    ResponseEntity initializeChapaPayment(PaymentRequestDTO requestDTO);
+    ResponseEntity initializeChapaPayment(PaymentRequestDTO paymentRequest);
 
     ResponseEntity verifyChapaPayment(String orderID);
 
@@ -29,7 +27,4 @@ public interface PaymentService {
 
     CompletableFuture<Void> chapaPaymentStatusChecker();
 
-    CompletableFuture<EbirrPaymentResponse> payWithEbirr(PaymentRequestDTO paymentRequest);
-
-    void updatePaymentForEbirr(CompletableFuture<EbirrPaymentResponse> paymentFuture);
 }

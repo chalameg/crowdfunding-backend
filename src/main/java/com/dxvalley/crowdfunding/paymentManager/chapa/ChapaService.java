@@ -1,11 +1,11 @@
 package com.dxvalley.crowdfunding.payment.chapa;
 
-import com.dxvalley.crowdfunding.exception.PaymentCannotProcessedException;
-import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.exception.customException.PaymentCannotProcessedException;
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +30,7 @@ public class ChapaService {
 
     /**
      * Initializes a payment with Chapa.
+     *
      * @param chapaRequest The Chapa request DTO.
      * @return The Chapa initialize response.
      * @throws RuntimeException if there is an error while initiating the payment request.
@@ -67,6 +68,7 @@ public class ChapaService {
 
     /**
      * Verifies payment by sending a GET request to Chapa's API.
+     *
      * @param orderID The unique identifier for the payment transaction.
      * @return A ChapaVerifyResponse object containing the payment verification details.
      * @throws ResourceNotFoundException If the payment cannot be verified.

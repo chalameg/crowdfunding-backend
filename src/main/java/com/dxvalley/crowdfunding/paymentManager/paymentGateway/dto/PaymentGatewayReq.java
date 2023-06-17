@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment.paymentGateway.dto;
+package com.dxvalley.crowdfunding.paymentManager.paymentGateway.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;

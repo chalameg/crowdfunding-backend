@@ -1,20 +1,22 @@
 package com.dxvalley.crowdfunding.payment;
 
 import com.dxvalley.crowdfunding.campaign.campaign.Campaign;
-import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment {
     @Id
     @GeneratedValue
-    private Long paymentId;
+    private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "campaign_id")
     private Campaign campaign;
@@ -25,13 +27,14 @@ public class Payment {
     private String orderId;
     private double amount;
     private String currency;
-    private String paymentStatus;
     private String transactionId;
     private String payerFullName;
     private String paymentContactInfo;
     private String transactionOrderedDate;
     private String transactionCompletedDate;
     private Boolean isAnonymous;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
     @Enumerated(EnumType.STRING)
     private PaymentProcessor paymentProcessor;
 
@@ -40,8 +43,8 @@ public class Payment {
         this.transactionOrderedDate = transactionOrderedDate;
     }
 
-    public Payment(Long paymentId, double amount, String payerFullName, String transactionCompletedDate, Boolean isAnonymous, String currency, String paymentStatus) {
-        this.paymentId = paymentId;
+    public Payment(Long id, double amount, String payerFullName, String transactionCompletedDate, Boolean isAnonymous, String currency, PaymentStatus paymentStatus) {
+        this.id = id;
         this.amount = amount;
         this.currency = currency;
         this.payerFullName = payerFullName;

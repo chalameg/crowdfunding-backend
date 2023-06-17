@@ -10,7 +10,7 @@ public class PaymentMapper {
         paymentResponse.setPaymentStatus(payment.getPaymentStatus());
         paymentResponse.setPayerFullName(payment.getIsAnonymous() ? "Anonymous" : payment.getPayerFullName());
         paymentResponse.setTransactionCompletedDate(payment.getTransactionCompletedDate());
-        paymentResponse.setPaymentProcessor(payment.getPaymentProcessor().name());
+        paymentResponse.setPaymentProcessor(payment.getPaymentProcessor());
 
         return paymentResponse;
     }

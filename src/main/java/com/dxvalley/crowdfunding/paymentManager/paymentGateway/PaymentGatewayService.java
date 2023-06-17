@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.payment.paymentGateway;
 
-import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
 import com.dxvalley.crowdfunding.payment.paymentGateway.dto.PaymentGatewayDTO;
 import com.dxvalley.crowdfunding.payment.paymentGateway.dto.PaymentGatewayMapper;
 import lombok.RequiredArgsConstructor;
