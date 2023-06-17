@@ -1,13 +1,11 @@
 package com.dxvalley.crowdfunding.utils;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 public class ApiResponse<T> {
     private HttpStatus httpStatus;
@@ -21,12 +19,24 @@ public class ApiResponse<T> {
             return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    public static ResponseEntity<ApiResponse> success(String message) {
+        ApiResponse apiResponse = new ApiResponse(HttpStatus.OK, message);
+
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+
     public static <T> ResponseEntity<?> created(T response) {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     public static <T> ResponseEntity<?> error(HttpStatus status, T message) {
         return ResponseEntity.status(status).body(new ApiResponse<>(status, message.toString()));
+    }
+
+    public static ResponseEntity<ApiResponse> error(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(new ApiResponse<>(status, message));
     }
 }
 
