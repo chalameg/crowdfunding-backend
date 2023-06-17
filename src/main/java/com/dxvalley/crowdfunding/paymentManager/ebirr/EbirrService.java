@@ -1,7 +1,7 @@
-package com.dxvalley.crowdfunding.payment.ebirr;
+package com.dxvalley.crowdfunding.paymentManager.ebirr;
 
 import com.dxvalley.crowdfunding.exception.customException.PaymentCannotProcessedException;
-import com.dxvalley.crowdfunding.payment.Payment;
+import com.dxvalley.crowdfunding.paymentManager.payment.Payment;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -37,7 +37,6 @@ public class EbirrService {
                 .amount(String.valueOf(payment.getAmount()))
                 .build();
     }
-
 
     public CompletableFuture<EbirrPaymentResponse> sendPaymentRequest(Payment payment) {
         RequestData ebirrPaymentRequest = createRequestData(payment);
