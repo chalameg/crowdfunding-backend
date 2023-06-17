@@ -1,72 +1,57 @@
 package com.dxvalley.crowdfunding.admin.user;
 
-import com.dxvalley.crowdfunding.exception.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.user.UserRepository;
-import com.dxvalley.crowdfunding.user.UserService;
-import com.dxvalley.crowdfunding.user.UserStatus;
-import com.dxvalley.crowdfunding.user.Users;
-import com.dxvalley.crowdfunding.user.dto.UserDTO;
-import com.dxvalley.crowdfunding.user.dto.UserDTOMapper;
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.userManager.user.UserRepository;
+import com.dxvalley.crowdfunding.userManager.user.UserStatus;
+import com.dxvalley.crowdfunding.userManager.user.UserUtils;
+import com.dxvalley.crowdfunding.userManager.user.Users;
+import com.dxvalley.crowdfunding.userManager.userDTO.UserMapper;
+import com.dxvalley.crowdfunding.userManager.userDTO.UserResponse;
+import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
-public class AdminUserService{
+public class AdminUserService {
     private final UserRepository userRepository;
-    private final UserDTOMapper userDTOMapper;
-    private final UserService userService;
+    private final UserUtils userUtils;
 
+    public List<UserResponse> getUsers() {
+        List<Users> users = userRepository.findAll();
+        if (users.isEmpty())
+            throw new ResourceNotFoundException("Currently, There is no User");
 
-    public List<UserDTO> getUsers() {
-        try {
-            List<Users> users = userRepository.findAll();
-            if (users.isEmpty())
-                throw new ResourceNotFoundException("Currently, There is no User");
-            List<UserDTO> mappedUsers = users.stream().map(userDTOMapper).collect(Collectors.toList());
-
-            return mappedUsers;
-        } catch (DataAccessException ex) {
-            log.error("Error retrieving Users: {}", ex.getMessage());
-            throw new RuntimeException("Error retrieving Users", ex);
-        }
+        return users.stream().map(UserMapper::toUserResponse).toList();
     }
 
-    public UserDTO getUserById(Long userId) {
-        return new UserDTOMapper().apply(userService.utilGetUserByUserId(userId));
+    public UserResponse getUserById(Long userId) {
+        return UserMapper.toUserResponse(userUtils.utilGetUserByUserId(userId));
     }
 
-    public UserDTO getUserByUsername(String username) {
-        return new UserDTOMapper().apply(userService.utilGetUserByUsername(username));
+    public UserResponse getUserByUsername(String username) {
+        return UserMapper.toUserResponse(userUtils.utilGetUserByUsername(username));
     }
 
-    public UserDTO activate_ban(Long userId) {
-        Users user = userService.utilGetUserByUserId(userId);
+    public UserResponse activate_ban(Long userId) {
+        Users user = userUtils.utilGetUserByUserId(userId);
 
         if (user.getUserStatus().equals(UserStatus.ACTIVE))
             user.setUserStatus(UserStatus.BANNED);
         else
             user.setUserStatus(UserStatus.ACTIVE);
 
-        return new UserDTOMapper().apply(userRepository.save(user));
+        return UserMapper.toUserResponse(userRepository.save(user));
     }
 
 
-    public void delete(String username) {
-        try {
-            Users user = userService.utilGetUserByUsername(username);
-            userRepository.delete(user);
-
-        } catch (DataAccessException ex) {
-            log.error("Error Deleting User : {}", ex.getMessage());
-            throw new RuntimeException("Error Deleting User", ex);
-        }
+    public ResponseEntity<ApiResponse> delete(String username) {
+        Users user = userUtils.utilGetUserByUsername(username);
+        userRepository.delete(user);
+        return ApiResponse.success("User Deleted Successfully");
     }
 
 }
