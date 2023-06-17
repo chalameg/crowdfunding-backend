@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment.paymentGateway;
+package com.dxvalley.crowdfunding.paymentManager.paymentGateway;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment.paymentGateway;
+package com.dxvalley.crowdfunding.paymentManager.paymentGateway;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
