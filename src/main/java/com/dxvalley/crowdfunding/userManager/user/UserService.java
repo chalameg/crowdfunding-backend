@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-@Service
 public interface UserService {
     UserResponse getUserById(Long userId);
 
@@ -25,7 +24,6 @@ public interface UserService {
     ResponseEntity<ApiResponse> resetPassword(ResetPassword resetPassword);
 
     ResponseEntity<ApiResponse> delete(String username);
-
 }
 
 
