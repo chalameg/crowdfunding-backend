@@ -1,67 +1,68 @@
-package com.dxvalley.crowdfunding.payment;
+package com.dxvalley.crowdfunding.paymentManager.payment;
 
-import com.dxvalley.crowdfunding.payment.paymentDTO.EbirrPaymentReqDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO1;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentUpdateDTO;
-import com.dxvalley.crowdfunding.payment.paymentGateway.PaymentGatewayService;
+import com.dxvalley.crowdfunding.paymentManager.chapa.ChapaPaymentResponse;
+import com.dxvalley.crowdfunding.paymentManager.chapa.VerifyResponse;
+import com.dxvalley.crowdfunding.paymentManager.paymentDTO.*;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/payment")
-@RequiredArgsConstructor
+@RequestMapping({"/api/payment"})
 public class PaymentController {
-    private final PaymentService paymentService;
-    private final PaymentGatewayService paymentGatewayService;
-    private final PaymentUtils paymentUtils;
+    private final PaymentRetrievalService paymentRetrievalService;
+    private final PaymentOperationService paymentOperationService;
 
-    @GetMapping("/getPaymentByCampaign/{campaignId}")
-    public ResponseEntity<?> getPaymentByCampaign(@PathVariable Long campaignId) {
-        return ApiResponse.success(paymentService.getPaymentByCampaignId(campaignId));
+    public PaymentController(final PaymentRetrievalService paymentRetrievalService, final PaymentOperationService paymentOperationService) {
+        this.paymentRetrievalService = paymentRetrievalService;
+        this.paymentOperationService = paymentOperationService;
     }
 
-    @GetMapping("/getPaymentByUser/{userId}")
-    public ResponseEntity<?> getPaymentByUser(@PathVariable Long userId) {
-        return ApiResponse.success(paymentService.getPaymentByUserId(userId));
+    @GetMapping({"/getPaymentByCampaign/{campaignId}"})
+    public ResponseEntity<List<PaymentResponse>> getPaymentByCampaign(@PathVariable Long campaignId) {
+        return ResponseEntity.ok(this.paymentRetrievalService.getPaymentByCampaignId(campaignId));
     }
 
-    @PostMapping("/add")
+    @GetMapping({"/getPaymentByUser/{userId}"})
+    public ResponseEntity<List<PaymentResponse>> getPaymentByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(this.paymentRetrievalService.getPaymentByUserId(userId));
+    }
+
+    @PostMapping({"/payWithEbirr"})
+    public ResponseEntity<ApiResponse> payWithEbirr(@RequestBody @Valid EbirrPaymentReqDTO ebirrPaymentReqDTO) {
+        return this.paymentOperationService.processPaymentWithEbirr(ebirrPaymentReqDTO);
+    }
+
+    @PostMapping({"/add"})
     public ResponseEntity<?> addPayment(@RequestBody @Valid PaymentRequestDTO1 paymentAddDTO) {
-        return paymentService.addPayment(paymentAddDTO);
+        return this.paymentOperationService.addPayment(paymentAddDTO);
     }
 
-    @PutMapping("/update/{orderId}")
+    @PutMapping({"/update/{orderId}"})
     public ResponseEntity<?> updatePayment(@PathVariable String orderId, @RequestBody @Valid PaymentUpdateDTO paymentUpdateDTO) {
-        return paymentService.updatePayment(orderId, paymentUpdateDTO);
+        return this.paymentOperationService.updatePayment(orderId, paymentUpdateDTO);
     }
 
-    @PostMapping("/chapaInitialize")
-    public ResponseEntity<?> initializeChapaPayment(@RequestBody @Valid PaymentRequestDTO chapaRequest) {
-        return paymentService.initializeChapaPayment(chapaRequest);
+    @PostMapping({"/chapaInitialize"})
+    public ResponseEntity<ChapaPaymentResponse> initializeChapaPayment(@RequestBody @Valid ChapaDTO chapaRequest) {
+        return this.paymentOperationService.initializeChapaPayment(chapaRequest);
     }
 
-    @PostMapping("/cooPassInitialize")
+    @PutMapping({"/chapaVerify/{orderId}"})
+    public ResponseEntity<?> verifyChapaPayment(@PathVariable String orderId, @RequestBody VerifyResponse verifyResponse) {
+        return this.paymentOperationService.updatePaymentStatusForChapa(orderId, verifyResponse);
+    }
+
+    @PostMapping({"/cooPassInitialize"})
     public ResponseEntity<?> initializeCooPassPayment(@RequestBody @Valid PaymentRequestDTO paymentRequest) {
-        return paymentService.initializeCooPassPayment(paymentRequest);
+        return this.paymentOperationService.initializeCooPassPayment(paymentRequest);
     }
 
-    @GetMapping("/chapaVerify/{orderId}")
-    public ResponseEntity<?> verifyChapaPayment(@PathVariable String orderId) {
-        return paymentService.verifyChapaPayment(orderId);
-    }
-
-    @GetMapping("/cooPassVerify/{orderId}")
+    @GetMapping({"/cooPassVerify/{orderId}"})
     public ResponseEntity<?> verifyCooPassPayment(@PathVariable String orderId) {
-        return paymentService.verifyCooPassPayment(orderId);
-    }
-
-    @PostMapping("/payWithEbirr")
-    public ResponseEntity<?> payWithEbirr(@RequestBody @Valid EbirrPaymentReqDTO ebirrPaymentReqDTO) {
-        paymentUtils.validatePaymentPreconditions(ebirrPaymentReqDTO.getCampaignId(), PaymentProcessor.EBIRR);
-        return paymentService.processPaymentWithEbirr(ebirrPaymentReqDTO);
+        return this.paymentOperationService.verifyCooPassPayment(orderId);
     }
 }

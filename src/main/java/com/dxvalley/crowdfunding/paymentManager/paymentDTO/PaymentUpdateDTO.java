@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment.paymentDTO;
+package com.dxvalley.crowdfunding.paymentManager.paymentDTO;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

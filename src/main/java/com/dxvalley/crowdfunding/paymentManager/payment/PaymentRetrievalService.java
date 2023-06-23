@@ -1,30 +1,11 @@
-package com.dxvalley.crowdfunding.payment;
+package com.dxvalley.crowdfunding.paymentManager.payment;
 
-import com.dxvalley.crowdfunding.payment.paymentDTO.*;
-import org.springframework.http.ResponseEntity;
+import com.dxvalley.crowdfunding.paymentManager.paymentDTO.PaymentResponse;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-public interface PaymentService {
-    ResponseEntity processPaymentWithEbirr(EbirrPaymentReqDTO ebirrPaymentReqDTO);
-
-    ResponseEntity<?> addPayment(PaymentRequestDTO1 paymentAddDTO);
-
-    ResponseEntity<?> updatePayment(String orderId, PaymentUpdateDTO paymentUpdateDTO);
-
+public interface PaymentRetrievalService {
     List<PaymentResponse> getPaymentByCampaignId(Long campaignId);
 
-    List<Payment> getPaymentByUserId(Long userId);
-
-    ResponseEntity initializeChapaPayment(PaymentRequestDTO paymentRequest);
-
-    ResponseEntity verifyChapaPayment(String orderID);
-
-    ResponseEntity initializeCooPassPayment(PaymentRequestDTO requestDTO);
-
-    ResponseEntity verifyCooPassPayment(String orderID);
-
-    CompletableFuture<Void> chapaPaymentStatusChecker();
-
+    List<PaymentResponse> getPaymentByUserId(Long userId);
 }

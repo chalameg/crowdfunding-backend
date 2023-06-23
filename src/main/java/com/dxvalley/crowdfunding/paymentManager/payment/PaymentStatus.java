@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment;
+package com.dxvalley.crowdfunding.paymentManager.payment;
 
 import java.util.Arrays;
 

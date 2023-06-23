@@ -1,4 +1,4 @@
-package com.dxvalley.crowdfunding.payment.cooPass;
+package com.dxvalley.crowdfunding.paymentManager.cooPass;
 
 import lombok.Data;
 
