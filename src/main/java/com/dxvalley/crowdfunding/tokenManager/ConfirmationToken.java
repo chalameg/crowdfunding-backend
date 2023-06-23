@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.tokenManager;
 
-import com.dxvalley.crowdfunding.user.Users;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
