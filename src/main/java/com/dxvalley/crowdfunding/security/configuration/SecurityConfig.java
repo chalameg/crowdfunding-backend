@@ -23,7 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
-
     private final AuthenticationConfiguration authenticationConfiguration;
 
     @Bean
@@ -44,16 +43,12 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/**").permitAll();
-//                    auth.requestMatchers("/login", "/api/token/refresh", "/api/users/register", "/api/users/confirm",
-//                            "/api/users/forgotPassword/**", "/api/users/resetPassword").permitAll();
-//                    auth.requestMatchers("/api/payment/**").permitAll();
-//                    auth.requestMatchers(HttpMethod.POST, "/api/otp/checkOtpExistence", "/api/newsLetter/**").permitAll();
-//                    auth.requestMatchers(HttpMethod.GET, "/api/campaigns/**", "/api/campaignCategories/**", "/api/campaignSubCategory/**",
-//                            "/api/fundingTypes/**", "/api/rewards/**").permitAll();
+//                    auth.requestMatchers("/login").permitAll();
+//                    auth.requestMatchers("/admin/admin-users/**")
+//                            .hasAnyAuthority("Dashboard", "Settings", "Jigii User Management", "Admin User Management", "Campaign Management");
 //
-//                    auth.requestMatchers(HttpMethod.POST, "/api/campaigns/**").hasAuthority("user");
-//                    auth.requestMatchers(HttpMethod.PUT, "/api/campaigns/**").hasAuthority("user");
-//                    auth.requestMatchers(HttpMethod.DELETE, "/api/campaigns/**").hasAuthority("user");
+//                    auth.requestMatchers(HttpMethod.POST, "/admin/admin-users/**").hasAuthority("Admin User Management");
+//                    auth.requestMatchers(HttpMethod.DELETE, "/admin/admin-users/**").hasAuthority("Admin User Management");
 //                    auth.anyRequest().authenticated();
                 })
                 .addFilter(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration)))
