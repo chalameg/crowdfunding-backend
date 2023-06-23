@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.configuration;
 
-import com.dxvalley.crowdfunding.exception.AsyncMethodException;
+import com.dxvalley.crowdfunding.exception.customException.AsyncMethodException;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
