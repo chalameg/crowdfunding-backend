@@ -1,37 +1,33 @@
 package com.dxvalley.crowdfunding.campaign.campaign.dto;
 
 import com.dxvalley.crowdfunding.campaign.campaign.CampaignStage;
+import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.file.CampaignFile;
 import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.image.CampaignImage;
-import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.video.CampaignVideo;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.CampaignBankAccount;
 import com.dxvalley.crowdfunding.campaign.campaignCollaborator.dto.CollaboratorResponse;
 import com.dxvalley.crowdfunding.campaign.campaignFundingType.FundingType;
 import com.dxvalley.crowdfunding.campaign.campaignPromotion.dto.PromotionResponse;
 import com.dxvalley.crowdfunding.campaign.campaignReward.dto.RewardResponse;
 import com.dxvalley.crowdfunding.campaign.campaignSubCategory.CampaignSubCategory;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentResponse;
+import com.dxvalley.crowdfunding.paymentManager.paymentDTO.PaymentResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@JsonInclude(Include.NON_NULL)
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CampaignDTO {
     private Long campaignId;
     private String title;
     private String shortDescription;
     private String city;
-    private List<CampaignImage> images;
-    private List<CampaignVideo> videos;
     private String projectType;
     private CampaignStage campaignStage;
     private Double goalAmount;
     private String owner;
+    private String ownerEmail;
     private String description;
     private String risks;
     private Double commissionRate;
@@ -44,9 +40,11 @@ public class CampaignDTO {
     private String createdAt;
     private String enabledAt;
     private String completedAt;
-    private String ownerFullName;
     private Integer numberOfCampaigns;
     private FundingType fundingType;
+    private String videoLink;
+    private List<CampaignImage> images;
+    private List<CampaignFile> files;
     private CampaignBankAccount campaignBankAccount;
     private CampaignSubCategory campaignSubCategory;
     private List<PaymentResponse> contributors;

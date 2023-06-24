@@ -13,84 +13,76 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CampaignCategoryServiceIml implements CampaignCategoryService {
-
     private final CampaignCategoryRepository campaignCategoryRepository;
     private final CampaignSubCategoryService campaignCategoryService;
 
-    @Override
     public List<CategoryResponse> getCampaignCategories() {
-        List<CampaignCategory> campaignCategories = campaignCategoryRepository.findAll();
-
-        if (campaignCategories.isEmpty())
+        List<CampaignCategory> campaignCategories = this.campaignCategoryRepository.findAll();
+        if (campaignCategories.isEmpty()) {
             throw new ResourceNotFoundException("Currently, There is no Campaign Category.");
+        } else {
+            List<CategoryResponse> categoryResponses = new ArrayList();
+            Iterator iterator = campaignCategories.iterator();
 
-        List<CategoryResponse> categoryResponses = new ArrayList<>();
+            while(iterator.hasNext()) {
+                CampaignCategory campaignCategory = (CampaignCategory)iterator.next();
+                List<SubCategoryRes> subCategories = this.campaignCategoryService.getCampaignSubCategoryByCategory(campaignCategory.getId());
+                CategoryResponse categoryResponse = CategoryMapper.toCategoryResponse(campaignCategory, subCategories);
+                categoryResponses.add(categoryResponse);
+            }
 
-        for (CampaignCategory campaignCategory : campaignCategories) {
-            List<SubCategoryRes> subCategories = campaignCategoryService.getCampaignSubCategoryByCategory(campaignCategory.getId());
-
-            CategoryResponse categoryResponse = CategoryMapper.toCategoryResponse(campaignCategory, subCategories);
-            categoryResponses.add(categoryResponse);
+            return categoryResponses;
         }
-
-        return categoryResponses;
     }
 
-
-    @Override
     public CategoryResponse getCampaignCategoryById(Short campaignCategoryId) {
-        CampaignCategory campaignCategory = getCategoryById(campaignCategoryId);
-
-        List<SubCategoryRes> subCategories = campaignCategoryService.getCampaignSubCategoryByCategory(campaignCategory.getId());
-
+        CampaignCategory campaignCategory = this.getCategoryById(campaignCategoryId);
+        List<SubCategoryRes> subCategories = this.campaignCategoryService.getCampaignSubCategoryByCategory(campaignCategory.getId());
         CategoryResponse categoryResponse = CategoryMapper.toCategoryResponse(campaignCategory, subCategories);
-
         return categoryResponse;
     }
 
-    @Override
     public CampaignCategory addCampaignCategory(CategoryReq categoryReq) {
-        validateCategoryNameNotExist(categoryReq.getName());
-        CampaignCategory campaignCategory = createCampaignCategory(categoryReq);
-        return campaignCategoryRepository.save(campaignCategory);
+        this.validateCategoryNameNotExist(categoryReq.getName());
+        CampaignCategory campaignCategory = this.createCampaignCategory(categoryReq);
+        return (CampaignCategory)this.campaignCategoryRepository.save(campaignCategory);
     }
 
-    @Override
     public CampaignCategory editCampaignCategory(CampaignCategory tempCampaignCategory, Short campaignCategoryId) {
-        CampaignCategory campaignCategory = campaignCategoryRepository
-                .findById(campaignCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no campaign Category with this ID."));
-
-        if (tempCampaignCategory.getName() != null)
+        CampaignCategory campaignCategory = (CampaignCategory)this.campaignCategoryRepository.findById(campaignCategoryId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign Category with this ID.");
+        });
+        if (tempCampaignCategory.getName() != null) {
             campaignCategory.setName(tempCampaignCategory.getName());
+        }
 
-        if (tempCampaignCategory.getDescription() != null)
+        if (tempCampaignCategory.getDescription() != null) {
             campaignCategory.setDescription(tempCampaignCategory.getDescription());
+        }
 
-        return campaignCategoryRepository.save(campaignCategory);
+        return (CampaignCategory)this.campaignCategoryRepository.save(campaignCategory);
     }
 
-    @Override
     public ResponseEntity<ApiResponse> deleteCampaignCategory(Short campaignCategoryId) {
-        getCategoryById(campaignCategoryId);
-        campaignCategoryRepository.deleteById(campaignCategoryId);
-
+        this.getCategoryById(campaignCategoryId);
+        this.campaignCategoryRepository.deleteById(campaignCategoryId);
         return ApiResponse.success("CampaignCategory Deleted successfully!");
     }
 
     private CampaignCategory getCategoryById(Short campaignCategoryId) {
-        return campaignCategoryRepository
-                .findById(campaignCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no campaign Category with this ID."));
+        return (CampaignCategory)this.campaignCategoryRepository.findById(campaignCategoryId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign Category with this ID.");
+        });
     }
 
     private void validateCategoryNameNotExist(String name) {
-        CampaignCategory category = campaignCategoryRepository.findByName(name);
+        CampaignCategory category = this.campaignCategoryRepository.findByName(name);
         if (category != null) {
             throw new ResourceAlreadyExistsException("There is already a category with this name!");
         }
@@ -100,7 +92,6 @@ public class CampaignCategoryServiceIml implements CampaignCategoryService {
         CampaignCategory campaignCategory = new CampaignCategory();
         campaignCategory.setName(categoryReq.getName());
         campaignCategory.setDescription(categoryReq.getDescription());
-
         return campaignCategory;
     }
 }

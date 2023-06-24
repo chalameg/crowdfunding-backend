@@ -26,77 +26,69 @@ public class CampaignProgressUpdateServiceImpl implements CampaignProgressUpdate
     private final UserUtils userUtils;
     private final CampaignUtils campaignUtils;
 
-    // Retrieves all campaign updates for a given campaign ID.
     public List<ProgressUpdateResponse> getAllCampaignUpdates(Long campaignId) {
-        List<CampaignProgressUpdate> campaignProgressUpdates = campaignProgressUpdateRepository
-                .findByCampaignId(campaignId);
-        if (campaignProgressUpdates.isEmpty())
+        List<CampaignProgressUpdate> campaignProgressUpdates = this.campaignProgressUpdateRepository.findByCampaignId(campaignId);
+        if (campaignProgressUpdates.isEmpty()) {
             throw new ResourceNotFoundException("Currently, there is no progress update for this campaign.");
-
-        return campaignProgressUpdates
-                .stream()
-                .map(ProgressUpdateMapper::toResponseDTO)
-                .toList();
+        } else {
+            return campaignProgressUpdates.stream().map(ProgressUpdateMapper::toResponseDTO).toList();
+        }
     }
 
-    // Creates a campaign progress update using the provided ProgressUpdateReq.
-    @Override
     public ProgressUpdateResponse createCampaignUpdate(ProgressUpdateReq progressUpdateReq) {
-        CampaignProgressUpdate campaignProgressUpdate = initializeCampaignProgressUpdate(progressUpdateReq);
-        validateCampaignCreator(campaignProgressUpdate.getCampaign(), progressUpdateReq.getAuthorID());
-        CampaignProgressUpdate savedCampaignProgressUpdate = campaignProgressUpdateRepository.save(campaignProgressUpdate);
+        CampaignProgressUpdate campaignProgressUpdate = this.initializeCampaignProgressUpdate(progressUpdateReq);
+        this.validateCampaignCreator(campaignProgressUpdate.getCampaign(), progressUpdateReq.getAuthorID());
+        CampaignProgressUpdate savedCampaignProgressUpdate = (CampaignProgressUpdate) this.campaignProgressUpdateRepository.save(campaignProgressUpdate);
         return ProgressUpdateMapper.toResponseDTO(savedCampaignProgressUpdate);
     }
 
     private CampaignProgressUpdate initializeCampaignProgressUpdate(ProgressUpdateReq progressUpdateReq) {
         CampaignProgressUpdate campaignProgressUpdate = new CampaignProgressUpdate();
-        Campaign campaign = campaignUtils.utilGetCampaignById(progressUpdateReq.getCampaignId());
-        Users user = userUtils.utilGetUserByUserId(progressUpdateReq.getAuthorID());
-
+        Campaign campaign = this.campaignUtils.utilGetCampaignById(progressUpdateReq.getCampaignId());
+        Users user = this.userUtils.utilGetUserByUserId(progressUpdateReq.getAuthorID());
         campaignProgressUpdate.setTitle(progressUpdateReq.getTitle());
         campaignProgressUpdate.setDescription(progressUpdateReq.getDescription());
-        campaignProgressUpdate.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
+        campaignProgressUpdate.setCreatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
         campaignProgressUpdate.setAuthor(user);
         campaignProgressUpdate.setCampaign(campaign);
-
         return campaignProgressUpdate;
     }
 
-    // Updates a campaign update with the provided ProgressUpdateReq.
-    @Override
     public ProgressUpdateResponse updateCampaignUpdate(Long id, ProgressUpdateReq progressUpdateReq) {
-        CampaignProgressUpdate campaignProgressUpdate = getCampaignUpdateById(id);
-        validateCampaignCreator(campaignProgressUpdate.getCampaign(), progressUpdateReq.getAuthorID());
-        updateCampaignProgressUpdate(campaignProgressUpdate, progressUpdateReq);
-        CampaignProgressUpdate updatedCampaignProgressUpdate = campaignProgressUpdateRepository.save(campaignProgressUpdate);
+        CampaignProgressUpdate campaignProgressUpdate = this.getCampaignUpdateById(id);
+        this.validateCampaignCreator(campaignProgressUpdate.getCampaign(), progressUpdateReq.getAuthorID());
+        this.updateCampaignProgressUpdate(campaignProgressUpdate, progressUpdateReq);
+        CampaignProgressUpdate updatedCampaignProgressUpdate = (CampaignProgressUpdate) this.campaignProgressUpdateRepository.save(campaignProgressUpdate);
         return ProgressUpdateMapper.toResponseDTO(updatedCampaignProgressUpdate);
     }
 
-
     private void validateCampaignCreator(Campaign campaign, Long authorId) {
-        if (campaign.getUser().getUserId() != authorId)
+        if (campaign.getUser().getUserId() != authorId) {
             throw new ForbiddenException("This operation is only allowed for the campaign creator");
+        }
     }
 
     private void updateCampaignProgressUpdate(CampaignProgressUpdate campaignProgressUpdate, ProgressUpdateReq progressUpdateReq) {
-        if (progressUpdateReq.getTitle() != null)
+        if (progressUpdateReq.getTitle() != null) {
             campaignProgressUpdate.setTitle(progressUpdateReq.getTitle());
-        if (progressUpdateReq.getDescription() != null)
+        }
+
+        if (progressUpdateReq.getDescription() != null) {
             campaignProgressUpdate.setDescription(progressUpdateReq.getDescription());
-        campaignProgressUpdate.setUpdatedAt(LocalDateTime.now().format(dateTimeFormatter));
+        }
+
+        campaignProgressUpdate.setUpdatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
     }
 
-    // Deletes a campaign update with the specified ID.
     public ResponseEntity<ApiResponse> deleteCampaignUpdate(Long id) {
-        getCampaignUpdateById(id);
-        campaignProgressUpdateRepository.deleteById(id);
-
+        this.getCampaignUpdateById(id);
+        this.campaignProgressUpdateRepository.deleteById(id);
         return ApiResponse.success("Deleted Successfully");
     }
 
     private CampaignProgressUpdate getCampaignUpdateById(Long id) {
-        return campaignProgressUpdateRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no campaign progress update with this ID."));
-
+        return this.campaignProgressUpdateRepository.findById(id).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign progress update with this ID.");
+        });
     }
 }

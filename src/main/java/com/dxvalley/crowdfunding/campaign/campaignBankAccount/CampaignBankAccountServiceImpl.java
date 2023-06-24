@@ -29,36 +29,26 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
     private final CampaignBankAccountRepository campaignBankAccountRepository;
     private final CampaignUtils campaignUtils;
     private final DateTimeFormatter dateTimeFormatter;
+    private final RestTemplate restTemplate;
     @Value("${APP_CONNECT.CHECK_BANK_ACCOUNT_URI}")
     private String checkBankAccountURI;
 
-
-    // Retrieves the bank account with associated campaign.
-    @Override
     public BankAccountRes getByAccountNumber(String accountNumber) {
-
-        CampaignBankAccount campaignBankAccount = campaignBankAccountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Bank Account is not Found."));
-        List<Campaign> campaigns = campaignUtils.getCampaignsByBankAccount(accountNumber);
-
+        CampaignBankAccount campaignBankAccount = (CampaignBankAccount)this.campaignBankAccountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> {
+            return new ResourceNotFoundException("Bank Account is not Found.");
+        });
+        List<Campaign> campaigns = this.campaignUtils.getCampaignsByBankAccount(accountNumber);
         return BankAccountMapper.toBankAccountDTO(campaignBankAccount, campaigns);
     }
 
-
-    //Adds a bank account to a campaign.
-    @Override
     public CampaignBankAccount addBankAccount(AccountAddReq accountAddReq) {
-        Campaign campaign = campaignUtils.utilGetCampaignById(accountAddReq.getCampaignId());
-
+        Campaign campaign = this.campaignUtils.utilGetCampaignById(accountAddReq.getCampaignId());
         String accountNumber = accountAddReq.getAccountNumber();
         String accountOwner = accountAddReq.getAccountOwner();
-
-        validateBankAccount(accountNumber, campaign);
-        CampaignBankAccount campaignBankAccount = getOrCreateCampaignBankAccount(accountNumber, accountOwner);
-
+        this.validateBankAccount(accountNumber, campaign);
+        CampaignBankAccount campaignBankAccount = this.getOrCreateCampaignBankAccount(accountNumber, accountOwner);
         campaign.setBankAccount(campaignBankAccount);
-        campaignUtils.saveCampaign(campaign);
-
+        this.campaignUtils.saveCampaign(campaign);
         return campaignBankAccount;
     }
 
@@ -69,50 +59,41 @@ public class CampaignBankAccountServiceImpl implements CampaignBankAccountServic
     }
 
     private CampaignBankAccount getOrCreateCampaignBankAccount(String accountNumber, String accountOwner) {
-        Optional<CampaignBankAccount> optionalCampaignBankAccount = campaignBankAccountRepository.findByAccountNumber(accountNumber);
-        return optionalCampaignBankAccount.orElseGet(
-                () -> createCampaignBankAccount(accountNumber, accountOwner));
+        Optional<CampaignBankAccount> optionalCampaignBankAccount = this.campaignBankAccountRepository.findByAccountNumber(accountNumber);
+        return (CampaignBankAccount)optionalCampaignBankAccount.orElseGet(() -> {
+            return this.createCampaignBankAccount(accountNumber, accountOwner);
+        });
     }
 
     private CampaignBankAccount createCampaignBankAccount(String accountNumber, String accountOwner) {
         CampaignBankAccount newBankAccount = new CampaignBankAccount();
         newBankAccount.setAccountNumber(accountNumber);
         newBankAccount.setAccountOwner(accountOwner);
-        newBankAccount.setAddedAt(LocalDateTime.now().format(dateTimeFormatter));
-        return campaignBankAccountRepository.save(newBankAccount);
+        newBankAccount.setAddedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        return (CampaignBankAccount)this.campaignBankAccountRepository.save(newBankAccount);
     }
 
-
-    // Description: Checks the existence of a bank account using the given account number.
-    @Override
     public AccountExistenceRes checkBankAccountExistence(String accountNumber) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("criteriaValue", accountNumber);
-
-            HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(checkBankAccountURI, request, String.class);
-
-            JSONObject jsonResponse = new JSONObject(response.getBody());
-
-            if (jsonResponse.has("AccountDetailsResponse")) {
-                JSONObject accountDetailsResponse = jsonResponse.getJSONObject("AccountDetailsResponse");
-                JSONObject esbStatus = accountDetailsResponse.getJSONObject("EsbStatus");
-                if (esbStatus.getString("status").equals("Success")) {
-                    String accountName = accountDetailsResponse.getString("name");
-                    return new AccountExistenceRes(accountName);
-                }
-            }
-
-            throw new ResourceNotFoundException("Account does not exist!");
-        } catch (Exception ex) {
+            String requestBody = "{\n    \"AccountDetailsRequest\": {\n        \"ESBHeader\": {\n            \"serviceCode\": \"740000\",\n            \"channel\": \"USSD\",\n            \"Service_name\": \"AccountDetail\",\n            \"Message_Id\": \"6255726662\"\n        },\n        \"ACCTCOMPANYVIEWType\": [\n            {\n                \"columnName\": \"ACCOUNT.NUMBER\",\n                \"criteriaValue\": \"" + accountNumber + "\",\n                \"operand\": \"EQ\"\n            }\n        ]\n    }\n}";
+            HttpEntity<String> requestEntity = new HttpEntity(requestBody, headers);
+            String responseBody = (String)this.restTemplate.postForObject(this.checkBankAccountURI, requestEntity, String.class, new Object[0]);
+            return new AccountExistenceRes(this.getAccountTitle(responseBody));
+        } catch (Exception var6) {
             throw new RuntimeException("Internal Server Error");
         }
     }
 
+    private String getAccountTitle(String jsonString) {
+        int useableBalIndex = jsonString.indexOf("\"ACCOUNTTITLE1\"");
+        if (useableBalIndex != -1) {
+            int valueStartIndex = jsonString.indexOf("\"", useableBalIndex + 15) + 1;
+            int valueEndIndex = jsonString.indexOf("\"", valueStartIndex);
+            return jsonString.substring(valueStartIndex, valueEndIndex);
+        } else {
+            return "No bank account was found with the provided account number.";
+        }
+    }
 }

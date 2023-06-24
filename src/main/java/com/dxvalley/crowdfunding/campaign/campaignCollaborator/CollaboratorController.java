@@ -18,30 +18,30 @@ import java.util.List;
 public class CollaboratorController {
     private final CollaboratorService collaboratorService;
 
-    @GetMapping("/{id}")
+    @GetMapping({"/{id}"})
     public ResponseEntity<CollaboratorResponse> getCollaborator(@PathVariable Long id) {
-        return ResponseEntity.ok(collaboratorService.getCollaboratorById(id));
+        return ResponseEntity.ok(this.collaboratorService.getCollaboratorById(id));
     }
 
-    @GetMapping("/byCampaign/{campaignId}")
+    @GetMapping({"/byCampaign/{campaignId}"})
     public ResponseEntity<List<CollaboratorResponse>> getUserCollaborators(@PathVariable Long campaignId) {
-        return ResponseEntity.ok(collaboratorService.getCollaboratorByCampaignId(campaignId));
+        return ResponseEntity.ok(this.collaboratorService.getCollaboratorByCampaignId(campaignId));
     }
 
-
-    @PostMapping("/invite")
+    @PostMapping({"/invite"})
     public ResponseEntity<CollaboratorResponse> sendInvitation(@RequestBody @Valid CollaborationRequest collaborationRequest) {
-        CollaboratorResponse collaboratorResponse = collaboratorService.sendInvitation(collaborationRequest);
+        CollaboratorResponse collaboratorResponse = this.collaboratorService.sendInvitation(collaborationRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(collaboratorResponse);
     }
 
-    @PutMapping("/respondToInvitation/{id}/{accepted}")
+    @PutMapping({"/respondToInvitation/{id}/{accepted}"})
     public ResponseEntity<ApiResponse> acceptInvitation(@PathVariable Long id, @PathVariable boolean accepted) {
-        return collaboratorService.respondToCollaborationInvitation(id, accepted);
+        return this.collaboratorService.respondToCollaborationInvitation(id, accepted);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping({"/{id}"})
     public ResponseEntity<ApiResponse> deleteCollaborator(@PathVariable Long id) {
-        return collaboratorService.deleteCollaborator(id);
+        return this.collaboratorService.deleteCollaborator(id);
     }
+
 }

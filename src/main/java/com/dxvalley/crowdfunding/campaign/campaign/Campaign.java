@@ -1,5 +1,6 @@
 package com.dxvalley.crowdfunding.campaign.campaign;
 
+import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.file.CampaignFile;
 import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.image.CampaignImage;
 import com.dxvalley.crowdfunding.campaign.campaign.campaignMedia.video.CampaignVideo;
 import com.dxvalley.crowdfunding.campaign.campaignBankAccount.CampaignBankAccount;
@@ -13,6 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Entity
@@ -24,11 +26,10 @@ public class Campaign {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String shortDescription;
     private String city;
-
     private double goalAmount;
     private String projectType;
     @Enumerated(EnumType.STRING)
@@ -38,14 +39,12 @@ public class Campaign {
     private String description;
     @Column(columnDefinition = "TEXT")
     private String risks;
-
     private short campaignDuration;
     private double commissionRate;
     private double totalAmountCollected;
     private int numberOfBackers;
     private int numberOfLikes;
     private boolean enabled;
-
     private String createdAt;
     private String approvedAt;
     private String editedAt;
@@ -57,20 +56,18 @@ public class Campaign {
     private String resumedAt;
     private String resumedBy;
     private String completedAt;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<CampaignImage> images = new ArrayList<>();
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<CampaignVideo> videos = new ArrayList<>();
-
+    @OneToMany(cascade = {CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<CampaignImage> images = new ArrayList();
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.EAGER)
+    private CampaignVideo video;
+    @OneToMany(cascade = {CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<CampaignFile> files = new ArrayList();
     @ManyToOne(optional = false)
     @JoinColumn(name = "funding_type_id", nullable = false)
     private FundingType fundingType;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "campaign_subcategory_id", nullable = false)
     private CampaignSubCategory campaignSubCategory;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
@@ -82,8 +79,18 @@ public class Campaign {
         this.images.add(campaignImage);
     }
 
-    public void addVideo(CampaignVideo campaignVideo) {
-        this.videos.add(campaignVideo);
+    public void addFile(CampaignFile campaignFile) {
+        this.files.add(campaignFile);
+    }
+
+    public void setFiles(List<CampaignFile> campaignFiles) {
+        Iterator var2 = campaignFiles.iterator();
+
+        while(var2.hasNext()) {
+            CampaignFile campaignFile = (CampaignFile)var2.next();
+            this.addFile(campaignFile);
+        }
+
     }
 
 }

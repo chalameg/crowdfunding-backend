@@ -18,3 +18,4 @@ public interface CollaboratorService {
 
     ResponseEntity<ApiResponse> deleteCollaborator(Long collaboratorId);
 }
+

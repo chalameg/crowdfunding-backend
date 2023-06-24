@@ -1,9 +1,6 @@
 package com.dxvalley.crowdfunding.campaign.campaignFundingType;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +13,11 @@ public class FundingType {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Short id;
+
+    @Column(unique = true)
     private String name;
+
+    public FundingType(String name) {
+        this.name = name;
+    }
 }

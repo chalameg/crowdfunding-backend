@@ -24,58 +24,43 @@ public class PromotionServiceImpl implements PromotionService {
     private final CampaignUtils campaignUtils;
     private final DateTimeFormatter dateTimeFormatter;
 
-    @Override
     public PromotionResponse addPromotion(PromotionReq promotionReq) {
         Promotion promotion = new Promotion();
-        Campaign campaign = campaignUtils.utilGetCampaignById(promotionReq.getCampaignId());
-
+        Campaign campaign = this.campaignUtils.utilGetCampaignById(promotionReq.getCampaignId());
         promotion.setPromotionLink(promotionReq.getPromotionLink());
         promotion.setDescription(promotionReq.getDescription());
-        promotion.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
+        promotion.setCreatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
         promotion.setCampaign(campaign);
-
-        Promotion savedPromotion = promotionRepository.save(promotion);
-
+        Promotion savedPromotion = (Promotion) this.promotionRepository.save(promotion);
         return PromotionMapper.toPromotionRes(savedPromotion);
     }
 
-    @Override
     public PromotionResponse editPromotion(Long id, PromotionUpdateReq promotionUpdateReq) {
-        Promotion promotion = utilGetPromotionById(id);
-
+        Promotion promotion = this.utilGetPromotionById(id);
         promotion.setDescription(promotionUpdateReq.getDescription());
-        promotion.setUpdatedAt(LocalDateTime.now().format(dateTimeFormatter));
-
-        Promotion savedPromotion = promotionRepository.save(promotion);
-
+        promotion.setUpdatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        Promotion savedPromotion = (Promotion) this.promotionRepository.save(promotion);
         return PromotionMapper.toPromotionRes(savedPromotion);
-
     }
 
-    @Override
     public PromotionResponse getPromotionById(Long promotionId) {
-        return PromotionMapper.toPromotionRes(utilGetPromotionById(promotionId));
+        return PromotionMapper.toPromotionRes(this.utilGetPromotionById(promotionId));
     }
 
-    @Override
     public List<PromotionResponse> getPromotionByCampaign(Long campaignId) {
-        List<Promotion> promotions = promotionRepository.findPromotionByCampaignId(campaignId);
-
+        List<Promotion> promotions = this.promotionRepository.findPromotionByCampaignId(campaignId);
         return promotions.stream().map(PromotionMapper::toPromotionRes).toList();
     }
 
-    @Override
     public ResponseEntity<ApiResponse> deletePromotion(Long promotionId) {
-        utilGetPromotionById(promotionId);
-        promotionRepository.deleteById(promotionId);
-
+        this.utilGetPromotionById(promotionId);
+        this.promotionRepository.deleteById(promotionId);
         return ApiResponse.success("Deleted Successfully");
     }
 
     private Promotion utilGetPromotionById(Long promotionId) {
-        return promotionRepository.findById(promotionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Promotion Not Found"));
-
+        return this.promotionRepository.findById(promotionId).orElseThrow(() -> {
+            return new ResourceNotFoundException("Promotion Not Found");
+        });
     }
-
 }

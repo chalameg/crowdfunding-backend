@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.*;
 public class CampaignSharingController {
     private final CampaignSharingService campaignSharingService;
 
-    @GetMapping("/{campaignId}")
+    @GetMapping({"/{campaignId}"})
     public ResponseEntity<CampaignShareCountResponse> getByCampaignId(@PathVariable Long campaignId) {
-        CampaignShareCountResponse campaignShareCountResponse = campaignSharingService.getByCampaignId(campaignId);
+        CampaignShareCountResponse campaignShareCountResponse = this.campaignSharingService.getByCampaignId(campaignId);
         return ResponseEntity.ok(campaignShareCountResponse);
     }
 
     @PostMapping
     public ResponseEntity<CampaignShareResponse> shareCampaign(@RequestBody @Valid CampaignSharingReq campaignSharingReq) {
-        CampaignShareResponse campaignSharing = campaignSharingService.addShareCampaign(campaignSharingReq);
+        CampaignShareResponse campaignSharing = this.campaignSharingService.addShareCampaign(campaignSharingReq);
         return ResponseEntity.ok(campaignSharing);
     }
 }

@@ -23,73 +23,62 @@ public class RewardServiceImpl implements RewardService {
     private final CampaignUtils campaignUtils;
     private final DateTimeFormatter dateTimeFormatter;
 
-    @Override
     public RewardResponse addReward(RewardRequest rewardRequest) {
-        Campaign campaign = campaignUtils.utilGetCampaignById(rewardRequest.getCampaignId());
-
+        Campaign campaign = this.campaignUtils.utilGetCampaignById(rewardRequest.getCampaignId());
         Reward reward = new Reward();
-
         reward.setTitle(rewardRequest.getTitle());
         reward.setDescription(rewardRequest.getDescription());
         reward.setAmountToCollect(rewardRequest.getAmountToCollect());
-        reward.setDeliveryTime(LocalDateTime.now().format(dateTimeFormatter));
+        reward.setDeliveryTime(LocalDateTime.now().format(this.dateTimeFormatter));
         reward.setCampaign(campaign);
-        reward.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
-
-        Reward savedReward = rewardRepository.save(reward);
-
+        reward.setCreatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        Reward savedReward = (Reward)this.rewardRepository.save(reward);
         return RewardMapper.toRewardResponse(savedReward);
     }
 
-    @Override
     public RewardResponse editReward(Long rewardId, RewardRequest rewardUpdate) {
-        Reward reward = utilGetRewardById(rewardId);
-
-        if (rewardUpdate.getTitle() != null)
+        Reward reward = this.utilGetRewardById(rewardId);
+        if (rewardUpdate.getTitle() != null) {
             reward.setTitle(rewardUpdate.getTitle());
+        }
 
-        if (rewardUpdate.getDescription() != null)
+        if (rewardUpdate.getDescription() != null) {
             reward.setDescription(rewardUpdate.getDescription());
+        }
 
-        if (rewardUpdate.getAmountToCollect() != null)
+        if (rewardUpdate.getAmountToCollect() != null) {
             reward.setAmountToCollect(rewardUpdate.getAmountToCollect());
+        }
 
-        if (rewardUpdate.getDeliveryTime() != null)
+        if (rewardUpdate.getDeliveryTime() != null) {
             reward.setDeliveryTime(rewardUpdate.getDeliveryTime());
+        }
 
-        reward.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
-
-        Reward savedReward = rewardRepository.save(reward);
-
+        reward.setEditedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        Reward savedReward = (Reward)this.rewardRepository.save(reward);
         return RewardMapper.toRewardResponse(savedReward);
     }
 
-
-    @Override
     public List<RewardResponse> getByCampaign(Long campaignId) {
-        List<Reward> rewards = rewardRepository.findByCampaignId(campaignId);
-
+        List<Reward> rewards = this.rewardRepository.findByCampaignId(campaignId);
         return rewards.stream().map(RewardMapper::toRewardResponse).toList();
     }
 
-    @Override
     public RewardResponse getRewardById(Long rewardId) {
-        Reward reward = utilGetRewardById(rewardId);
+        Reward reward = this.utilGetRewardById(rewardId);
         return RewardMapper.toRewardResponse(reward);
     }
 
-    @Override
     public ResponseEntity<ApiResponse> deleteReward(Long rewardId) {
-        utilGetRewardById(rewardId);
-        rewardRepository.deleteById(rewardId);
-
+        this.utilGetRewardById(rewardId);
+        this.rewardRepository.deleteById(rewardId);
         return ApiResponse.success("Deleted Successfully");
     }
 
-
     private Reward utilGetRewardById(Long rewardId) {
-        return rewardRepository.findById(rewardId).orElseThrow(
-                () -> new ResourceNotFoundException("There is no Reward with this Id"));
+        return (Reward)this.rewardRepository.findById(rewardId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no Reward with this Id");
+        });
     }
 
 }
