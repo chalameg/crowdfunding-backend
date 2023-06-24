@@ -10,9 +10,6 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 public class AppConfig {
-    public AppConfig() {
-    }
-
     @Bean
     public DateTimeFormatter dateTimeFormatter() {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
