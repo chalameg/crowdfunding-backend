@@ -17,6 +17,7 @@ import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundExcep
 import com.dxvalley.crowdfunding.userManager.user.UserUtils;
 import com.dxvalley.crowdfunding.userManager.user.Users;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,56 +35,49 @@ public class AdminCampaignApprovalService {
     private final DateTimeFormatter dateTimeFormatter;
     private final ApprovalFileService approvalFileService;
 
-    // Retrieves the campaign approval information by campaign ID.
     public ApprovalResponse getCampaignApprovalByCampaignId(Long campaignId) {
-        CampaignApproval campaignApproval = campaignApprovalRepository.findByCampaignId(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no approval information for this campaign."));
-
+        CampaignApproval campaignApproval = (CampaignApproval)this.campaignApprovalRepository.findByCampaignId(campaignId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no approval information for this campaign.");
+        });
         return CampaignApprovalMapper.toAdminApprovalResponse(campaignApproval);
     }
 
-
-    // Create a campaign approval.
     @Transactional
-    public ApprovalResponse approveCampaign(CampaignApprovalReq campaignApprovalReq) {
-        checkExistingApproval(campaignApprovalReq.getCampaignId());
-        Campaign campaign = getCampaign(campaignApprovalReq.getCampaignId());
-
-        CampaignApproval campaignApproval = createCampaignApproval(campaign, campaignApprovalReq);
-        CampaignApproval savedCampaignApproval = campaignApprovalRepository.save(campaignApproval);
-
-        processCampaignApproval(campaign, campaignApprovalReq);
-
-        return CampaignApprovalMapper.toAdminApprovalResponse(savedCampaignApproval);
+    public ResponseEntity<String> approveCampaign(CampaignApprovalReq campaignApprovalReq) {
+        this.checkExistingApproval(campaignApprovalReq.getCampaignId());
+        Campaign campaign = this.getCampaign(campaignApprovalReq.getCampaignId());
+        CampaignApproval campaignApproval = this.createCampaignApproval(campaign, campaignApprovalReq);
+        this.campaignApprovalRepository.save(campaignApproval);
+        this.processCampaignApproval(campaign, campaignApprovalReq);
+        return ResponseEntity.ok("Campaign " + campaignApprovalReq.getApprovalStatus().toLowerCase() + " Successfully");
     }
 
-
     private void checkExistingApproval(Long campaignId) {
-        Optional<CampaignApproval> existingApproval = campaignApprovalRepository.findByCampaignId(campaignId);
-        if (existingApproval.isPresent())
+        Optional<CampaignApproval> existingApproval = this.campaignApprovalRepository.findByCampaignId(campaignId);
+        if (existingApproval.isPresent()) {
             throw new ResourceAlreadyExistsException("This campaign has already been approved.");
+        }
     }
 
     private Campaign getCampaign(Long campaignId) {
-        Campaign campaign = campaignUtils.utilGetCampaignByIdAndStage(campaignId, CampaignStage.PENDING);
-        if (!campaignUtils.isValidCampaign(campaign))
-            throw new BadRequestException("Unable to approve the campaign with the provided data. " +
-                    "Please provide all required information and try again.");
-
-        return campaign;
+        Campaign campaign = this.campaignUtils.utilGetCampaignByIdAndStage(campaignId, CampaignStage.PENDING);
+        if (!this.campaignUtils.isValidCampaign(campaign)) {
+            throw new BadRequestException("Unable to approve the campaign with the provided data. Please provide all required information and try again.");
+        } else {
+            return campaign;
+        }
     }
 
     private CampaignApproval createCampaignApproval(Campaign campaign, CampaignApprovalReq campaignApprovalReq) {
         CampaignApproval campaignApproval = new CampaignApproval();
-
         campaignApproval.setCampaign(campaign);
         campaignApproval.setApprovedBy(campaignApprovalReq.getApprovedBy());
         campaignApproval.setApprovalStatus(ApprovalStatus.lookup(campaignApprovalReq.getApprovalStatus()));
         campaignApproval.setReason(campaignApprovalReq.getReason());
         campaignApproval.setCommissionRate(campaignApprovalReq.getCommissionRate());
-        campaignApproval.setApprovedAt(LocalDateTime.now().format(dateTimeFormatter));
+        campaignApproval.setApprovedAt(LocalDateTime.now().format(this.dateTimeFormatter));
         if (campaignApprovalReq.getFiles() != null && !campaignApprovalReq.getFiles().isEmpty()) {
-            List<ApprovalFile> approvalFiles = approvalFileService.saveApprovalFile(campaignApprovalReq.getFiles());
+            List<ApprovalFile> approvalFiles = this.approvalFileService.saveApprovalFile(campaignApprovalReq.getFiles());
             campaignApproval.setApprovalFiles(approvalFiles);
         }
 
@@ -91,36 +85,39 @@ public class AdminCampaignApprovalService {
     }
 
     private void processCampaignApproval(Campaign campaign, CampaignApprovalReq campaignApprovalReq) {
-        if (ApprovalStatus.ACCEPTED.name().equalsIgnoreCase(campaignApprovalReq.getApprovalStatus()))
-            acceptCampaign(campaign);
-        else
-            rejectCampaign(campaign);
+        if (ApprovalStatus.ACCEPTED.name().equalsIgnoreCase(campaignApprovalReq.getApprovalStatus())) {
+            this.acceptCampaign(campaign);
+        } else {
+            this.rejectCampaign(campaign);
+        }
+
     }
 
     private void acceptCampaign(Campaign campaign) {
-        configureCampaignForAcceptance(campaign);
-        incrementUserTotalCampaigns(campaign.getUser().getUsername());
+        this.configureCampaignForAcceptance(campaign);
+        this.incrementUserTotalCampaigns(campaign.getUser().getUsername());
     }
 
     private void rejectCampaign(Campaign campaign) {
         campaign.setEnabled(false);
         campaign.setCampaignStage(CampaignStage.REJECTED);
-        campaign.setApprovedAt(LocalDateTime.now().format(dateTimeFormatter));
-        campaignUtils.saveCampaign(campaign);
+        campaign.setApprovedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        this.campaignUtils.saveCampaign(campaign);
     }
 
     private void configureCampaignForAcceptance(Campaign campaign) {
         campaign.setEnabled(true);
         campaign.setCampaignStage(CampaignStage.FUNDING);
-        campaign.setApprovedAt(LocalDateTime.now().format(dateTimeFormatter));
-        campaign.setCompletedAt(LocalDateTime.now().plusDays(campaign.getCampaignDuration()).format(dateTimeFormatter));
-        campaignUtils.saveCampaign(campaign);
+        campaign.setApprovedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        campaign.setCompletedAt(LocalDateTime.now().plusDays((long)campaign.getCampaignDuration()).format(this.dateTimeFormatter));
+        this.campaignUtils.saveCampaign(campaign);
     }
 
     private void incrementUserTotalCampaigns(String username) {
-        Users user = userUtils.utilGetUserByUsername(username);
-        user.setTotalCampaigns((short) (user.getTotalCampaigns() + 1));
-        userUtils.saveUser(user);
+        Users user = this.userUtils.utilGetUserByUsername(username);
+        user.setTotalCampaigns((short)(user.getTotalCampaigns() + 1));
+        this.userUtils.saveUser(user);
     }
+
 }
 

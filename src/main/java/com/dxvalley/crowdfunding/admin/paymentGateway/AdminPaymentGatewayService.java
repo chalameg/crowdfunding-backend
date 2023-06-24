@@ -20,23 +20,19 @@ public class AdminPaymentGatewayService {
     private final PaymentGatewayRepository paymentGatewayRepository;
     private final DateTimeFormatter dateTimeFormatter;
 
-    // Retrieves all payment gateways.
     public List<PaymentGateway> getAllPaymentGateways() {
-        return paymentGatewayRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
-
+        return this.paymentGatewayRepository.findAll(Sort.by(Sort.Direction.ASC, new String[]{"id"}));
     }
 
-    // Updates the status of a payment gateway.
     @Transactional
     public PaymentGateway setPaymentGatewayStatus(PaymentGatewayReq paymentGatewayReq) {
-        PaymentGateway paymentGateway = paymentGatewayRepository.findByGatewayName(paymentGatewayReq.getGatewayName())
-                .orElseThrow(() -> new ResourceNotFoundException("Payment Gateway not found: " + paymentGatewayReq.getGatewayName()));
-
+        PaymentGateway paymentGateway = (PaymentGateway)this.paymentGatewayRepository.findByGatewayName(paymentGatewayReq.getGatewayName()).orElseThrow(() -> {
+            return new ResourceNotFoundException("Payment Gateway not found: " + paymentGatewayReq.getGatewayName());
+        });
         paymentGateway.setIsActive(paymentGatewayReq.getIsActive());
-        paymentGateway.setUpdatedAt(LocalDateTime.now().format(dateTimeFormatter));
+        paymentGateway.setUpdatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
         paymentGateway.setUpdatedBy(paymentGatewayReq.getUpdatedBy());
-
-        return paymentGatewayRepository.save(paymentGateway);
+        return (PaymentGateway)this.paymentGatewayRepository.save(paymentGateway);
     }
 
 }

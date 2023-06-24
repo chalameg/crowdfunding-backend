@@ -25,72 +25,73 @@ public class AdminCampaignController {
     private final AdminCampaignService adminCampaignService;
     private final AdminCampaignApprovalService adminCampaignApprovalService;
 
-    @GetMapping("/approvals/{campaignId}")
+    @GetMapping({"/approvals/{campaignId}"})
     public ResponseEntity<ApprovalResponse> getCampaignApprovalByCampaignId(@PathVariable Long campaignId) {
-        return ResponseEntity.ok(adminCampaignApprovalService.getCampaignApprovalByCampaignId(campaignId));
+        return ResponseEntity.ok(this.adminCampaignApprovalService.getCampaignApprovalByCampaignId(campaignId));
     }
 
-    @PostMapping("/approvals")
-    public ResponseEntity<ApprovalResponse> approveCampaign(@Valid @ModelAttribute CampaignApprovalReq campaignApprovalReq) {
-        return ResponseEntity.ok(adminCampaignApprovalService.approveCampaign(campaignApprovalReq));
+    @PostMapping({"/approvals"})
+    public ResponseEntity<String> approveCampaign(@ModelAttribute @Valid CampaignApprovalReq campaignApprovalReq) {
+        return this.adminCampaignApprovalService.approveCampaign(campaignApprovalReq);
     }
 
     @GetMapping
     ResponseEntity<List<Campaign>> getCampaigns() {
-        return ResponseEntity.ok(adminCampaignService.getCampaigns());
+        return ResponseEntity.ok(this.adminCampaignService.getCampaigns());
     }
 
-    @GetMapping("campaignId/{campaignId}")
+    @GetMapping({"campaignId/{campaignId}"})
     ResponseEntity<CampaignDTO> getCampaign(@PathVariable Long campaignId) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignById(campaignId));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignById(campaignId));
     }
 
-    @GetMapping("/campaignOwner/{owner}")
+    @GetMapping({"/campaignOwner/{owner}"})
     ResponseEntity<List<CampaignDTO>> getCampaignByOwner(@PathVariable String owner) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignsByOwner(owner));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignsByOwner(owner));
     }
 
-    @GetMapping("/campaignsCategory/{categoryId}")
+    @GetMapping({"/campaignsCategory/{categoryId}"})
     ResponseEntity<List<CampaignDTO>> getCampaignsByCategory(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignByCategory(categoryId));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignByCategory(categoryId));
     }
 
-    @GetMapping("/campaignsSubCategory/{subCategoryId}")
+    @GetMapping({"/campaignsSubCategory/{subCategoryId}"})
     ResponseEntity<List<CampaignDTO>> getCampaignsBySubCategory(@PathVariable Long subCategoryId) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignBySubCategory(subCategoryId));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignBySubCategory(subCategoryId));
     }
 
-    @GetMapping("/campaignsStage/{campaignStage}")
+    @GetMapping({"/campaignsStage/{campaignStage}"})
     ResponseEntity<List<CampaignDTO>> getCampaignsByStage(@PathVariable String campaignStage) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignsByStage(campaignStage));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignsByStage(campaignStage));
     }
 
-    @GetMapping("/campaignsFundingType/{fundingTypeId}")
+    @GetMapping({"/campaignsFundingType/{fundingTypeId}"})
     ResponseEntity<List<CampaignDTO>> getCampaignsByFundingType(@PathVariable Long fundingTypeId) {
-        return ResponseEntity.ok(campaignRetrievalService.getCampaignsByFundingType(fundingTypeId));
+        return ResponseEntity.ok(this.campaignRetrievalService.getCampaignsByFundingType(fundingTypeId));
     }
 
-    @GetMapping("/searchCampaigns")
+    @GetMapping({"/searchCampaigns"})
     ResponseEntity<List<CampaignDTO>> searchCampaigns(@RequestParam String searchParam) {
-        return ResponseEntity.ok(campaignRetrievalService.searchCampaigns(searchParam));
+        return ResponseEntity.ok(this.campaignRetrievalService.searchCampaigns(searchParam));
     }
 
-    @PutMapping("suspend-resume/{campaignId}")
+    @PutMapping({"suspend-resume/{campaignId}"})
     ResponseEntity<?> suspendResumeCampaign(@PathVariable Long campaignId, @RequestParam String action) {
+        CampaignDTO campaignDTO;
         if (action.equalsIgnoreCase("SUSPEND")) {
-            CampaignDTO campaignDTO = adminCampaignService.suspendCampaign(campaignId);
+            campaignDTO = this.adminCampaignService.suspendCampaign(campaignId);
             return ResponseEntity.ok(campaignDTO);
         } else if (action.equalsIgnoreCase("RESUME")) {
-            CampaignDTO campaignDTO = adminCampaignService.resumeCampaign(campaignId);
+            campaignDTO = this.adminCampaignService.resumeCampaign(campaignId);
             return ResponseEntity.ok(campaignDTO);
-        } else
+        } else {
             return ApiResponse.error(HttpStatus.BAD_REQUEST, "Invalid action. Action should be either 'SUSPEND' or 'RESUME'.");
+        }
     }
 
-    @DeleteMapping("delete/{campaignId}")
+    @DeleteMapping({"delete/{campaignId}"})
     ResponseEntity<ApiResponse> deleteCampaign(@PathVariable Long campaignId) {
-        campaignOperationService.deleteCampaign(campaignId);
+        this.campaignOperationService.deleteCampaign(campaignId);
         return ApiResponse.success("Campaign successfully deleted!");
     }
-
 }

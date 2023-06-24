@@ -21,37 +21,36 @@ public class AdminUserService {
     private final UserUtils userUtils;
 
     public List<UserResponse> getUsers() {
-        List<Users> users = userRepository.findAll();
-        if (users.isEmpty())
+        List<Users> users = this.userRepository.findAll();
+        if (users.isEmpty()) {
             throw new ResourceNotFoundException("Currently, There is no User");
-
-        return users.stream().map(UserMapper::toUserResponse).toList();
+        } else {
+            return users.stream().map(UserMapper::toUserResponse).toList();
+        }
     }
 
     public UserResponse getUserById(Long userId) {
-        return UserMapper.toUserResponse(userUtils.utilGetUserByUserId(userId));
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUserId(userId));
     }
 
     public UserResponse getUserByUsername(String username) {
-        return UserMapper.toUserResponse(userUtils.utilGetUserByUsername(username));
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUsername(username));
     }
 
     public UserResponse activate_ban(Long userId) {
-        Users user = userUtils.utilGetUserByUserId(userId);
-
-        if (user.getUserStatus().equals(UserStatus.ACTIVE))
+        Users user = this.userUtils.utilGetUserByUserId(userId);
+        if (user.getUserStatus().equals(UserStatus.ACTIVE)) {
             user.setUserStatus(UserStatus.BANNED);
-        else
+        } else {
             user.setUserStatus(UserStatus.ACTIVE);
+        }
 
-        return UserMapper.toUserResponse(userRepository.save(user));
+        return UserMapper.toUserResponse((Users)this.userRepository.save(user));
     }
-
 
     public ResponseEntity<ApiResponse> delete(String username) {
-        Users user = userUtils.utilGetUserByUsername(username);
-        userRepository.delete(user);
+        Users user = this.userUtils.utilGetUserByUsername(username);
+        this.userRepository.delete(user);
         return ApiResponse.success("User Deleted Successfully");
     }
-
 }

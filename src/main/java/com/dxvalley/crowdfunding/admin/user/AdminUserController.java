@@ -1,5 +1,11 @@
 package com.dxvalley.crowdfunding.admin.user;
 
+import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
+import com.dxvalley.crowdfunding.userManager.user.UserRepository;
+import com.dxvalley.crowdfunding.userManager.user.UserStatus;
+import com.dxvalley.crowdfunding.userManager.user.UserUtils;
+import com.dxvalley.crowdfunding.userManager.user.Users;
+import com.dxvalley.crowdfunding.userManager.userDTO.UserMapper;
 import com.dxvalley.crowdfunding.userManager.userDTO.UserResponse;
 import com.dxvalley.crowdfunding.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,32 +18,41 @@ import java.util.List;
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 public class AdminUserController {
-    private final AdminUserService adminUserService;
+    private final UserRepository userRepository;
+    private final UserUtils userUtils;
 
-    @GetMapping
-    public ResponseEntity<List<UserResponse>> getUsers() {
-        return ResponseEntity.ok(adminUserService.getUsers());
+    public List<UserResponse> getUsers() {
+        List<Users> users = this.userRepository.findAll();
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException("Currently, There is no User");
+        } else {
+            return users.stream().map(UserMapper::toUserResponse).toList();
+        }
     }
 
-    @GetMapping("/userId/{userId}")
-    public ResponseEntity<UserResponse> getByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(adminUserService.getUserById(userId));
+    public UserResponse getUserById(Long userId) {
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUserId(userId));
     }
 
-    @GetMapping("/username/{username}")
-    ResponseEntity<UserResponse> getByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(adminUserService.getUserByUsername(username));
+    public UserResponse getUserByUsername(String username) {
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUsername(username));
     }
 
-    @PutMapping("/activate-ban/{userId}")
-    public ResponseEntity<UserResponse> activate_ban(@PathVariable Long userId) {
-        return ResponseEntity.ok(adminUserService.activate_ban(userId));
+    public UserResponse activate_ban(Long userId) {
+        Users user = this.userUtils.utilGetUserByUserId(userId);
+        if (user.getUserStatus().equals(UserStatus.ACTIVE)) {
+            user.setUserStatus(UserStatus.BANNED);
+        } else {
+            user.setUserStatus(UserStatus.ACTIVE);
+        }
+
+        return UserMapper.toUserResponse((Users)this.userRepository.save(user));
     }
 
-    @DeleteMapping("/delete/{username}")
-    ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
-        return adminUserService.delete(username);
+    public ResponseEntity<ApiResponse> delete(String username) {
+        Users user = this.userUtils.utilGetUserByUsername(username);
+        this.userRepository.delete(user);
+        return ApiResponse.success("User Deleted Successfully");
     }
-
 }
 
