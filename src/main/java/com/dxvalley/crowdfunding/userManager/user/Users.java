@@ -21,7 +21,7 @@ public class Users implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long userId;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
     @Column(nullable = false)
     private String password;
@@ -30,8 +30,12 @@ public class Users implements UserDetails {
     private String avatarUrl;
     private String biography;
     private String website;
+    @Column(
+            unique = true
+    )
+    private String email;
     private String address;
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private UserStatus userStatus;
     private short totalCampaigns;
     private short contributions;

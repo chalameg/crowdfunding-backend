@@ -10,28 +10,32 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequiredArgsConstructor
-@RequestMapping("/api/campaignBankAccount")
+@RequestMapping({"/api/campaignBankAccount"})
 public class CampaignBankAccountController {
     private final CampaignBankAccountService campaignBankAccountService;
 
-    @GetMapping("/byAccountNumber/{accountNumber}")
-    ResponseEntity<BankAccountRes> getCampaignBankAccountByCampaign(
-            @PathVariable @Pattern(regexp = "^[0-9]{13}$",
-                    message = "Account number must be 13 digits") String accountNumber) {
-        BankAccountRes campaignBankAccount = campaignBankAccountService.getByAccountNumber(accountNumber);
+    @GetMapping({"/byAccountNumber/{accountNumber}"})
+    ResponseEntity<BankAccountRes> getCampaignBankAccountByCampaign(@PathVariable @Pattern(
+            regexp = "^[0-9]{13}$",
+            message = "Account number must be 13 digits"
+    ) String accountNumber) {
+        BankAccountRes campaignBankAccount = this.campaignBankAccountService.getByAccountNumber(accountNumber);
         return ResponseEntity.ok(campaignBankAccount);
     }
 
-    @PostMapping("/add")
+    @PostMapping({"/add"})
     public ResponseEntity<CampaignBankAccount> addCampaignBankAccount(@RequestBody @Valid AccountAddReq accountAddReq) {
-        CampaignBankAccount campaignBankAccount = campaignBankAccountService.addBankAccount(accountAddReq);
+        CampaignBankAccount campaignBankAccount = this.campaignBankAccountService.addBankAccount(accountAddReq);
         return ResponseEntity.ok(campaignBankAccount);
     }
 
-    @GetMapping("/checkBankAccountExistence/{bankAccount}")
+    @GetMapping({"/checkBankAccountExistence/{bankAccount}"})
     ResponseEntity<AccountExistenceRes> checkBankAccountExistence(@PathVariable String bankAccount) {
-        AccountExistenceRes response = campaignBankAccountService.checkBankAccountExistence(bankAccount);
+        AccountExistenceRes response = this.campaignBankAccountService.checkBankAccountExistence(bankAccount);
         return ResponseEntity.ok(response);
+    }
+
+    public CampaignBankAccountController(final CampaignBankAccountService campaignBankAccountService) {
+        this.campaignBankAccountService = campaignBankAccountService;
     }
 }

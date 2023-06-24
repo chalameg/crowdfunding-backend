@@ -19,7 +19,6 @@ public interface PromotionService {
     List<PromotionResponse> getPromotionByCampaign(Long campaignId);
 
     ResponseEntity<ApiResponse> deletePromotion(Long promotionId);
-
 }
 
 

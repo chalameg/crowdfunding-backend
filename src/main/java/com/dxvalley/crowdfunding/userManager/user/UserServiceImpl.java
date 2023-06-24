@@ -34,58 +34,63 @@ public class UserServiceImpl implements UserService {
     private final DateTimeFormatter dateTimeFormatter;
     private final UserUtils userUtils;
 
-    @Override
     public UserResponse getUserById(Long userId) {
-        return UserMapper.toUserResponse(userUtils.utilGetUserByUserId(userId));
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUserId(userId));
     }
 
-    @Override
     public UserResponse getUserByUsername(String username) {
-        return UserMapper.toUserResponse(userUtils.utilGetUserByUsername(username));
+        return UserMapper.toUserResponse(this.userUtils.utilGetUserByUsername(username));
     }
+
 
     @Override
     public UserResponse register(UserRegistrationReq userRegistrationReq) {
         String username = userRegistrationReq.getUsername();
-        userUtils.validateUsername(username);
-        userUtils.validateUsernameAvailability(username);
+        this.userUtils.validateUsername(username);
+        this.userUtils.validateUsernameAvailability(username);
 
-        Users user = userUtils.createUser(userRegistrationReq);
-        Users savedUser = userUtils.saveUser(user);
-        confirmationTokenService.sendConfirmationToken(savedUser);
+        Users user = this.userUtils.createUser(username, userRegistrationReq);
+        Users savedUser = this.userUtils.saveUser(user);
+        this.confirmationTokenService.sendConfirmationToken(savedUser);
 
         return UserMapper.toUserResponse(user);
     }
 
     @Override
     public UserResponse editUser(Long userId, UserUpdateReq updateReq) {
-        Users user = userUtils.utilGetUserByUserId(userId);
-
-        if (updateReq.getFullName() != null)
+        Users user = this.userUtils.utilGetUserByUserId(userId);
+        if (updateReq.getFullName() != null) {
             user.setFullName(updateReq.getFullName());
+        }
 
-        if (updateReq.getBiography() != null)
+        if (updateReq.getBiography() != null) {
             user.setBiography(updateReq.getBiography());
+        }
 
-        if (updateReq.getWebsite() != null)
+        if (updateReq.getWebsite() != null) {
             user.setWebsite(updateReq.getWebsite());
+        }
 
-        if (updateReq.getAddress() != null)
+        if (updateReq.getAddress() != null) {
             user.setAddress(updateReq.getAddress());
+        }
 
-        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
+        if (updateReq.getEmail() != null) {
+            user.setEmail(updateReq.getEmail());
+        }
 
-        Users updatedUser = userUtils.saveUser(user);
+        user.setEditedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        Users updatedUser = this.userUtils.saveUser(user);
         return UserMapper.toUserResponse(updatedUser);
     }
 
     @Override
     public UserResponse uploadUserAvatar(String userName, MultipartFile userAvatar) {
-        String avatarUrl = fileUploadService.uploadFile(userAvatar);
-        Users user = userUtils.utilGetUserByUsername(userName);
+        String avatarUrl = this.fileUploadService.uploadFile(userAvatar);
+        Users user = this.userUtils.utilGetUserByUsername(userName);
         user.setAvatarUrl(avatarUrl);
-        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
-        Users result = userUtils.saveUser(user);
+        user.setEditedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        Users result = this.userUtils.saveUser(user);
 
         return UserMapper.toUserResponse(result);
     }
@@ -93,44 +98,39 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<ApiResponse> changePassword(String username, ChangePassword temp) {
-        Users user = userUtils.utilGetUserByUsername(username);
+        Users user = this.userUtils.utilGetUserByUsername(username);
 
-        validateOldPassword(user, temp.getOldPassword());
+        this.validateOldPassword(user, temp.getOldPassword());
 
-        user.setPassword(passwordEncoder.encode(temp.getNewPassword()));
-        user.setEditedAt(LocalDateTime.now().format(dateTimeFormatter));
-        userUtils.saveUser(user);
+        user.setPassword(this.passwordEncoder.encode(temp.getNewPassword()));
+        user.setEditedAt(LocalDateTime.now().format(this.dateTimeFormatter));
+        this.userUtils.saveUser(user);
 
         return ApiResponse.success("Password Changed Successfully!");
     }
 
     private void validateOldPassword(Users user, String oldPassword) {
-        boolean isPasswordMatch = passwordEncoder.matches(oldPassword, user.getPassword());
-        if (!isPasswordMatch)
+        boolean isPasswordMatch = this.passwordEncoder.matches(oldPassword, user.getPassword());
+        if (!isPasswordMatch) {
             throw new BadRequestException("Incorrect old Password!");
+        }
     }
 
 
     @Override
     public ResponseEntity<ApiResponse> forgotPassword(String username) {
-        Users user = userUtils.utilGetUserByUsername(username);
-        if (emailService.isValidEmail(username)) {
-            String token = UUID.randomUUID().toString();
-            String link = "http://10.1.177.121/resetPassword/" + token;
-
-            emailService.send(
-                    user.getUsername(),
-                    EmailBuilder.emailBuilderForPasswordReset(user.getFullName(), link),
-                    "Reset your password");
-
-            confirmationTokenService.saveConfirmationToken(user, token, 30);
-
+        Users user = this.userUtils.utilGetUserByUsername(username);
+        String code;
+        if (this.emailService.isValidEmail(username)) {
+            code = UUID.randomUUID().toString();
+            String link = "http://10.100.51.60/resetPassword/" + code;
+            this.emailService.send(user.getUsername(), EmailBuilder.emailBuilderForPasswordReset(user.getFullName(), link), "Reset your password");
+            this.confirmationTokenService.saveConfirmationToken(user, code, 30);
             return ApiResponse.success("Please check your email");
         } else {
-            String code = String.format("%06d", new Random().nextInt(999999));
-            smsService.sendOtp(username, code);
-            confirmationTokenService.saveConfirmationToken(user, code, 3);
-
+            code = String.format("%06d", (new Random()).nextInt(999999));
+            this.smsService.sendOtp(username, code);
+            this.confirmationTokenService.saveConfirmationToken(user, code, 3);
             return ApiResponse.success("Please check your phone");
         }
     }

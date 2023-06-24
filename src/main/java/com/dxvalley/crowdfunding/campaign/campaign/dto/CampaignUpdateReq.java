@@ -1,6 +1,7 @@
 package com.dxvalley.crowdfunding.campaign.campaign.dto;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class CampaignUpdateReq {
@@ -12,5 +13,8 @@ public class CampaignUpdateReq {
     private String description;
     private String risks;
     private Short campaignDuration;
+    private MultipartFile campaignImage;
+    private String campaignVideoUrl;
+
 
 }

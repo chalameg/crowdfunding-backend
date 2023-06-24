@@ -22,31 +22,22 @@ public class CampaignSharingServiceImpl implements CampaignSharingService {
     private final CampaignUtils campaignUtils;
 
     // Retrieves the share counts for a campaign based on the campaign ID.
-    @Override
     public CampaignShareCountResponse getByCampaignId(Long campaignId) {
-        List<CampaignSharing> campaignShares = campaignSharingRepository.findByCampaignId(campaignId);
+        List<CampaignSharing> campaignShares = this.campaignSharingRepository.findByCampaignId(campaignId);
         CampaignShareCountResponse campaignShareCountResponse = new CampaignShareCountResponse();
-
-        campaignShares.stream()
-                .map(CampaignSharing::getSharingPlatform)
-                .map(SharingPlatform::valueOf)
-                .forEach(sharingPlatform -> {
-                    int shareCount = calculateShareCount(campaignShares, sharingPlatform);
-                    setShareCount(campaignShareCountResponse, sharingPlatform, shareCount);
-                });
-
+        campaignShares.stream().map(CampaignSharing::getSharingPlatform).map(SharingPlatform::valueOf).forEach((sharingPlatform) -> {
+            int shareCount = this.calculateShareCount(campaignShares, sharingPlatform);
+            this.setShareCount(campaignShareCountResponse, sharingPlatform, shareCount);
+        });
         return campaignShareCountResponse;
     }
 
-    //Calculates the total share count for a specific sharing platform.
     private int calculateShareCount(List<CampaignSharing> campaignShares, SharingPlatform sharingPlatform) {
-        return campaignShares.stream()
-                .filter(campaignSharing -> campaignSharing.getSharingPlatform().equals(sharingPlatform.name()))
-                .mapToInt(CampaignSharing::getShareCount)
-                .sum();
+        return campaignShares.stream().filter((campaignSharing) -> {
+            return campaignSharing.getSharingPlatform().equals(sharingPlatform.name());
+        }).mapToInt(CampaignSharing::getShareCount).sum();
     }
 
-    // Sets the share count for a specific sharing platform in the CampaignShareCountResponse object.
     private void setShareCount(CampaignShareCountResponse campaignShareCountResponse, SharingPlatform sharingPlatform, int shareCount) {
         switch (sharingPlatform) {
             case FACEBOOK:
@@ -72,44 +63,36 @@ public class CampaignSharingServiceImpl implements CampaignSharingService {
                 break;
             default:
                 campaignShareCountResponse.setOtherShares(shareCount);
-                break;
         }
+
     }
 
-    // Adds a share for a campaign.
-
-    @Override
     @Transactional
     public CampaignShareResponse addShareCampaign(CampaignSharingReq campaignSharingReq) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        CampaignSharing existingSharing = findExistingSharing(campaignSharingReq, username);
+        CampaignSharing existingSharing = this.findExistingSharing(campaignSharingReq, username);
+        CampaignSharing newSharing;
         if (existingSharing != null) {
             existingSharing.setShareCount(existingSharing.getShareCount() + 1);
-            existingSharing.setSharingTime(LocalDateTime.now().format(dateTimeFormatter));
-            CampaignSharing campaignSharing = campaignSharingRepository.save(existingSharing);
-            return CampaignShareMapper.toCampaignShareResponse(campaignSharing);
+            existingSharing.setSharingTime(LocalDateTime.now().format(this.dateTimeFormatter));
+            newSharing = (CampaignSharing)this.campaignSharingRepository.save(existingSharing);
+            return CampaignShareMapper.toCampaignShareResponse(newSharing);
+        } else {
+            newSharing = this.createNewSharing(campaignSharingReq, username);
+            return CampaignShareMapper.toCampaignShareResponse(newSharing);
         }
-
-        CampaignSharing newSharing = createNewSharing(campaignSharingReq, username);
-        return CampaignShareMapper.toCampaignShareResponse(newSharing);
     }
 
-    // Finds an existing campaign share based on the campaign ID, username, and sharing platform.
     private CampaignSharing findExistingSharing(CampaignSharingReq campaignSharingReq, String username) {
-        if (!username.equals("anonymousUser"))
-            return campaignSharingRepository.findByCampaignIdAndUsernameAndSharingPlatform(
-                    campaignSharingReq.getCampaignId(), username, SharingPlatform.lookup(campaignSharingReq.getSharingPlatform()));
-
-        return null;
+        return !username.equals("anonymousUser") ? this.campaignSharingRepository.findByCampaignIdAndUsernameAndSharingPlatform(campaignSharingReq.getCampaignId(), username, SharingPlatform.lookup(campaignSharingReq.getSharingPlatform())) : null;
     }
 
     private CampaignSharing createNewSharing(CampaignSharingReq campaignSharingReq, String username) {
         CampaignSharing newSharing = new CampaignSharing();
-        newSharing.setCampaign(campaignUtils.utilGetCampaignById(campaignSharingReq.getCampaignId()));
+        newSharing.setCampaign(this.campaignUtils.utilGetCampaignById(campaignSharingReq.getCampaignId()));
         newSharing.setUsername(username);
         newSharing.setSharingPlatform(SharingPlatform.lookup(campaignSharingReq.getSharingPlatform()));
-        newSharing.setSharingTime(LocalDateTime.now().format(dateTimeFormatter));
+        newSharing.setSharingTime(LocalDateTime.now().format(this.dateTimeFormatter));
         newSharing.setShareCount(1);
         return newSharing;
     }

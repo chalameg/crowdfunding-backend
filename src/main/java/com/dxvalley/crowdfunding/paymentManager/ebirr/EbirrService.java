@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.concurrent.CompletableFuture;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -26,9 +24,9 @@ public class EbirrService {
 
     public RequestData createRequestData(Payment payment) {
         return RequestData.builder()
-                .clientId(ebirrProperties.getClientId())
-                .secrateKey(ebirrProperties.getSecrateKey())
-                .apiKey(ebirrProperties.getApiKey())
+                .clientId(this.ebirrProperties.getClientId())
+                .secrateKey(this.ebirrProperties.getSecrateKey())
+                .apiKey(this.ebirrProperties.getApiKey())
                 .orderID(payment.getOrderId())
                 .requestId(payment.getOrderId())
                 .referenceId(payment.getOrderId())
@@ -38,19 +36,19 @@ public class EbirrService {
                 .build();
     }
 
-    public CompletableFuture<EbirrPaymentResponse> sendPaymentRequest(Payment payment) {
-        RequestData ebirrPaymentRequest = createRequestData(payment);
+    public EbirrPaymentResponse sendPaymentRequest(Payment payment) {
+        RequestData ebirrPaymentRequest = this.createRequestData(payment);
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<RequestData> request = new HttpEntity<>(ebirrPaymentRequest, headers);
-            ResponseEntity<EbirrPaymentResponse> paymentResponse = restTemplate.postForEntity(ebirrProperties.getUrl(), request, EbirrPaymentResponse.class);
-
+            HttpEntity<RequestData> request = new HttpEntity(ebirrPaymentRequest, headers);
+            ResponseEntity<EbirrPaymentResponse> paymentResponse = this.restTemplate.postForEntity(this.ebirrProperties.getUrl(), request, EbirrPaymentResponse.class);
             if (paymentResponse.getStatusCode().is2xxSuccessful())
-                return CompletableFuture.completedFuture(paymentResponse.getBody());
+                return paymentResponse.getBody();
+            else
+                throw new PaymentCannotProcessedException("Error processing payment");
 
-            throw new PaymentCannotProcessedException("Error processing payment");
         } catch (Exception ex) {
             log.error("Error processing payment request for {}", ebirrPaymentRequest);
             log.error(ex.getMessage());

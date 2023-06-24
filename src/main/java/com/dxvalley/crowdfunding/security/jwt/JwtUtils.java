@@ -2,6 +2,7 @@ package com.dxvalley.crowdfunding.security.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.dxvalley.crowdfunding.security.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,35 +10,45 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 public class JwtUtils {
-    public static String PRIVATE_KEY;
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 30 * 60 * 1000; // 30 minutes
+    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 24 * 7 * 60 * 60 * 1000; // one week
+    public static String SECRET_KEY;
+    private static CustomUserDetailsService customUserDetailsService;
 
-    public JwtUtils(@Value("${PRIVATE_KEY}") String privateKey) {
-        if (privateKey == null) {
-            throw new IllegalArgumentException("PRIVATE_KEY cannot be null or empty.");
-        }
-        JwtUtils.PRIVATE_KEY = privateKey;
+    public JwtUtils(@Value("${SECRET_KEY}") String privateKey, CustomUserDetailsService customUserDetailsService) {
+        JwtUtils.SECRET_KEY = privateKey;
+        JwtUtils.customUserDetailsService = customUserDetailsService;
     }
 
+    public static String generateAccessToken(User user, HttpServletRequest request) {
+        customUserDetailsService.updateLastLogin(user.getUsername());
 
-    public static String create_access_token(User user, HttpServletRequest request) {
+        List<String> authorities = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
         return JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 30 * 60 * 1000)) // 3o minutes
+                .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME)) // 30 minutes
                 .withIssuer(request.getRequestURL().toString())
-                .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
-                .sign(Algorithm.HMAC256(PRIVATE_KEY.getBytes()));
+                .withClaim("authorities", authorities)
+                .sign(Algorithm.HMAC256(SECRET_KEY.getBytes()));
     }
 
-    public static String create_refresh_token(User user, HttpServletRequest request) {
+    public static String generateRefreshToken(User user, HttpServletRequest request) {
         return JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 7 * 60 * 60 * 1000)) // one week
+                .withExpiresAt(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
                 .withIssuer(request.getRequestURL().toString())
-                .sign(Algorithm.HMAC256(PRIVATE_KEY.getBytes()));
+                .sign(Algorithm.HMAC256(SECRET_KEY.getBytes()));
+    }
+
+    public static String getSecretKey() {
+        return SECRET_KEY;
     }
 }
 

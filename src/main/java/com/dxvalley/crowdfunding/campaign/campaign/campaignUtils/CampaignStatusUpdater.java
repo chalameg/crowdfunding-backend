@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -22,30 +23,23 @@ public class CampaignStatusUpdater {
     private final CampaignRepository campaignRepository;
     private final DateTimeFormatter dateTimeFormatter;
 
-
-    /**
-     * Scheduled task that updates the campaign status by checking the expiration time.
-     * <p>
-     * This task runs every 5 minutes and is executed asynchronously using the "asyncExecutor" thread pool.
-     * It retrieves campaigns in the "FUNDING" stage from the repository, compares their expiration time
-     * with the current time, and updates the campaign stage to "COMPLETED" if the expiration time has passed.
-     * The updated campaigns are then saved back to the repository.
-     *
-     * @throws DataAccessException if an error occurs while accessing the database.
-     */
-    @Scheduled(fixedDelay = 300000) // runs every 5 minutes
+    @Scheduled(
+            fixedDelay = 300000L
+    )
     @Async("asyncExecutor")
     public void updateCampaignStatus() {
-        List<Campaign> campaigns = campaignRepository.findCampaignsByCampaignStage(CampaignStage.FUNDING);
-
+        List<Campaign> campaigns = this.campaignRepository.findCampaignsByCampaignStage(CampaignStage.FUNDING);
         LocalDateTime currentDateTime = LocalDateTime.now();
-        for (Campaign campaign : campaigns) {
-            LocalDateTime expiredAt = LocalDateTime.parse(campaign.getCompletedAt(), dateTimeFormatter);
+        Iterator iterator = campaigns.iterator();
+
+        while(iterator.hasNext()) {
+            Campaign campaign = (Campaign)iterator.next();
+            LocalDateTime expiredAt = LocalDateTime.parse(campaign.getCompletedAt(), this.dateTimeFormatter);
             if (expiredAt.isBefore(currentDateTime)) {
                 campaign.setCampaignStage(CampaignStage.COMPLETED);
             }
         }
 
-        campaignRepository.saveAll(campaigns);
+        this.campaignRepository.saveAll(campaigns);
     }
 }

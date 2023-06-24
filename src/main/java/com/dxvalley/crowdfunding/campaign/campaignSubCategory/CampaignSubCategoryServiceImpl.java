@@ -20,70 +20,65 @@ public class CampaignSubCategoryServiceImpl implements CampaignSubCategoryServic
     private final CampaignSubCategoryRepository campaignSubCategoryRepository;
     private final CampaignCategoryRepository campaignCategoryRepository;
 
-    @Override
     public List<SubCategoryRes> getCampaignSubCategories() {
-        List<CampaignSubCategory> campaignSubCategories = campaignSubCategoryRepository.findAll();
-        if (campaignSubCategories.isEmpty())
+        List<CampaignSubCategory> campaignSubCategories = this.campaignSubCategoryRepository.findAll();
+        if (campaignSubCategories.isEmpty()) {
             throw new ResourceNotFoundException("Currently, There is no Campaign SubCategory.");
-
-        return campaignSubCategories.stream().map(SubCategoryMapper::toSubCategoryRes).toList();
+        } else {
+            return campaignSubCategories.stream().map(SubCategoryMapper::toSubCategoryRes).toList();
+        }
     }
 
-    @Override
     public CampaignSubCategory getCampaignSubCategoryById(Short campaignSubCategoryId) {
-        return campaignSubCategoryRepository
-                .findById(campaignSubCategoryId).orElseThrow(
-                        () -> new ResourceNotFoundException("There is no campaign subcategory with this ID."));
+        return (CampaignSubCategory)this.campaignSubCategoryRepository.findById(campaignSubCategoryId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign subcategory with this ID.");
+        });
     }
 
-    @Override
     public List<SubCategoryRes> getCampaignSubCategoryByCategory(Short campaignCategoryId) {
-        List<CampaignSubCategory> campaignSubCategories = campaignSubCategoryRepository.
-                findByCampaignCategoryId(campaignCategoryId);
-
+        List<CampaignSubCategory> campaignSubCategories = this.campaignSubCategoryRepository.findByCampaignCategoryId(campaignCategoryId);
         return campaignSubCategories.stream().map(SubCategoryMapper::toSubCategoryRes).toList();
     }
 
-    @Override
     public CampaignSubCategory addCampaignSubCategory(SubCategoryReq subCategoryReq) {
-        validateSubCategoryNameNotExist(subCategoryReq.getName());
-        CampaignCategory campaignCategory = getCategoryById(subCategoryReq.getCategoryId());
-        CampaignSubCategory campaignSubCategory = createCampaignSubCategory(subCategoryReq, campaignCategory);
-        return campaignSubCategoryRepository.save(campaignSubCategory);
+        this.validateSubCategoryNameNotExist(subCategoryReq.getName());
+        CampaignCategory campaignCategory = this.getCategoryById(subCategoryReq.getCategoryId());
+        CampaignSubCategory campaignSubCategory = this.createCampaignSubCategory(subCategoryReq, campaignCategory);
+        return (CampaignSubCategory)this.campaignSubCategoryRepository.save(campaignSubCategory);
     }
 
-    @Override
     public CampaignSubCategory editCampaignSubCategory(Short campaignSubCategoryId, CampaignSubCategory tempcampaignSubCategory) {
-        CampaignSubCategory campaignSubCategory = campaignSubCategoryRepository.findById(campaignSubCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no campaign subcategory with this ID."));
-
-        if (tempcampaignSubCategory.getName() != null && tempcampaignSubCategory.getName().length() > 0)
+        CampaignSubCategory campaignSubCategory = (CampaignSubCategory)this.campaignSubCategoryRepository.findById(campaignSubCategoryId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign subcategory with this ID.");
+        });
+        if (tempcampaignSubCategory.getName() != null && tempcampaignSubCategory.getName().length() > 0) {
             campaignSubCategory.setName(tempcampaignSubCategory.getName());
+        }
 
-        if (tempcampaignSubCategory.getDescription() != null && tempcampaignSubCategory.getDescription().length() > 0)
+        if (tempcampaignSubCategory.getDescription() != null && tempcampaignSubCategory.getDescription().length() > 0) {
             campaignSubCategory.setDescription(tempcampaignSubCategory.getDescription());
+        }
 
-        return campaignSubCategoryRepository.save(campaignSubCategory);
+        return (CampaignSubCategory)this.campaignSubCategoryRepository.save(campaignSubCategory);
     }
 
-    @Override
     public ResponseEntity<ApiResponse> deleteCampaignSubCategory(Short campaignSubCategoryId) {
-        getCampaignSubCategoryById(campaignSubCategoryId);
-        campaignSubCategoryRepository.deleteById(campaignSubCategoryId);
-
+        this.getCampaignSubCategoryById(campaignSubCategoryId);
+        this.campaignSubCategoryRepository.deleteById(campaignSubCategoryId);
         return ApiResponse.success("Campaign subCategory Deleted successfully!");
     }
 
     private void validateSubCategoryNameNotExist(String name) {
-        CampaignSubCategory subCategory = campaignSubCategoryRepository.findByName(name);
-        if (subCategory != null)
+        CampaignSubCategory subCategory = this.campaignSubCategoryRepository.findByName(name);
+        if (subCategory != null) {
             throw new ResourceAlreadyExistsException("There is already a sub-category with this name!");
+        }
     }
 
     private CampaignCategory getCategoryById(Short campaignCategoryId) {
-        return campaignCategoryRepository
-                .findById(campaignCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("There is no campaign Category with this ID."));
+        return (CampaignCategory)this.campaignCategoryRepository.findById(campaignCategoryId).orElseThrow(() -> {
+            return new ResourceNotFoundException("There is no campaign Category with this ID.");
+        });
     }
 
     private CampaignSubCategory createCampaignSubCategory(SubCategoryReq subCategoryReq, CampaignCategory campaignCategory) {

@@ -1,8 +1,8 @@
-package com.dxvalley.crowdfunding.payment.cooPass;
+package com.dxvalley.crowdfunding.paymentManager.cooPass;
 
 import com.dxvalley.crowdfunding.exception.customException.PaymentCannotProcessedException;
 import com.dxvalley.crowdfunding.exception.customException.ResourceNotFoundException;
-import com.dxvalley.crowdfunding.payment.paymentDTO.PaymentRequestDTO;
+import com.dxvalley.crowdfunding.paymentManager.paymentDTO.PaymentRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
@@ -18,6 +18,7 @@ public class CooPassService {
     private final String secretKey;
     private final String clientId;
     private final String apiKey;
+
 
     public CooPassService(
             @Value("${COOPASS.PAYMENT_INITIATION_URI}") String paymentInitiationURI,

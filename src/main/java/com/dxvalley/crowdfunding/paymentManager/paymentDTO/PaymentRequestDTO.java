@@ -1,6 +1,6 @@
-package com.dxvalley.crowdfunding.payment.paymentDTO;
+package com.dxvalley.crowdfunding.paymentManager.paymentDTO;
 
-import com.dxvalley.crowdfunding.payment.PaymentProcessor;
+import com.dxvalley.crowdfunding.paymentManager.paymentGateway.PaymentProcessor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

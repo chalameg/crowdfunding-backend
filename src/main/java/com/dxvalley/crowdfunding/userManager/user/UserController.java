@@ -13,52 +13,51 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-
     private final UserService userService;
 
-    @GetMapping("/getUser/{userId}")
+    @GetMapping({"/getUser/{userId}"})
     public ResponseEntity<UserResponse> getByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+        return ResponseEntity.ok(this.userService.getUserById(userId));
     }
 
-    @GetMapping("/getUserByUsername/{username}")
+    @GetMapping({"/getUserByUsername/{username}"})
     ResponseEntity<UserResponse> getByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.getUserByUsername(username));
+        return ResponseEntity.ok(this.userService.getUserByUsername(username));
     }
 
-    @PostMapping("/register")
+    @PostMapping({"/register"})
     public ResponseEntity<UserResponse> register(@RequestBody @Valid UserRegistrationReq userRegistrationReq) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(userRegistrationReq));
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.register(userRegistrationReq));
     }
 
-    @PutMapping("/edit/{userId}")
+    @PutMapping({"/edit/{userId}"})
     public ResponseEntity<UserResponse> editUser(@PathVariable Long userId, @RequestBody @Valid UserUpdateReq updateReq) {
-        return ResponseEntity.ok(userService.editUser(userId, updateReq));
+        return ResponseEntity.ok(this.userService.editUser(userId, updateReq));
     }
 
-    @PutMapping("/uploadUserAvatar/{userName}")
+    @PutMapping({"/uploadUserAvatar/{userName}"})
     public ResponseEntity<UserResponse> uploadUserAvatar(@PathVariable String userName, @RequestParam MultipartFile userAvatar) {
-        return ResponseEntity.ok(userService.uploadUserAvatar(userName, userAvatar));
+        return ResponseEntity.ok(this.userService.uploadUserAvatar(userName, userAvatar));
     }
 
-    @PutMapping("/changePassword/{userName}")
+    @PutMapping({"/changePassword/{userName}"})
     public ResponseEntity<ApiResponse> changePassword(@PathVariable String userName, @RequestBody @Valid ChangePassword changePassword) {
-        return userService.changePassword(userName, changePassword);
+        return this.userService.changePassword(userName, changePassword);
     }
 
-    @PostMapping("/forgotPassword/{username}")
+    @PostMapping({"/forgotPassword/{username}"})
     ResponseEntity<ApiResponse> forgotPassword(@PathVariable String username) {
-        return userService.forgotPassword(username);
+        return this.userService.forgotPassword(username);
     }
 
-    @PutMapping("/resetPassword")
+    @PutMapping({"/resetPassword"})
     ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPassword resetPassword) {
-        return userService.resetPassword(resetPassword);
+        return this.userService.resetPassword(resetPassword);
     }
 
-    @DeleteMapping("/delete/{username}")
+    @DeleteMapping({"/delete/{username}"})
     ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
-        return userService.delete(username);
+        return this.userService.delete(username);
     }
 
 }

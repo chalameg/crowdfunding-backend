@@ -1,7 +1,7 @@
-package com.dxvalley.crowdfunding.payment.paymentDTO;
+package com.dxvalley.crowdfunding.paymentManager.paymentDTO;
 
-import com.dxvalley.crowdfunding.payment.PaymentProcessor;
-import com.dxvalley.crowdfunding.payment.PaymentStatus;
+import com.dxvalley.crowdfunding.paymentManager.payment.PaymentStatus;
+import com.dxvalley.crowdfunding.paymentManager.paymentGateway.PaymentProcessor;
 import lombok.Data;
 
 @Data

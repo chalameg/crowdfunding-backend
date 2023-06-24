@@ -20,5 +20,4 @@ public interface CampaignRetrievalService {
     List<CampaignDTO> searchCampaigns(String searchParam);
 
     List<CampaignDTO> getCampaigns();
-
 }

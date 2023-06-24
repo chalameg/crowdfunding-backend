@@ -1,6 +1,6 @@
 package com.dxvalley.crowdfunding.configuration;
 
-import com.dxvalley.crowdfunding.exception.AsyncMethodException;
+import com.dxvalley.crowdfunding.exception.customException.AsyncMethodException;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -47,41 +47,41 @@ public class AsyncConfig implements AsyncConfigurer {
 
         return executor;
     }
+}
 
-    @Component
-    @ConfigurationProperties(prefix = "threadpool")
-    @Setter
-    private class ThreadPoolProperties {
-        @Min(value = 1, message = "Core pool size must be at least 1")
-        private int corePoolSize;
+@Component
+@ConfigurationProperties(prefix = "threadpool")
+@Setter
+class ThreadPoolProperties {
+    @Min(value = 1, message = "Core pool size must be at least 1")
+    private int corePoolSize;
 
-        @Min(value = 1, message = "Max pool size must be at least 1")
-        private int maxPoolSize;
+    @Min(value = 1, message = "Max pool size must be at least 1")
+    private int maxPoolSize;
 
-        @Min(value = 1, message = "Queue capacity must be at least 1")
-        private int queueCapacity;
+    @Min(value = 1, message = "Queue capacity must be at least 1")
+    private int queueCapacity;
 
 
-        public int getCorePoolSize() {
-            return corePoolSize <= 0 ? 10 : corePoolSize;
-        }
-
-        public int getMaxPoolSize() {
-            return maxPoolSize <= 0 ? 20 : maxPoolSize;
-        }
-
-        public int getQueueCapacity() {
-            return queueCapacity <= 0 ? 50 : queueCapacity;
-        }
+    public int getCorePoolSize() {
+        return corePoolSize <= 0 ? 10 : corePoolSize;
     }
 
-    @Component
-    private class CustomAsyncExceptionHandler implements AsyncUncaughtExceptionHandler {
-
-        @Override
-        public void handleUncaughtException(Throwable throwable, Method method, Object... params) {
-            throw new AsyncMethodException(throwable.getMessage());
-        }
-
+    public int getMaxPoolSize() {
+        return maxPoolSize <= 0 ? 20 : maxPoolSize;
     }
+
+    public int getQueueCapacity() {
+        return queueCapacity <= 0 ? 50 : queueCapacity;
+    }
+}
+
+@Component
+class CustomAsyncExceptionHandler implements AsyncUncaughtExceptionHandler {
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, Method method, Object... params) {
+        throw new AsyncMethodException(throwable.getMessage());
+    }
+
 }

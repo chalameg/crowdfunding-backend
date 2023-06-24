@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -18,37 +19,36 @@ public class ApprovalFileService {
     private final DateTimeFormatter dateTimeFormatter;
 
     public List<ApprovalFile> getAllApprovalFiles() {
-        return approvalFileRepository.findAll();
+        return this.approvalFileRepository.findAll();
     }
 
     public List<ApprovalFile> saveApprovalFile(List<MultipartFile> approvalFiles) {
-        List<ApprovalFile> approvalFileList = new ArrayList<>();
-
+        List<ApprovalFile> approvalFileList = new ArrayList();
         if (approvalFiles != null && !approvalFiles.isEmpty()) {
-            for (MultipartFile file : approvalFiles) {
-                ApprovalFile approvalFile = createApprovalFile(file);
+            Iterator iterator = approvalFiles.iterator();
+
+            while (iterator.hasNext()) {
+                MultipartFile file = (MultipartFile) iterator.next();
+                ApprovalFile approvalFile = this.createApprovalFile(file);
                 approvalFileList.add(approvalFile);
             }
         }
 
-        return approvalFileRepository.saveAll(approvalFileList);
+        return this.approvalFileRepository.saveAll(approvalFileList);
     }
 
     private ApprovalFile createApprovalFile(MultipartFile file) {
-        String fileUrl = fileUploadService.uploadFile(file);
-
+        String fileUrl = this.fileUploadService.uploadFile(file);
         ApprovalFile approvalFile = new ApprovalFile();
         approvalFile.setFileUrl(fileUrl);
         approvalFile.setFileName(file.getOriginalFilename());
         approvalFile.setFileType(file.getContentType());
-        approvalFile.setCreatedAt(LocalDateTime.now().format(dateTimeFormatter));
-
+        approvalFile.setCreatedAt(LocalDateTime.now().format(this.dateTimeFormatter));
         return approvalFile;
     }
 
-
     public void deleteApprovalFileById(Long fileId) {
-        approvalFileRepository.deleteById(fileId);
+        this.approvalFileRepository.deleteById(fileId);
     }
 
 }

@@ -1,6 +1,9 @@
 package com.dxvalley.crowdfunding.security.service;
 
-import com.dxvalley.crowdfunding.user.UserRepository;
+import com.dxvalley.crowdfunding.exception.customException.BlockedUserException;
+import com.dxvalley.crowdfunding.userManager.user.UserRepository;
+import com.dxvalley.crowdfunding.userManager.user.UserStatus;
+import com.dxvalley.crowdfunding.userManager.user.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,26 +11,41 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final DateTimeFormatter dateTimeFormatter;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findByUsername(username).orElseThrow(
+    public UserDetails loadUserByUsername(String username) {
+        Users user = userRepository.findByUsername(username).orElseThrow(
                 () -> new UsernameNotFoundException("There is no user with this username")
         );
 
-        Collection<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRoleName()))
-                .collect(Collectors.toList());
+        if (user.getUserStatus().equals(UserStatus.BANNED))
+            throw new BlockedUserException("Your account has been temporarily blocked. Please admins for further assistance.");
+
+        Collection<SimpleGrantedAuthority> authorities = user.getAuthorities().stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.getName()))
+                .toList();
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(), authorities
         );
+    }
+
+    public void updateLastLogin(String username){
+        Optional<Users> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            Users adminUser = user.get();
+            adminUser.setLastLogin(LocalDateTime.now().format(dateTimeFormatter));
+            userRepository.save(adminUser);
+        }
     }
 }
