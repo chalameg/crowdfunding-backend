@@ -14,6 +14,8 @@ public class PaymentMapper {
         paymentResponse.setPayerFullName(payment.getIsAnonymous() ? "Anonymous" : payment.getPayerFullName());
         paymentResponse.setTransactionCompletedDate(payment.getTransactionCompletedDate());
         paymentResponse.setPaymentProcessor(payment.getPaymentProcessor());
+        paymentResponse.setCampaignId(payment.getCampaign().getId());
+        paymentResponse.setCampaignTitle(payment.getCampaign().getTitle());
         return paymentResponse;
     }
 }

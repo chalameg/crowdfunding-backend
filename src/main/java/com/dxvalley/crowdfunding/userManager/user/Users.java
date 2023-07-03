@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(name = "AdminUser_username_unique", columnNames = "username")})
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,9 +29,7 @@ public class Users implements UserDetails {
     private String avatarUrl;
     private String biography;
     private String website;
-    @Column(
-            unique = true
-    )
+    @Column(unique = true)
     private String email;
     private String address;
     @Enumerated(EnumType.STRING)

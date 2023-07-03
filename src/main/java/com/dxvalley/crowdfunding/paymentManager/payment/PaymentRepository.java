@@ -13,7 +13,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     List<Payment> findByCampaignIdAndPaymentStatus(Long campaignId, PaymentStatus paymentStatus);
 
-    List<Payment> findByUserUserId(Long userId);
+    List<Payment> findByUserUsernameAndPaymentStatus(String username,PaymentStatus paymentStatus);
 
     @Query("SELECT SUM(p.amount) FROM Payment as p WHERE p.campaign.id = :campaignId")
     Double findTotalAmountOfPaymentForCampaign(Long campaignId);
