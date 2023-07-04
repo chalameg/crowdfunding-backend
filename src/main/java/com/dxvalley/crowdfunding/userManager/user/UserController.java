@@ -40,9 +40,9 @@ public class UserController {
         return userService.changePassword(changePassword);
     }
 
-    @PostMapping({"/forgotPassword"})
-    ResponseEntity<ApiResponse> forgotPassword() {
-        return userService.forgotPassword();
+    @PostMapping({"/forgotPassword/{username}"})
+    ResponseEntity<ApiResponse> forgotPassword(String username) {
+        return userService.forgotPassword(username);
     }
 
     @PutMapping({"/resetPassword"})

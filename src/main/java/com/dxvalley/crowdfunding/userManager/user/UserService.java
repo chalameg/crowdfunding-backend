@@ -15,7 +15,7 @@ public interface UserService {
 
     ResponseEntity<ApiResponse> changePassword(ChangePassword temp);
 
-    ResponseEntity<ApiResponse> forgotPassword();
+    ResponseEntity<ApiResponse> forgotPassword(String username);
 
     ResponseEntity<ApiResponse> resetPassword(ResetPassword resetPassword);
 }

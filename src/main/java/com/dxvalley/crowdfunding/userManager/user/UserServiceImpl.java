@@ -115,8 +115,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity<ApiResponse> forgotPassword() {
-        String username = currentLoggedInUser.getUserName();
+    public ResponseEntity<ApiResponse> forgotPassword(String username) {
         Users user = userUtils.utilGetUserByUsername(username);
         String code;
         if (emailService.isValidEmail(username)) {
